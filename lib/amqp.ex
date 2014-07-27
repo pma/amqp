@@ -8,8 +8,4 @@ defmodule AMQP do
       alias AMQP.Basic
     end
   end
-
-  defmodule Message do
-    defstruct [:properties, :payload]
-  end
 end
