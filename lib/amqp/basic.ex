@@ -98,7 +98,7 @@ defmodule AMQP.Basic do
   @doc """
   Negative acknowledge of one or more messages. If multiple is set to `true`, all messages up to the one
   specified by `delivery_tag` are considered as not acknowledged by the server. If `requeue` is set to
-  `true`, the message will be returned to the queue and redelivered the next available consumer.
+  `true`, the message will be returned to the queue and redelivered to the next available consumer.
 
   This is a RabbitMQ specific extension to AMQP 0.9.1. It is equivalent to reject, but allows rejecting
   multiple messages using the `multiple` option.

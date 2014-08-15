@@ -16,6 +16,7 @@ defmodule AMQP.Queue do
   *   `durable`: If set, keeps the Queue between restarts of the broker
   *   `auto-delete`: If set, deletes the Queue once all subscribers disconnect
   *   `exclusive`: If set, only one subscriber can consume from the Queue
+  *   `passive`: If set, raises an error unless the queue already exists
 
   """
   def declare(%Channel{pid: pid}, queue \\ "", options \\ []) do
