@@ -16,7 +16,7 @@ Add AMQP as a dependency in your `mix.exs` file.
 
 ```elixir
 def deps do
-  [ { :amqp, github: "pma/amqp" } ]
+  [{:amqp, "0.0.3"}]
 end
 ```
 
@@ -75,12 +75,8 @@ defmodule Consumer do
     {:ok, chan}
   end
 
-  def handle_info(info, chan) do
-    case info do
-      {payload, %{delivery_tag: tag, redelivered: redelivered}} ->
-        spawn fn -> consume(chan, tag, redelivered, payload) end
-      _ -> nil
-    end
+  def handle_info({payload, %{delivery_tag: tag, redelivered: redelivered}}, chan) do
+    spawn fn -> consume(chan, tag, redelivered, payload) end
     {:noreply, chan}
   end
 
@@ -123,5 +119,5 @@ iex> AMQP.Basic.publish chan, "gen_server_test_exchange", "", "42"
 iex> AMQP.Basic.publish chan, "gen_server_test_exchange", "", "Hello, World!"
 :ok
 Error converting Hello, World! to integer
-Error converting Hello, World! to intege
+Error converting Hello, World! to integer
 ```
