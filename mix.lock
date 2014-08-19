@@ -1,6 +1,4 @@
-%{"amqp_client": {:git, "git://github.com/pma/amqp_client.git", "85da3db807a527d3acc9a4aeafb710a125a1609d", [tag: "rabbitmq-3.3.5"]},
+%{"amqp_client": {:package, "3.0.2"},
   "earmark": {:package, "0.1.10"},
-  "ex_doc": {:package, "0.5.1"},
-  "hoedown": {:git, "git://github.com/hoedown/hoedown.git", "0610117f44b173a4e2112afb2f510156a32355b5", []},
-  "markdown": {:git, "git://github.com/devinus/markdown.git", "7b1912a693611a9445574e099687879948bafbae", []},
-  "rabbit_common": {:git, "git://github.com/pma/rabbit_common.git", "e43a663211c60d71830306ca00c8d0013e3751cf", [tag: "rabbitmq-3.3.4"]}}
+  "ex_doc": {:package, "0.5.2"},
+  "rabbit_common": {:package, "3.0.2"}}
