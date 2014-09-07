@@ -3,7 +3,7 @@ defmodule AMQP.Connection do
   Functions to operate on Connections.
   """
 
-  require Record
+  import Record
   import AMQP.Core
   alias __MODULE__
 
@@ -53,7 +53,7 @@ defmodule AMQP.Connection do
   """
   def close(conn), do: :amqp_connection.close(conn.pid)
 
-  defp do_open(amqp_params) when Record.record?(amqp_params) do
+  defp do_open(amqp_params) when is_record(amqp_params) do
     case :amqp_connection.start(amqp_params) do
       {:ok, pid} -> {:ok, %Connection{pid: pid}}
       error      -> error
