@@ -1,10 +1,10 @@
-defmodule Amqp.Mixfile do
+defmodule AMQP.Mixfile do
   use Mix.Project
 
   def project do
     [app: :amqp,
-     version: "0.0.4",
-     elixir: "~> 1.0.0 or ~> 1.1.0-dev",
+     version: "0.0.5",
+     elixir: "~> 1.0.0",
      description: description,
      package: package,
      deps: deps,
@@ -12,7 +12,7 @@ defmodule Amqp.Mixfile do
   end
 
   def application do
-    [applications: []]
+    [applications: [:amqp_client, :rabbit_common]]
   end
 
   defp deps do

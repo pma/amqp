@@ -109,6 +109,21 @@ defmodule AMQP.Basic do
                                        requeue: Keyword.get(options, :requeue,   true))
   end
 
+  @doc """
+  Polls a queue for an existing message.
+
+  Returns the tuple `{:empty, meta}` if the queue is empty or the tuple {:ok, payload, meta} if at least
+  one message exists in the queue. The returned meta map includes the entry `message_count` with the
+  current number of messages in the queue.
+
+  Receiving messages by polling a queue is not as as efficient as subscribing a consumer to a queue,
+  so consideration should be taken when receiving large volumes of messages.
+
+  Setting the `no_ack` option to true will tell the broker that the receiver will not send an acknowledgement of
+  the message. Once it believes it has delivered a message, then it is free to assume that the consuming application
+  has taken responsibility for it. In general, a lot of applications will not want these semantics, rather, they
+  will want to explicitly acknowledge the receipt of a message and have `no_ack` with the default value of false.
+  """
   def get(%Channel{pid: pid}, queue, options \\ []) do
     case :amqp_channel.call pid, basic_get(queue: queue, no_ack: Keyword.get(options, :no_ack, false)) do
       {basic_get_ok(delivery_tag: delivery_tag,

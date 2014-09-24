@@ -17,7 +17,15 @@ Add AMQP as a dependency in your `mix.exs` file.
 
 ```elixir
 def deps do
-  [{:amqp, "0.0.4"}]
+  [{:amqp, "0.0.5"}]
+end
+```
+
+You should also update your application list to include `:amqp`:
+
+```elixir
+def application do
+  [applications: [:amqp]]
 end
 ```
 
@@ -62,7 +70,7 @@ defmodule Consumer do
   @queue_error "#{@queue}_error"
 
   def init(_opts) do
-    {:ok, conn} = Connection.open
+    {:ok, conn} = Connection.open("amqp://guest:guest@localhost")
     {:ok, chan} = Channel.open(conn)
     # Limit unacknowledged messages to 10
     Basic.qos(chan, prefetch_count: 10)
