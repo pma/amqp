@@ -1,4 +1,6 @@
 %{"amqp_client": {:package, "3.0.2"},
   "earmark": {:package, "0.1.10"},
-  "ex_doc": {:package, "0.5.2"},
+  "ex_doc": {:package, "0.6.0"},
+  "inch_ex": {:package, "0.2.0"},
+  "json": {:package, "0.3.2"},
   "rabbit_common": {:package, "3.0.2"}}
