@@ -1,4 +1,6 @@
 defmodule AMQP.Core do
+  @moduledoc false
+
   require Record
 
   Record.defrecord :p_basic,             :'P_basic',             Record.extract(:'P_basic',             from_lib: "rabbit_common/include/rabbit_framing.hrl")
