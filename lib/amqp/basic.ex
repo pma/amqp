@@ -12,11 +12,11 @@ defmodule AMQP.Basic do
   @doc """
   Publishes a message to an Exchange.
 
-  This method publishes a message to a specific exchange. The message will be routed to queues as defined by
-  the exchange configuration and distributed to any subscribers.
+  This method publishes a message to a specific exchange. The message will be routed
+  to queues as defined by the exchange configuration and distributed to any subscribers.
 
-  The parameter `exchange` specifies the name of the exchange to publish to. If set to empty string, it publishes to the
-  default exchange.
+  The parameter `exchange` specifies the name of the exchange to publish to. If set to
+  empty string, it publishes to the default exchange.
   The `routing_key` parameter specifies the routing key for the message.
 
   The `payload` parameter specifies the message content as a binary..
@@ -31,7 +31,8 @@ defmodule AMQP.Basic do
   *   `content_type`:   MIME Content type
   *   `content_encoding`:   MIME Content encoding
   *   `headers`:   Message headers. Can be used with headers Exchanges
-  *   `persistent`:   If set, uses persistent delivery mode. Messages marked as `persistent` that are delivered to `durable` queues will be logged to disk.
+  *   `persistent`:   If set, uses persistent delivery mode. Messages marked as `persistent` that are
+delivered to `durable` queues will be logged to disk.
   *   `correlation_id`:   application correlation identifier
   *   `priority`:   message priority, ranging from 0 to 9
   *   `reply_to`:   name of the reply queue
@@ -39,8 +40,8 @@ defmodule AMQP.Basic do
   *   `message_id`:   message identifier
   *   `timestamp`:   timestamp associated with this message (epoch time)
   *   `type`:   message type as a string
-  *   `user-id`:   creating user ID. RabbitMQ will validate this against the active connection user
-  *   `app-id`:  publishing application ID
+  *   `user_id`:   creating user ID. RabbitMQ will validate this against the active connection user
+  *   `app_id`:  publishing application ID
   """
   def publish(%Channel{pid: pid}, exchange, routing_key, payload, options \\ []) do
     basic_publish =

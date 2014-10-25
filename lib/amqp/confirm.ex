@@ -22,14 +22,18 @@ defmodule AMQP.Confirm do
     :amqp_channel.wait_for_confirms(pid)
   end
 
+  @doc """
+  Wait until all messages published since the last call have been
+  either ack'd or nack'd by the broker, or until timeout elapses.
+  """
   def wait_for_confirms(%Channel{pid: pid}, timeout) do
     :amqp_channel.wait_for_confirms(pid, timeout)
   end
 
   @doc """
   Wait until all messages published since the last call have been
-  either ack'd or nack'd by the broker. If any of the messages
-  were nack'd, the calling process dies.
+  either ack'd or nack'd by the broker, or until timeout elapses.
+  If any of the messages were nack'd, the calling process dies.
   """
   def wait_for_confirms_or_die(%Channel{pid: pid}) do
     :amqp_channel.wait_for_confirms_or_die(pid)

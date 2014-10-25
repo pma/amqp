@@ -6,6 +6,7 @@ defmodule AMQP do
       alias AMQP.Exchange
       alias AMQP.Queue
       alias AMQP.Basic
+      alias AMQP.Confirm
     end
   end
 end
