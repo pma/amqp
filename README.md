@@ -8,17 +8,13 @@ Simple Elixir wrapper for the Erlang RabbitMQ client.
 
 The API is based on Langohr, a Clojure client for RabbitMQ.
 
-Caveat: The somewhat more idiomatic API adds some overhead. Input parameters
-are keyword lists and need to be converted to Erlang records. Output parameters and
-callback parameters are converted from Erlang records into Maps/Structs.
-
 ## Usage
 
 Add AMQP as a dependency in your `mix.exs` file.
 
 ```elixir
 def deps do
-  [{:amqp, "0.0.5"}]
+  [{:amqp, "0.0.6"}]
 end
 ```
 
