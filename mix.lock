@@ -1,6 +1,6 @@
 %{"amqp_client": {:hex, :amqp_client, "3.4.0"},
   "earmark": {:hex, :earmark, "0.1.10"},
-  "ex_doc": {:hex, :ex_doc, "0.6.1"},
+  "ex_doc": {:hex, :ex_doc, "0.7.0"},
   "inch_ex": {:hex, :inch_ex, "0.2.3"},
   "poison": {:hex, :poison, "1.2.0"},
   "rabbit_common": {:hex, :rabbit_common, "3.4.0"}}

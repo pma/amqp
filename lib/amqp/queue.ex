@@ -136,6 +136,8 @@ defmodule AMQP.Queue do
 
   defp do_consume(channel, handler) do
     receive do
+      {:basic_cancel, %{consumer_tag: _consumer_tag, no_wait: _no_wait}} ->
+        :ok
       {payload, %{delivery_tag: delivery_tag, redelivered: redelivered} = meta} ->
         spawn fn ->
           try do
@@ -148,8 +150,14 @@ defmodule AMQP.Queue do
               reraise exception, stacktrace
           end
         end
+        do_consume(channel, handler)
     end
-    do_consume(channel, handler)
   end
 
+  @doc """
+  Convenience to end a Queue consumer.
+  """
+  def unsubscribe(%Channel{} = channel, consumer_tag) do
+    Basic.cancel(channel, consumer_tag)
+  end
 end

@@ -3,7 +3,7 @@ defmodule AMQP.Mixfile do
 
   def project do
     [app: :amqp,
-     version: "0.0.6",
+     version: "0.0.7",
      elixir: "~> 1.0.0",
      description: description,
      package: package,
@@ -13,12 +13,12 @@ defmodule AMQP.Mixfile do
   end
 
   def application do
-    [applications: [:amqp_client, :rabbit_common]]
+    [applications: [:logger, :amqp_client, :rabbit_common]]
   end
 
   defp deps do
     [{:earmark, "~> 0.1", only: :docs},
-     {:ex_doc, "~> 0.6", only: :docs},
+     {:ex_doc, "~> 0.7", only: :docs},
      {:inch_ex, "~> 0.2", only: :docs},
      {:amqp_client, "~> 3.4.0"}]
   end

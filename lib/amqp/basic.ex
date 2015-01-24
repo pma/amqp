@@ -32,7 +32,7 @@ defmodule AMQP.Basic do
   *   `content_encoding`:   MIME Content encoding
   *   `headers`:   Message headers. Can be used with headers Exchanges
   *   `persistent`:   If set, uses persistent delivery mode. Messages marked as `persistent` that are
-delivered to `durable` queues will be logged to disk.
+delivered to `durable` queues will be logged to disk
   *   `correlation_id`:   application correlation identifier
   *   `priority`:   message priority, ranging from 0 to 9
   *   `reply_to`:   name of the reply queue
@@ -81,11 +81,12 @@ delivered to `durable` queues will be logged to disk.
   end
 
   @doc """
-  Acknowledges one or more messages. If multiple is set to `true`, all messages up to the one
+  Acknowledges one or more messages. If `multiple` is set to `true`, all messages up to the one
   specified by `delivery_tag` are considered acknowledged by the server.
   """
   def ack(%Channel{pid: pid}, delivery_tag, options \\ []) do
-    :amqp_channel.call pid, basic_ack(delivery_tag: delivery_tag, multiple: Keyword.get(options, :multiple, false))
+    :amqp_channel.call pid, basic_ack(delivery_tag: delivery_tag,
+                                      multiple: Keyword.get(options, :multiple, false))
   end
 
   @doc """
@@ -97,9 +98,9 @@ delivered to `durable` queues will be logged to disk.
   end
 
   @doc """
-  Negative acknowledge of one or more messages. If multiple is set to `true`, all messages up to the one
-  specified by `delivery_tag` are considered as not acknowledged by the server. If `requeue` is set to
-  `true`, the message will be returned to the queue and redelivered to the next available consumer.
+  Negative acknowledge of one or more messages. If `multiple` is set to `true`, all messages up to the
+  one specified by `delivery_tag` are considered as not acknowledged by the server. If `requeue` is set
+  to `true`, the message will be returned to the queue and redelivered to the next available consumer.
 
   This is a RabbitMQ specific extension to AMQP 0.9.1. It is equivalent to reject, but allows rejecting
   multiple messages using the `multiple` option.
@@ -251,8 +252,26 @@ delivered to `durable` queues will be logged to disk.
                                   user_id: user_id,
                                   app_id: app_id,
                                   cluster_id: cluster_id}}
+        do_consume(handler)
+      basic_consume_ok(consumer_tag: _consumer_tag) ->
+        do_consume(handler)
+      basic_cancel_ok(consumer_tag: _consumer_tag) ->
+        :ok
+      basic_cancel(consumer_tag: consumer_tag, nowait: no_wait) ->
+        send handler, {:basic_cancel, %{consumer_tag: consumer_tag, no_wait: no_wait}}
     end
-    do_consume(handler)
   end
 
+  @doc """
+  End a queue consumer.
+
+  This method cancels a consumer. This does not affect already delivered messages, but it does
+  mean the server will not send any more messages for that consumer. The client may receive an
+  arbitrary number of messages in between sending the cancel method and receiving the reply.
+  """
+  def cancel(%Channel{pid: pid}, consumer_tag, options \\ []) do
+    basic_cancel = basic_cancel(consumer_tag: consumer_tag, nowait: Keyword.get(options, :no_wait, false))
+    basic_cancel_ok(consumer_tag: consumer_tag) = :amqp_channel.call pid, basic_cancel
+    {:ok, consumer_tag}
+  end
 end

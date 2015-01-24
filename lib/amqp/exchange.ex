@@ -19,7 +19,7 @@ defmodule AMQP.Exchange do
   Besides the exchange name and type, the following options can be used:
 
   *   `durable`: If set, keeps the Exchange between restarts of the broker
-  *   `auto-delete`: If set, deletes the Exchange once all queues unbind from it
+  *   `auto_delete`: If set, deletes the Exchange once all queues unbind from it
   *   `passive`: If set, returns an error if the Exchange does not already exist
   *   `internal:` If set, the exchange may not be used directly by publishers,
 but only when bound to other exchanges. Internal exchanges are used to construct
