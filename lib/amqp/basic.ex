@@ -1,4 +1,6 @@
 defmodule AMQP.Basic do
+  require Logger
+
   @moduledoc """
   Functions to publish, consume and acknowledge messages.
   """
@@ -189,7 +191,7 @@ delivered to `durable` queues will be logged to disk
   The handler process will receive the following data structures and should as
   process messages.
   """
-  def consume(%Channel{pid: pid}, queue, options \\ []) do
+  def consume(%Channel{} = chan, queue, consumer \\ nil, options \\ []) do
     basic_consume =
       basic_consume(queue: queue,
                     consumer_tag: Keyword.get(options, :consumer_tag, ""),
@@ -199,20 +201,30 @@ delivered to `durable` queues will be logged to disk
                     nowait:       Keyword.get(options, :no_wait,      false),
                     arguments:    Keyword.get(options, :arguments,    []))
 
-    handler = options[:handler] || self()
+    consumer = consumer || self()
 
     response_mapper = spawn fn ->
-      Process.link(handler)
-      do_consume(handler)
+      Process.flag(:trap_exit, true)
+      Process.monitor(consumer)
+      Process.monitor(chan.pid)
+      do_start_consumer(chan, consumer)
     end
 
     basic_consume_ok(consumer_tag: consumer_tag) =
-      :amqp_channel.subscribe(pid, basic_consume, response_mapper)
+      :amqp_channel.subscribe(chan.pid, basic_consume, response_mapper)
 
     {:ok, consumer_tag}
   end
 
-  defp do_consume(handler) do
+  defp do_start_consumer(chan, consumer) do
+    receive do
+      basic_consume_ok(consumer_tag: consumer_tag) ->
+        send consumer, {:basic_consume_ok, consumer_tag}
+        do_consume(chan, consumer, consumer_tag)
+    end
+  end
+
+  defp do_consume(chan, consumer, consumer_tag) do
     receive do
       {basic_deliver(consumer_tag: consumer_tag,
                      delivery_tag: delivery_tag,
@@ -233,7 +245,7 @@ delivered to `durable` queues will be logged to disk
                                user_id: user_id,
                                app_id: app_id,
                                cluster_id: cluster_id), payload: payload)} ->
-        send handler, {payload, %{consumer_tag: consumer_tag,
+        send consumer, {:basic_deliver, payload, %{consumer_tag: consumer_tag,
                                   delivery_tag: delivery_tag,
                                   redelivered: redelivered,
                                   exchange: exchange,
@@ -252,13 +264,19 @@ delivered to `durable` queues will be logged to disk
                                   user_id: user_id,
                                   app_id: app_id,
                                   cluster_id: cluster_id}}
-        do_consume(handler)
-      basic_consume_ok(consumer_tag: _consumer_tag) ->
-        do_consume(handler)
-      basic_cancel_ok(consumer_tag: _consumer_tag) ->
-        :ok
+        do_consume(chan, consumer, consumer_tag)
+      basic_consume_ok(consumer_tag: consumer_tag) ->
+        send consumer, {:basic_consume_ok, consumer_tag}
+        do_consume(chan, consumer, consumer_tag)
+      basic_cancel_ok(consumer_tag: consumer_tag) ->
+        send consumer, {:basic_cancel_ok, consumer_tag}
       basic_cancel(consumer_tag: consumer_tag, nowait: no_wait) ->
-        send handler, {:basic_cancel, %{consumer_tag: consumer_tag, no_wait: no_wait}}
+        send consumer, {:basic_cancel, %{consumer_tag: consumer_tag, no_wait: no_wait}}
+      {:DOWN, _ref, :process, ^consumer, reason} ->
+        cancel(chan, consumer_tag)
+        exit(reason)
+      {:DOWN, _ref, :process, _pid, reason} ->
+        exit(reason)
     end
   end
 

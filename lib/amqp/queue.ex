@@ -1,4 +1,6 @@
 defmodule AMQP.Queue do
+  require Logger
+
   @moduledoc """
   Functions to operate on Queues.
   """
@@ -127,30 +129,36 @@ defmodule AMQP.Queue do
   the server will route the message to it once it's rejected the second time. This can be used as a way to
   later inspect and handle messages that could not be processed.
 
-  This convenience function will spawn_link a process and register it using AMQP.Basic.consume.
+  This convenience function will spawn a process and register it using AMQP.Basic.consume.
   """
-  def subscribe(%Channel{} = channel, queue, handler) when is_function(handler, 2) do
-    handler = spawn_link fn -> do_consume(channel, handler) end
-    Basic.consume(channel, queue, handler: handler)
+  def subscribe(%Channel{} = channel, queue, fun) when is_function(fun, 2) do
+    consumer_pid = spawn fn -> do_start_consumer(channel, fun) end
+    {:ok, consumer_tag} = Basic.consume(channel, queue, consumer_pid)
+    {:ok, consumer_tag}
   end
 
-  defp do_consume(channel, handler) do
+  defp do_start_consumer(channel, fun) do
+    receive do
+      {:basic_consume_ok, consumer_tag} ->
+        do_consume(channel, fun, consumer_tag)
+    end
+  end
+
+  defp do_consume(channel, fun, consumer_tag) do
     receive do
       {:basic_cancel, %{consumer_tag: _consumer_tag, no_wait: _no_wait}} ->
-        :ok
-      {payload, %{delivery_tag: delivery_tag, redelivered: redelivered} = meta} ->
-        spawn fn ->
-          try do
-            handler.(payload, meta)
-            Basic.ack(channel, delivery_tag)
-          rescue
-            exception ->
-              stacktrace = System.stacktrace
-              Basic.reject(channel, delivery_tag, requeue: not redelivered)
-              reraise exception, stacktrace
-          end
+        exit(:basic_cancel)
+      {:basic_deliver, payload, %{delivery_tag: delivery_tag, redelivered: redelivered} = meta} ->
+        try do
+          fun.(payload, meta)
+          Basic.ack(channel, delivery_tag)
+        rescue
+          exception ->
+            stacktrace = System.stacktrace
+            Basic.reject(channel, delivery_tag, requeue: not redelivered)
+            reraise exception, stacktrace
         end
-        do_consume(channel, handler)
+        do_consume(channel, fun, consumer_tag)
     end
   end
 

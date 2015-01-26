@@ -3,13 +3,13 @@ defmodule AMQP.Mixfile do
 
   def project do
     [app: :amqp,
-     version: "0.0.7",
+     version: "0.1.0",
      elixir: "~> 1.0.0",
      description: description,
      package: package,
      source_url: "https://github.com/pma/amqp",
      deps: deps,
-     docs: [readme: true, main: "README"]]
+     docs: [readme: "README.md", main: "README"]]
   end
 
   def application do

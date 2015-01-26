@@ -14,7 +14,7 @@ Add AMQP as a dependency in your `mix.exs` file.
 
 ```elixir
 def deps do
-  [{:amqp, "0.0.6"}]
+  [{:amqp, "0.1.0"}]
 end
 ```
 
@@ -73,15 +73,32 @@ defmodule Consumer do
     Basic.qos(chan, prefetch_count: 10)
     Queue.declare(chan, @queue_error, durable: true)
     # Messages that cannot be delivered to any consumer in the main queue will be routed to the error queue
-    Queue.declare(chan, @queue, durable: true, arguments: [{"x-dead-letter-exchange", :longstr, ""}, {"x-dead-letter-routing-key", :longstr, @queue_error}])
+    Queue.declare(chan, @queue, durable: true,
+                                arguments: [{"x-dead-letter-exchange", :longstr, ""},
+                                            {"x-dead-letter-routing-key", :longstr, @queue_error}])
     Exchange.fanout(chan, @exchange, durable: true)
     Queue.bind(chan, @queue, @exchange)
     # Register the GenServer process as a consumer
-    Basic.consume(chan, @queue)
+    {:ok, _consumer_tag} = Basic.consume(chan, @queue)
     {:ok, chan}
   end
 
-  def handle_info({payload, %{delivery_tag: tag, redelivered: redelivered}}, chan) do
+  # Confirmation sent by the broker after registering this process as a consumer
+  def handle_info({:basic_consume_ok, consumer_tag}, chan) do
+    {:noreply, chan}
+  end
+
+  # Sent by the broker when the consumer is unexpectedly cancelled (such as after a queue deletion)
+  def handle_info({:basic_cancel, consumer_tag}, chan) do
+    {:stop, :normal, chan}
+  end
+
+  # Confirmation sent by the broker to the consumer process after a Basic.cancel
+  def handle_info({:basic_cancel_ok, consumer_tag}, chan) do
+    {:noreply, chan}
+  end
+
+  def handle_info({:basic_deliver, payload, %{delivery_tag: tag, redelivered: redelivered}}, chan) do
     spawn fn -> consume(chan, tag, redelivered, payload) end
     {:noreply, chan}
   end
@@ -105,7 +122,6 @@ defmodule Consumer do
         IO.puts "Error converting #{payload} to integer"
     end
   end
-
 end
 ```
 
@@ -127,3 +143,17 @@ iex> AMQP.Basic.publish chan, "gen_server_test_exchange", "", "Hello, World!"
 Error converting Hello, World! to integer
 Error converting Hello, World! to integer
 ```
+
+
+## Upgrading from 0.0.6 to 0.1.0
+
+Version 0.1.0 includes the following breaking changes:
+
+  * Basic.consume now takes the consumer process pid as the third argument. This is optional
+  and defaults to the caller.
+  * When registering a consumer process with Basic.consume, this process will receive the
+  messages consumed from the Queue as the tuple `{:basic_deliver, payload, meta}` instead of
+  the previous format `{payload, meta}`.
+  * A consumer process registered with Basic.consume will have to handle (or ignore) the
+  following additional messages: `{:basic_consume_ok, consumer_tag}`, `{:basic_cancel, consumer_tag}`
+  and `{:basic_cancel_ok, consumer_tag}`.
