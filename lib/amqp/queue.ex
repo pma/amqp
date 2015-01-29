@@ -1,11 +1,10 @@
 defmodule AMQP.Queue do
-  require Logger
-
   @moduledoc """
   Functions to operate on Queues.
   """
 
   import AMQP.Core
+
   alias AMQP.Channel
   alias AMQP.Basic
 
@@ -15,10 +14,12 @@ defmodule AMQP.Queue do
 
   Besides the queue name, the following options can be used:
 
-  *   `durable`: If set, keeps the Queue between restarts of the broker
-  *   `auto-delete`: If set, deletes the Queue once all subscribers disconnect
-  *   `exclusive`: If set, only one subscriber can consume from the Queue
-  *   `passive`: If set, raises an error unless the queue already exists
+  # Options
+
+    * `:durable` - If set, keeps the Queue between restarts of the broker
+    * `:auto-delete` - If set, deletes the Queue once all subscribers disconnect
+    * `:exclusive` - If set, only one subscriber can consume from the Queue
+    * `:passive` - If set, raises an error unless the queue already exists
 
   """
   def declare(%Channel{pid: pid}, queue \\ "", options \\ []) do
@@ -123,42 +124,39 @@ defmodule AMQP.Queue do
   and a Map with the message properties.
 
   The consumed message will be acknowledged after executing the handler function.
-  If an exception is raised by the handler function, the message is rejected and requeued.
-  If on the second attempt an exception is raised, the message is rejected but not requeued.
-  If the queue was declared with a dead letter exchange (by defining a \"x-dead-letter-exchange\" argument),
-  the server will route the message to it once it's rejected the second time. This can be used as a way to
-  later inspect and handle messages that could not be processed.
+  If an exception is raised by the handler function, the message is rejected.
 
   This convenience function will spawn a process and register it using AMQP.Basic.consume.
   """
   def subscribe(%Channel{} = channel, queue, fun) when is_function(fun, 2) do
     consumer_pid = spawn fn -> do_start_consumer(channel, fun) end
-    {:ok, consumer_tag} = Basic.consume(channel, queue, consumer_pid)
-    {:ok, consumer_tag}
+    Basic.consume(channel, queue, consumer_pid)
   end
 
   defp do_start_consumer(channel, fun) do
     receive do
-      {:basic_consume_ok, consumer_tag} ->
+      {:basic_consume_ok, %{consumer_tag: consumer_tag}} ->
         do_consume(channel, fun, consumer_tag)
     end
   end
 
   defp do_consume(channel, fun, consumer_tag) do
     receive do
-      {:basic_cancel, %{consumer_tag: _consumer_tag, no_wait: _no_wait}} ->
-        exit(:basic_cancel)
-      {:basic_deliver, payload, %{delivery_tag: delivery_tag, redelivered: redelivered} = meta} ->
+      {:basic_deliver, payload, %{delivery_tag: delivery_tag} = meta} ->
         try do
           fun.(payload, meta)
           Basic.ack(channel, delivery_tag)
         rescue
           exception ->
             stacktrace = System.stacktrace
-            Basic.reject(channel, delivery_tag, requeue: not redelivered)
+            Basic.reject(channel, delivery_tag, requeue: false)
             reraise exception, stacktrace
         end
         do_consume(channel, fun, consumer_tag)
+      {:basic_cancel, %{consumer_tag: ^consumer_tag, no_wait: _}} ->
+        exit(:basic_cancel)
+      {:basic_cancel_ok, %{consumer_tag: ^consumer_tag}} ->
+        exit(:normal)
     end
   end
 

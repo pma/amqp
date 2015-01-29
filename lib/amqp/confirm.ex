@@ -4,6 +4,7 @@ defmodule AMQP.Confirm do
   """
 
   import AMQP.Core
+
   alias AMQP.Channel
 
   @doc """

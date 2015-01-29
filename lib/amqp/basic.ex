@@ -1,6 +1,4 @@
 defmodule AMQP.Basic do
-  require Logger
-
   @moduledoc """
   Functions to publish, consume and acknowledge messages.
   """
@@ -21,29 +19,34 @@ defmodule AMQP.Basic do
   empty string, it publishes to the default exchange.
   The `routing_key` parameter specifies the routing key for the message.
 
-  The `payload` parameter specifies the message content as a binary..
+  The `payload` parameter specifies the message content as a binary.
 
-  In addition to the previous parameters, , the following options can be used:
+  In addition to the previous parameters, the following options can be used:
 
-  *   `mandatory`: If set, returns an error if the broker can't route the message to a queue
-  *   `immediate`: If set, returns an error if the broker can't deliver te message to a consumer immediately.
+  # Options
 
-  Additional Basic properties can be set using the following options:
+    * `:mandatory` - If set, returns an error if the broker can't route the message to a queue (default `false`);
+    * `:immediate` - If set, returns an error if the broker can't deliver te message to a consumer immediately (default `false`);
+    * `:content_type` - MIME Content type;
+    * `:content_encoding` - MIME Content encoding;
+    * `:headers` - Message headers. Can be used with headers Exchanges;
+    * `:persistent` - If set, uses persistent delivery mode. Messages marked as `persistent` that are delivered to `durable` \
+                      queues will be logged to disk;
+    * `:correlation_id` - application correlation identifier;
+    * `:priority` - message priority, ranging from 0 to 9;
+    * `:reply_to` - name of the reply queue;
+    * `:expiration` - how long the message is valid (in milliseconds);
+    * `:message_id` - message identifier;
+    * `:timestamp` - timestamp associated with this message (epoch time);
+    * `:type` - message type as a string;
+    * `:user_id` - creating user ID. RabbitMQ will validate this against the active connection user;
+    * `:app_id` - publishing application ID.
 
-  *   `content_type`:   MIME Content type
-  *   `content_encoding`:   MIME Content encoding
-  *   `headers`:   Message headers. Can be used with headers Exchanges
-  *   `persistent`:   If set, uses persistent delivery mode. Messages marked as `persistent` that are
-delivered to `durable` queues will be logged to disk
-  *   `correlation_id`:   application correlation identifier
-  *   `priority`:   message priority, ranging from 0 to 9
-  *   `reply_to`:   name of the reply queue
-  *   `expiration`:   how long the message is valid (in milliseconds)
-  *   `message_id`:   message identifier
-  *   `timestamp`:   timestamp associated with this message (epoch time)
-  *   `type`:   message type as a string
-  *   `user_id`:   creating user ID. RabbitMQ will validate this against the active connection user
-  *   `app_id`:  publishing application ID
+  ## Examples
+
+      iex> AMQP.Basic.publish chan, \"my_exchange\", \"my_routing_key\", \"Hello World!\", persistent: true
+      :ok
+
   """
   def publish(%Channel{pid: pid}, exchange, routing_key, payload, options \\ []) do
     basic_publish =
@@ -186,12 +189,22 @@ delivered to `durable` queues will be logged to disk
 
   @doc """
   Registers a queue consumer process. The `pid` of the process can be set using
-  the `handler` option and defaults to the calling process.
+  the `consumer_pid` argument and defaults to the calling process.
 
-  The handler process will receive the following data structures and should as
-  process messages.
+  The consumer process will receive the following data structures:
+
+    * `{:basic_deliver, payload, meta}` - This is sent for each message consumed, where \
+  `payload` contains the message content and `meta` contains all the metadata set when \
+  sending with Basic.publish or additional info set by the broker;
+    * `{:basic_consume_ok, %{consumer_tag: consumer_tag}}` - Sent when the consumer \
+  process is registered with Basic.consume. The caller receives the same information \
+  as the return of Basic.consume;
+    * `{:basic_cancel, %{consumer_tag: consumer_tag, no_wait: no_wait}}` - Sent by the \
+  broker when the consumer is unexpectedly cancelled (such as after a queue deletion)
+    * `{:basic_cancel_ok, %{consumer_tag: consumer_tag}}` - Sent to the consumer process after a call to Basic.cancel
+
   """
-  def consume(%Channel{} = chan, queue, consumer \\ nil, options \\ []) do
+  def consume(%Channel{} = chan, queue, consumer_pid \\ nil, options \\ []) do
     basic_consume =
       basic_consume(queue: queue,
                     consumer_tag: Keyword.get(options, :consumer_tag, ""),
@@ -201,30 +214,30 @@ delivered to `durable` queues will be logged to disk
                     nowait:       Keyword.get(options, :no_wait,      false),
                     arguments:    Keyword.get(options, :arguments,    []))
 
-    consumer = consumer || self()
+    consumer_pid = consumer_pid || self()
 
-    response_mapper = spawn fn ->
+    adapter_pid = spawn fn ->
       Process.flag(:trap_exit, true)
-      Process.monitor(consumer)
+      Process.monitor(consumer_pid)
       Process.monitor(chan.pid)
-      do_start_consumer(chan, consumer)
+      do_start_consumer(chan, consumer_pid)
     end
 
     basic_consume_ok(consumer_tag: consumer_tag) =
-      :amqp_channel.subscribe(chan.pid, basic_consume, response_mapper)
+      :amqp_channel.subscribe(chan.pid, basic_consume, adapter_pid)
 
     {:ok, consumer_tag}
   end
 
-  defp do_start_consumer(chan, consumer) do
+  defp do_start_consumer(chan, consumer_pid) do
     receive do
       basic_consume_ok(consumer_tag: consumer_tag) ->
-        send consumer, {:basic_consume_ok, consumer_tag}
-        do_consume(chan, consumer, consumer_tag)
+        send consumer_pid, {:basic_consume_ok, %{consumer_tag: consumer_tag}}
+        do_consume(chan, consumer_pid, consumer_tag)
     end
   end
 
-  defp do_consume(chan, consumer, consumer_tag) do
+  defp do_consume(chan, consumer_pid, consumer_tag) do
     receive do
       {basic_deliver(consumer_tag: consumer_tag,
                      delivery_tag: delivery_tag,
@@ -245,34 +258,34 @@ delivered to `durable` queues will be logged to disk
                                user_id: user_id,
                                app_id: app_id,
                                cluster_id: cluster_id), payload: payload)} ->
-        send consumer, {:basic_deliver, payload, %{consumer_tag: consumer_tag,
-                                  delivery_tag: delivery_tag,
-                                  redelivered: redelivered,
-                                  exchange: exchange,
-                                  routing_key: routing_key,
-                                  content_type: content_type,
-                                  content_encoding: content_encoding,
-                                  headers: headers,
-                                  persistent: delivery_mode == 2,
-                                  priority: priority,
-                                  correlation_id: correlation_id,
-                                  reply_to: reply_to,
-                                  expiration: expiration,
-                                  message_id: message_id,
-                                  timestamp: timestamp,
-                                  type: type,
-                                  user_id: user_id,
-                                  app_id: app_id,
-                                  cluster_id: cluster_id}}
-        do_consume(chan, consumer, consumer_tag)
+        send consumer_pid, {:basic_deliver, payload, %{consumer_tag: consumer_tag,
+                                                       delivery_tag: delivery_tag,
+                                                       redelivered: redelivered,
+                                                       exchange: exchange,
+                                                       routing_key: routing_key,
+                                                       content_type: content_type,
+                                                       content_encoding: content_encoding,
+                                                       headers: headers,
+                                                       persistent: delivery_mode == 2,
+                                                       priority: priority,
+                                                       correlation_id: correlation_id,
+                                                       reply_to: reply_to,
+                                                       expiration: expiration,
+                                                       message_id: message_id,
+                                                       timestamp: timestamp,
+                                                       type: type,
+                                                       user_id: user_id,
+                                                       app_id: app_id,
+                                                       cluster_id: cluster_id}}
+        do_consume(chan, consumer_pid, consumer_tag)
       basic_consume_ok(consumer_tag: consumer_tag) ->
-        send consumer, {:basic_consume_ok, consumer_tag}
-        do_consume(chan, consumer, consumer_tag)
+        send consumer_pid, {:basic_consume_ok, %{consumer_tag: consumer_tag}}
+        do_consume(chan, consumer_pid, consumer_tag)
       basic_cancel_ok(consumer_tag: consumer_tag) ->
-        send consumer, {:basic_cancel_ok, consumer_tag}
+        send consumer_pid, {:basic_cancel_ok, %{consumer_tag: consumer_tag}}
       basic_cancel(consumer_tag: consumer_tag, nowait: no_wait) ->
-        send consumer, {:basic_cancel, %{consumer_tag: consumer_tag, no_wait: no_wait}}
-      {:DOWN, _ref, :process, ^consumer, reason} ->
+        send consumer_pid, {:basic_cancel, %{consumer_tag: consumer_tag, no_wait: no_wait}}
+      {:DOWN, _ref, :process, ^consumer_pid, reason} ->
         cancel(chan, consumer_tag)
         exit(reason)
       {:DOWN, _ref, :process, _pid, reason} ->

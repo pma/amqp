@@ -4,6 +4,7 @@ defmodule AMQP.Exchange do
   """
 
   import AMQP.Core
+
   alias AMQP.Channel
 
   @doc """
@@ -18,12 +19,15 @@ defmodule AMQP.Exchange do
 
   Besides the exchange name and type, the following options can be used:
 
-  *   `durable`: If set, keeps the Exchange between restarts of the broker
-  *   `auto_delete`: If set, deletes the Exchange once all queues unbind from it
-  *   `passive`: If set, returns an error if the Exchange does not already exist
-  *   `internal:` If set, the exchange may not be used directly by publishers,
+  # Options
+
+    * `:durable`: If set, keeps the Exchange between restarts of the broker;
+    * `:auto_delete`: If set, deletes the Exchange once all queues unbind from it;
+    * `:passive`: If set, returns an error if the Exchange does not already exist;
+    * `:internal:` If set, the exchange may not be used directly by publishers,
 but only when bound to other exchanges. Internal exchanges are used to construct
 wiring that is not visible to applications.
+
   """
   def declare(%Channel{pid: pid}, exchange, type \\ :direct, options \\ [])
   when type in [:direct, :topic, :fanout, :headers] do
@@ -44,7 +48,7 @@ wiring that is not visible to applications.
   Deletes an Exchange by name. When an Exchange is deleted all bindings to it are
   also deleted
   """
-  def delete(%Channel{pid: pid}, exchange, options \\ []) when is_binary(exchange) do
+  def delete(%Channel{pid: pid}, exchange, options \\ []) do
     exchange_delete =
       exchange_delete(exchange:  exchange,
                       if_unused: Keyword.get(options, :if_unused, false),
@@ -57,8 +61,7 @@ wiring that is not visible to applications.
   Binds an Exchange to another Exchange or a Queue using the
   exchange.bind AMQP method (a RabbitMQ-specific extension)
   """
-  def bind(%Channel{pid: pid}, destination, source, options \\ [])
-  when is_binary(destination) and is_binary(source) do
+  def bind(%Channel{pid: pid}, destination, source, options \\ []) do
     exchange_bind =
       exchange_bind(destination: destination,
                     source:      source,

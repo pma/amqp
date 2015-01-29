@@ -3,8 +3,8 @@ defmodule AMQP.Channel do
   Functions to operate on Channels.
   """
 
-  alias __MODULE__
   alias AMQP.Connection
+  alias AMQP.Channel
 
   defstruct [:conn, :pid]
 
@@ -21,6 +21,7 @@ defmodule AMQP.Channel do
   @doc """
   Closes an open Channel.
   """
-  def close(%Channel{pid: pid}), do: :amqp_channel.close(pid)
-
+  def close(%Channel{pid: pid}) do
+    :amqp_channel.close(pid)
+  end
 end
