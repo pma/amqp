@@ -144,6 +144,32 @@ Error converting Hello, World! to integer
 Error converting Hello, World! to integer
 ```
 
+## Types of arguments and headers
+
+The parameter `arguments` in `Queue.declare`, `Exchange.declare`, `Basic.consume` and the parameter `headers` in `Basic.publish` are a list of tuples in the form `{name, type, value}`, where `name` is a binary containing the argument/header name, `type` is an atom describing the AMQP field type and `value` a term compatible with the AMQP field type.
+
+The valid AMQP field types are:
+
+`:longstr` | `:signedint` | `:decimal` | `:timestamp` | `:table` | `:byte` | `:double` | `:float` | `:long` | `:short` | `:bool` | `:binary` | `:void` | `:array`
+
+Valid argument names in `Queue.declare` include:
+
+* "x-expires"
+* "x-message-ttl"
+* "x-dead-letter-routing-key"
+* "x-dead-letter-exchange"
+* "x-max-length"
+* "x-max-length-bytes"
+
+Valid argument names in `Basic.consume` include:
+
+* "x-priority"
+* "x-cancel-on-ha-failover"
+
+Valid argument names in `Exchange.declare` include:
+
+* "alternate-exchange"
+
 
 ## Upgrading from 0.0.6 to 0.1.0
 
@@ -155,5 +181,5 @@ Version 0.1.0 includes the following breaking changes:
   messages consumed from the Queue as the tuple `{:basic_deliver, payload, meta}` instead of
   the previous format `{payload, meta}`.
   * A consumer process registered with Basic.consume will have to handle (or ignore) the
-  following additional messages: `{:basic_consume_ok, consumer_tag}`, `{:basic_cancel, consumer_tag}`
-  and `{:basic_cancel_ok, consumer_tag}`.
+  following additional messages: `{:basic_consume_ok, %{consumer_tag: consumer_tag}}`, `{:basic_cancel, %{consumer_tag: consumer_tag}}`
+  and `{:basic_cancel_ok, %{consumer_tag: consumer_tag}}`.
