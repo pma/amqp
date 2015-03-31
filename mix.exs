@@ -20,7 +20,8 @@ defmodule AMQP.Mixfile do
     [{:earmark, "~> 0.1", only: :docs},
      {:ex_doc, "~> 0.7", only: :docs},
      {:inch_ex, "~> 0.2", only: :docs},
-     {:amqp_client, "~> 3.4.0"}]
+     {:amqp_client, github: "pma/amqp_client"},
+     {:rabbit_common, github: "pma/rabbit_common", override: true}]
   end
 
   defp description do
