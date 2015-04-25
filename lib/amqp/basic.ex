@@ -305,4 +305,19 @@ defmodule AMQP.Basic do
     basic_cancel_ok(consumer_tag: consumer_tag) = :amqp_channel.call pid, basic_cancel
     {:ok, consumer_tag}
   end
+
+  @doc """
+  Registers a process as a return handler for the given channel.
+  """
+  def register_return_handler(%Channel{pid: pid}, handler_pid) do
+    :amqp_channel.register_return_handler(pid, handler_pid)
+  end
+
+  @doc """
+  Unregisters a process previously registered as a return handler
+  for the given channel.
+  """
+  def unregister_return_handler(%Channel{pid: pid}) do
+    :amqp_channel.unregister_return_handler(pid)
+  end
 end
