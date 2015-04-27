@@ -117,53 +117,48 @@ defmodule AMQP.Queue do
     message_count(channel, queue) == 0
   end
 
-  @doc """
-  Convenience to consume messages from a Queue.
-
-  The handler function must have arity 2 and will receive as arguments a binary with the message payload
-  and a Map with the message properties.
-
-  The consumed message will be acknowledged after executing the handler function.
-  If an exception is raised by the handler function, the message is rejected.
-
-  This convenience function will spawn a process and register it using AMQP.Basic.consume.
-  """
+  @doc false
   def subscribe(%Channel{} = channel, queue, fun) when is_function(fun, 2) do
-    consumer_pid = spawn fn -> do_start_consumer(channel, fun) end
-    Basic.consume(channel, queue, consumer_pid)
+    {:ok, pid} = AMQP.Queue.Consumer.start_link(channel, queue, fun)
+    state = GenServer.call(pid, :state)
+    {:ok, state.consumer_tag}
   end
 
-  defp do_start_consumer(channel, fun) do
-    receive do
-      {:basic_consume_ok, %{consumer_tag: consumer_tag}} ->
-        do_consume(channel, fun, consumer_tag)
-    end
-  end
-
-  defp do_consume(channel, fun, consumer_tag) do
-    receive do
-      {:basic_deliver, payload, %{delivery_tag: delivery_tag} = meta} ->
-        try do
-          fun.(payload, meta)
-          Basic.ack(channel, delivery_tag)
-        rescue
-          exception ->
-            stacktrace = System.stacktrace
-            Basic.reject(channel, delivery_tag, requeue: false)
-            reraise exception, stacktrace
-        end
-        do_consume(channel, fun, consumer_tag)
-      {:basic_cancel, %{consumer_tag: ^consumer_tag, no_wait: _}} ->
-        exit(:basic_cancel)
-      {:basic_cancel_ok, %{consumer_tag: ^consumer_tag}} ->
-        exit(:normal)
-    end
-  end
-
-  @doc """
-  Convenience to end a Queue consumer.
-  """
+  @doc false
   def unsubscribe(%Channel{} = channel, consumer_tag) do
     Basic.cancel(channel, consumer_tag)
+  end
+end
+
+defmodule AMQP.Queue.Consumer do
+  @moduledoc false
+
+  use AMQP
+  use AMQP.Consumer
+
+  def start_link(channel, queue, fun) do
+    GenServer.start_link(__MODULE__, [channel, queue, fun])
+  end
+
+  def init([channel, queue, fun]) do
+    {:ok, consumer_tag} = Basic.consume(channel, queue)
+    {:ok, %{channel: channel, queue: queue, consumer_tag: consumer_tag, fun: fun}}
+  end
+
+  def handle_call(:state, _from, state) do
+    {:reply, state, state}
+  end
+
+  def handle_basic_deliver(payload, meta, state) do
+    try do
+      state.fun.(payload, meta)
+      :ok = Basic.ack(state.channel, meta.delivery_tag)
+      {:noreply, state}
+    rescue
+      exception ->
+        stacktrace = System.stacktrace
+        Basic.reject(state.channel, meta.delivery_tag, requeue: false)
+        reraise exception, stacktrace
+    end
   end
 end

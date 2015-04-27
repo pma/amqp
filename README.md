@@ -8,13 +8,17 @@ Simple Elixir wrapper for the Erlang RabbitMQ client.
 
 The API is based on Langohr, a Clojure client for RabbitMQ.
 
+This is not an official client for RabbitMQ. It is a community maintained wrapper for the official Erlang client
+with the goal of providing a more idiomatic Elixir API.
+
+
 ## Usage
 
 Add AMQP as a dependency in your `mix.exs` file.
 
 ```elixir
 def deps do
-  [{:amqp, "0.1.1"}]
+  [{:amqp, "0.2.0"}]
 end
 ```
 
@@ -44,19 +48,13 @@ iex> AMQP.Basic.publish chan, "test_exchange", "", "Hello, World!"
 iex> {:ok, payload, meta} = AMQP.Basic.get chan, "test_queue"
 iex> payload
 "Hello, World!"
-iex> AMQP.Queue.subscribe chan, "test_queue", fn(payload, _meta) -> IO.puts("Received: #{payload}") end
-{:ok, "amq.ctag-5L8U-n0HU5doEsNTQpaXWg"}
-iex> AMQP.Basic.publish chan, "test_exchange", "", "Hello, World!"
-:ok
-Hello, World!
 ```
 
 ### Setup a consumer GenServer
 
 ```elixir
 defmodule Consumer do
-  use GenServer
-  use AMQP
+  use AMQP.Consumer
 
   def start_link do
     GenServer.start_link(__MODULE__, [], [])
@@ -79,38 +77,23 @@ defmodule Consumer do
     Exchange.fanout(chan, @exchange, durable: true)
     Queue.bind(chan, @queue, @exchange)
     # Register the GenServer process as a consumer
-    {:ok, _consumer_tag} = Basic.consume(chan, @queue)
-    {:ok, chan}
+    {:ok, consumer_tag} = Basic.consume(chan, @queue)
+    {:ok, %{chan: chan, consumer_tag: consumer_tag}}
   end
 
-  # Confirmation sent by the broker after registering this process as a consumer
-  def handle_info({:basic_consume_ok, %{consumer_tag: consumer_tag}}, chan) do
-    {:noreply, chan}
+  def handle_basic_deliver(payload, meta, state) do
+    spawn fn -> consume(state.chan, meta.delivery_tag, meta.redelivered, payload) end
+    {:noreply, state}
   end
 
-  # Sent by the broker when the consumer is unexpectedly cancelled (such as after a queue deletion)
-  def handle_info({:basic_cancel, %{consumer_tag: consumer_tag}}, chan) do
-    {:stop, :normal, chan}
-  end
-
-  # Confirmation sent by the broker to the consumer process after a Basic.cancel
-  def handle_info({:basic_cancel_ok, %{consumer_tag: consumer_tag}}, chan) do
-    {:noreply, chan}
-  end
-
-  def handle_info({:basic_deliver, payload, %{delivery_tag: tag, redelivered: redelivered}}, chan) do
-    spawn fn -> consume(chan, tag, redelivered, payload) end
-    {:noreply, chan}
-  end
-
-  defp consume(channel, tag, redelivered, payload) do
+  defp consume(chan, tag, redelivered, payload) do
     try do
       number = String.to_integer(payload)
       if number <= 10 do
-        Basic.ack channel, tag
+        Basic.ack chan, tag
         IO.puts "Consumed a #{number}."
       else
-        Basic.reject channel, tag, requeue: false
+        Basic.reject chan, tag, requeue: false
         IO.puts "#{number} is too big and was rejected."
       end
     rescue
@@ -118,7 +101,7 @@ defmodule Consumer do
         # Requeue unless it's a redelivered message.
         # This means we will retry consuming a message once in case of exception
         # before we give up and have it moved to the error queue
-        Basic.reject channel, tag, requeue: not redelivered
+        Basic.reject chan, tag, requeue: not redelivered
         IO.puts "Error converting #{payload} to integer"
     end
   end
@@ -169,6 +152,14 @@ Valid argument names in `Basic.consume` include:
 Valid argument names in `Exchange.declare` include:
 
 * "alternate-exchange"
+
+  ## Upgrading from 0.1.0 to 0.2.0
+
+  * A process registered to consume messages (with Basic.consume) must implement the new consumer behaviour.
+  Simply add `use AMQP.Consumer` and implement the `handle_basic_deliver` callback. The previous method of
+  handling messages directly with `handle_info` was removed. The new approach removes the need for an adapter
+  process to convert from Erlang records.
+  * Queue.subscribe and Queue.unsubscribe were deprecated in favor of the new consumer behaviour.
 
 
 ## Upgrading from 0.0.6 to 0.1.0
