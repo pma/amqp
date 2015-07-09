@@ -7,6 +7,7 @@ defmodule AMQP.Queue do
 
   alias AMQP.Channel
   alias AMQP.Basic
+  alias AMQP.Utils
 
   @doc """
   Declares a queue. The optional `queue` parameter is used to set the name.
@@ -46,7 +47,7 @@ defmodule AMQP.Queue do
                  exchange:    exchange,
                  routing_key: Keyword.get(options, :routing_key, ""),
                  nowait:      Keyword.get(options, :no_wait,     false),
-                 arguments:   Keyword.get(options, :arguments,   []))
+                 arguments:   Keyword.get(options, :arguments,   []) |> Utils.to_type_tuple)
     queue_bind_ok() = :amqp_channel.call pid, queue_bind
     :ok
   end
