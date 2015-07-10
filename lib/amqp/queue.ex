@@ -31,7 +31,7 @@ defmodule AMQP.Queue do
                     exclusive:   Keyword.get(options, :exclusive,   false),
                     auto_delete: Keyword.get(options, :auto_delete, false),
                     nowait:      Keyword.get(options, :no_wait,     false),
-                    arguments:   Keyword.get(options, :arguments,   []))
+                    arguments:   Keyword.get(options, :arguments,   []) |> Utils.to_type_tuple)
     queue_declare_ok(queue:          queue,
                      message_count:  message_count,
                      consumer_count: consumer_count) = :amqp_channel.call pid, queue_declare
