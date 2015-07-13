@@ -48,7 +48,7 @@ iex> AMQP.Queue.subscribe chan, "test_queue", fn(payload, _meta) -> IO.puts("Rec
 {:ok, "amq.ctag-5L8U-n0HU5doEsNTQpaXWg"}
 iex> AMQP.Basic.publish chan, "test_exchange", "", "Hello, World!"
 :ok
-Hello, World!
+Received: Hello, World!
 ```
 
 ### Setup a consumer GenServer
