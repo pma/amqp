@@ -5,6 +5,7 @@ defmodule AMQP.Basic do
 
   require Record
   import AMQP.Core
+  alias AMQP.Utils
   alias AMQP.Channel
 
   Record.defrecordp :amqp_msg, [props: p_basic(), payload: ""]
@@ -57,7 +58,7 @@ defmodule AMQP.Basic do
     p_basic =
       p_basic(content_type:     Keyword.get(options, :content_type,     :undefined),
               content_encoding: Keyword.get(options, :content_encoding, :undefined),
-              headers:          Keyword.get(options, :headers,          :undefined),
+              headers:          Keyword.get(options, :headers,          :undefined) |> Utils.to_type_tuple,
               delivery_mode:    if(options[:persistent], do: 2, else: 1),
               priority:         Keyword.get(options, :priority,         :undefined),
               correlation_id:   Keyword.get(options, :correlation_id,   :undefined),
