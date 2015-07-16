@@ -10,7 +10,7 @@ defmodule AMQP.Utils do
     to_type_tuple {name, :bool, value}
   end
   def to_type_tuple({name, value}) when is_bitstring(value) or is_atom(value) do
-    to_type_tuple {name, :longstr, value}
+    to_type_tuple {name, :longstr, to_string(value)}
   end
   def to_type_tuple({name, value}) when is_integer(value) do
     to_type_tuple {name, :long, value}
