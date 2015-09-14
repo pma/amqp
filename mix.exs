@@ -4,7 +4,7 @@ defmodule AMQP.Mixfile do
   def project do
     [app: :amqp,
      version: "0.1.2",
-     elixir: "~> 1.0 or ~> 1.1",
+     elixir: "~> 1.0",
      description: description,
      package: package,
      source_url: "https://github.com/pma/amqp",
