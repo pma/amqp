@@ -5,6 +5,7 @@ defmodule AMQP.Utils do
   def to_type_tuple(fields) when is_list(fields) do
     Enum.map fields, &to_type_tuple/1
   end
+  def to_type_tuple(:undefined), do: :undefined
   def to_type_tuple({name, type, value}), do: {to_string(name), type, value}
   def to_type_tuple({name, value}) when is_boolean(value) do
     to_type_tuple {name, :bool, value}

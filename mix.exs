@@ -1,15 +1,19 @@
 defmodule AMQP.Mixfile do
   use Mix.Project
 
+  @version "0.1.3"
+
   def project do
     [app: :amqp,
-     version: "0.1.2",
+     version: @version,
      elixir: "~> 1.0",
      description: description,
      package: package,
      source_url: "https://github.com/pma/amqp",
      deps: deps,
-     docs: [readme: "README.md", main: "README"]]
+     docs: [extras: ["README.md"], main: "README",
+            source_ref: "v#{@version}",
+            source_url: "https://github.com/pma/amqp"]]
   end
 
   def application do
