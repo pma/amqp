@@ -17,7 +17,7 @@ defmodule AMQP.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :xmerl, :amqp_client, :rabbit_common]]
+    [applications: [:logger, :amqp_client]]
   end
 
   defp deps do
