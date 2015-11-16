@@ -11,7 +11,7 @@ defmodule AMQP.Mixfile do
      package: package,
      source_url: "https://github.com/pma/amqp",
      deps: deps,
-     docs: [extras: ["README.md"], main: "README",
+     docs: [extras: ["README.md"], main: "extra-readme",
             source_ref: "v#{@version}",
             source_url: "https://github.com/pma/amqp"]]
   end
@@ -35,7 +35,7 @@ defmodule AMQP.Mixfile do
 
   defp package do
     [files: ["lib", "mix.exs", "README.md", "LICENSE"],
-     contributors: ["Paulo Almeida", "Eduardo Gurgel"],
+     maintainers: ["Paulo Almeida", "Eduardo Gurgel"],
      licenses: ["MIT"],
      links: %{"GitHub" => "https://github.com/pma/amqp"}]
   end
