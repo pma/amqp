@@ -29,8 +29,7 @@ but only when bound to other exchanges. Internal exchanges are used to construct
 wiring that is not visible to applications.
 
   """
-  def declare(%Channel{pid: pid}, exchange, type \\ :direct, options \\ [])
-  when type in [:direct, :topic, :fanout, :headers] do
+  def declare(%Channel{pid: pid}, exchange, type \\ :direct, options \\ []) do
     exchange_declare =
       exchange_declare(exchange:    exchange,
                        type:        Atom.to_string(type),
