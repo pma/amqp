@@ -157,7 +157,7 @@ connection record holds the pid of the connection itself, we can monitor it
 and get a notification when it goes down.
 
 Example implementation (only changes from the last example):
-```iex
+```elixir
 # 1. Extract your connect logic into a private method rabbitmq_connect
 
 def init(_opts) do
