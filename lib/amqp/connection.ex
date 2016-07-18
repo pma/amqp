@@ -86,7 +86,8 @@ defmodule AMQP.Connection do
                           connection_timeout: Keyword.get(options, :connection_timeout, :infinity),
                           ssl_options:        Keyword.get(options, :ssl_options,        :none),
                           client_properties:  Keyword.get(options, :client_properties,  []),
-                          socket_options:     Keyword.get(options, :socket_options,     []))
+                          socket_options:     Keyword.get(options, :socket_options,     []),
+                          auth_mechanisms:    Keyword.get(options, :auth_mechanisms,    [&:amqp_auth_mechanisms.plain/3, &:amqp_auth_mechanisms.amqplain/3]))
 
     do_open(amqp_params)
   end
