@@ -7,10 +7,10 @@ defmodule AMQP.Mixfile do
     [app: :amqp,
      version: @version,
      elixir: "~> 1.0",
-     description: description,
-     package: package,
+     description: description(),
+     package: package(),
      source_url: "https://github.com/pma/amqp",
-     deps: deps,
+     deps: deps(),
      docs: [extras: ["README.md"], main: "extra-readme",
             source_ref: "v#{@version}",
             source_url: "https://github.com/pma/amqp"]]
