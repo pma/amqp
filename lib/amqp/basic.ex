@@ -197,7 +197,7 @@ defmodule AMQP.Basic do
     * `{:basic_deliver, payload, meta}` - This is sent for each message consumed, where \
   `payload` contains the message content and `meta` contains all the metadata set when \
   sending with Basic.publish or additional info set by the broker;
-    * `{:basic_consume_ok, %{consumer_tag: consumer_tag}}` - Sent when the consumer \
+    * `{:basic_consume_ok, %{consumer_tag: consumer_tag, channel: channel}}` - Sent when the consumer \
   process is registered with Basic.consume. The caller receives the same information \
   as the return of Basic.consume;
     * `{:basic_cancel, %{consumer_tag: consumer_tag, no_wait: no_wait}}` - Sent by the \
@@ -233,7 +233,7 @@ defmodule AMQP.Basic do
   defp do_start_consumer(chan, consumer_pid) do
     receive do
       basic_consume_ok(consumer_tag: consumer_tag) ->
-        send consumer_pid, {:basic_consume_ok, %{consumer_tag: consumer_tag}}
+        send consumer_pid, {:basic_consume_ok, %{consumer_tag: consumer_tag, channel: chan}}
         do_consume(chan, consumer_pid, consumer_tag)
     end
   end
@@ -280,7 +280,7 @@ defmodule AMQP.Basic do
                                                        cluster_id: cluster_id}}
         do_consume(chan, consumer_pid, consumer_tag)
       basic_consume_ok(consumer_tag: consumer_tag) ->
-        send consumer_pid, {:basic_consume_ok, %{consumer_tag: consumer_tag}}
+        send consumer_pid, {:basic_consume_ok, %{consumer_tag: consumer_tag, channel: chan}}
         do_consume(chan, consumer_pid, consumer_tag)
       basic_cancel_ok(consumer_tag: consumer_tag) ->
         send consumer_pid, {:basic_cancel_ok, %{consumer_tag: consumer_tag}}

@@ -1,6 +1,6 @@
-%{"amqp_client": {:hex, :amqp_client, "3.5.6"},
-  "earmark": {:hex, :earmark, "0.1.19"},
-  "ex_doc": {:hex, :ex_doc, "0.10.0"},
-  "inch_ex": {:hex, :inch_ex, "0.4.0"},
-  "poison": {:hex, :poison, "1.5.0"},
-  "rabbit_common": {:hex, :rabbit_common, "3.5.6"}}
+%{"amqp_client": {:hex, :amqp_client, "3.5.6", "ed7e63122f32af1d503d134e6c1b088a0627e89c6b5c77b92984c841cb0939be", [:rebar], [{:rabbit_common, "3.5.6", [hex: :rabbit_common, optional: false]}]},
+  "earmark": {:hex, :earmark, "0.1.19", "ffec54f520a11b711532c23d8a52b75a74c09697062d10613fa2dbdf8a9db36e", [:mix], []},
+  "ex_doc": {:hex, :ex_doc, "0.10.0", "f49c237250b829df986486b38f043e6f8e19d19b41101987f7214543f75947ec", [:mix], [{:earmark, "~> 0.1.17 or ~> 0.2", [hex: :earmark, optional: true]}]},
+  "inch_ex": {:hex, :inch_ex, "0.4.0", "27829de2227edfba8fa5c431088578685c0956128b40522957077963e563e868", [:mix], [{:poison, "~> 1.2", [hex: :poison, optional: false]}]},
+  "poison": {:hex, :poison, "1.5.0", "f2f4f460623a6f154683abae34352525e1d918380267cdbd949a07ba57503248", [:mix], []},
+  "rabbit_common": {:hex, :rabbit_common, "3.5.6", "ad541be86f08cdb1c04320eb4353ad30f25555569c95cc062af28cf79b74d085", [:rebar], []}}

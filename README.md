@@ -86,8 +86,8 @@ defmodule Consumer do
   end
 
   # Confirmation sent by the broker after registering this process as a consumer
-  def handle_info({:basic_consume_ok, %{consumer_tag: consumer_tag}}, chan) do
-    {:noreply, chan}
+  def handle_info({:basic_consume_ok, %{consumer_tag: consumer_tag, channel: channel}}, _chan) do
+    {:noreply, channel}
   end
 
   # Sent by the broker when the consumer is unexpectedly cancelled (such as after a queue deletion)
@@ -197,7 +197,7 @@ end
 ```
 
 Now, when the connection drops, or if the server is down when your application
-starts, it will try to reconnect indefinitely until it succeeds. 
+starts, it will try to reconnect indefinitely until it succeeds.
 ## Types of arguments and headers
 
 The parameter `arguments` in `Queue.declare`, `Exchange.declare`, `Basic.consume` and the parameter `headers` in `Basic.publish` are a list of tuples in the form `{name, type, value}`, where `name` is a binary containing the argument/header name, `type` is an atom describing the AMQP field type and `value` a term compatible with the AMQP field type.
