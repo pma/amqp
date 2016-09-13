@@ -20,15 +20,15 @@ defmodule QueueTest do
   end
 
   test "declare queue with explicitly assigned name", meta do
-    name = rand_name
+    name = rand_name()
     assert {:ok, %{queue: ^name, message_count: 0, consumer_count: 0}} =
       Queue.declare(meta[:chan], name)
     assert {:ok, %{message_count: 0}} = Queue.delete(meta[:chan], name)
   end
 
   test "bind and unbind queue to exchange", meta do
-    queue    = rand_name
-    exchange = rand_name
+    queue    = rand_name()
+    exchange = rand_name()
     assert :ok = Exchange.fanout(meta[:chan], exchange)
     assert {:ok, %{queue: ^queue, message_count: 0, consumer_count: 0}} =
       Queue.declare(meta[:chan], queue)
@@ -39,7 +39,7 @@ defmodule QueueTest do
   end
 
   test "status returns message count and consumer count", meta do
-    queue = rand_name
+    queue = rand_name()
     assert {:ok, %{queue: ^queue, message_count: 0, consumer_count: 0}} =
       Queue.declare(meta[:chan], queue)
     assert {:ok, %{message_count: 0, consumer_count: 0}} =
@@ -48,7 +48,7 @@ defmodule QueueTest do
   end
 
   test "message_count returns number of messages in queue", meta do
-    queue = rand_name
+    queue = rand_name()
     assert {:ok, %{queue: ^queue, message_count: 0, consumer_count: 0}} =
       Queue.declare(meta[:chan], queue)
     assert Queue.message_count(meta[:chan], queue) == 0
@@ -56,7 +56,7 @@ defmodule QueueTest do
   end
 
   test "consumer_count returns number of consumers in queue", meta do
-    queue = rand_name
+    queue = rand_name()
     assert {:ok, %{queue: ^queue, message_count: 0, consumer_count: 0}} =
       Queue.declare(meta[:chan], queue)
     assert Queue.consumer_count(meta[:chan], queue) == 0
