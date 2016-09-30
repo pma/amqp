@@ -1,7 +1,7 @@
 defmodule AMQP.Mixfile do
   use Mix.Project
 
-  @version "0.1.4"
+  @version "0.1.5"
 
   def project do
     [app: :amqp,
@@ -21,10 +21,10 @@ defmodule AMQP.Mixfile do
   end
 
   defp deps do
-    [{:earmark, "~> 0.1", only: :docs},
-     {:ex_doc, "~> 0.10", only: :docs},
-     {:inch_ex, "~> 0.4", only: :docs},
-     {:amqp_client, ">= 3.5.6"}]
+    [{:earmark, "~> 1.0", only: :docs},
+     {:ex_doc, "~> 0.14", only: :docs},
+     {:inch_ex, "~> 0.5", only: :docs},
+     {:amqp_client, "3.5.6"}]
   end
 
   defp description do
