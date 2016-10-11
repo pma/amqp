@@ -32,9 +32,9 @@ You can also set connection parameters in `config.exs` of your application:
 
 ```elixir
 config :amqp,
-  host:     "localhost",
-	username: "guest",
-	password: "guest"
+  host: "localhost",
+  username: "guest",
+  password: "guest"
 ```
 
 After you are done, run `mix deps.get` in your shell to fetch and compile AMQP. Start an interactive Elixir shell with `iex -S mix`.
