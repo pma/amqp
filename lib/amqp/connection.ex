@@ -18,6 +18,7 @@ defmodule AMQP.Connection do
   connection PID.
 
   The connection parameters can be passed as a keyword list or as a AMQP URI.
+  Or, alternatively you can set up connection parameters via config.exs.
 
   When using a keyword list, the following options can be used:
 
@@ -74,19 +75,7 @@ defmodule AMQP.Connection do
     options = options
     |> normalize_ssl_options
 
-    amqp_params =
-      amqp_params_network(username:           Keyword.get(options, :username,           "guest"),
-                          password:           Keyword.get(options, :password,           "guest"),
-                          virtual_host:       Keyword.get(options, :virtual_host,       "/"),
-                          host:               Keyword.get(options, :host,               'localhost') |> to_char_list,
-                          port:               Keyword.get(options, :port,               :undefined),
-                          channel_max:        Keyword.get(options, :channel_max,        0),
-                          frame_max:          Keyword.get(options, :frame_max,          0),
-                          heartbeat:          Keyword.get(options, :heartbeat,          0),
-                          connection_timeout: Keyword.get(options, :connection_timeout, :infinity),
-                          ssl_options:        Keyword.get(options, :ssl_options,        :none),
-                          client_properties:  Keyword.get(options, :client_properties,  []),
-                          socket_options:     Keyword.get(options, :socket_options,     []))
+    amqp_params = merge_amqp_params(options)
 
     do_open(amqp_params)
   end
@@ -122,4 +111,38 @@ defmodule AMQP.Connection do
     end
   end
   defp normalize_ssl_options(options), do: options
+
+  @app_name Mix.Project.config[:app]
+
+  defp app_setting(name) do
+    Application.get_env(@app_name, name, nil)
+  end
+
+  defp merge_amqp_params(options) do
+    username           = Keyword.get(options,  :username)           || app_setting(:username)           || "guest"
+    password           = Keyword.get(options,  :password)           || app_setting(:password)           || "guest"
+    virtual_host       = Keyword.get(options,  :virtual_host)       || app_setting(:virtual_host)       || "/"
+    host               = (Keyword.get(options, :host)               || app_setting(:host)               || "localhost") |> to_char_list
+    port               = Keyword.get(options,  :port)               || app_setting(:port)               || :undefined
+    channel_max        = Keyword.get(options,  :channel_max)        || app_setting(:channel_max)        || 0
+    frame_max          = Keyword.get(options,  :frame_max)          || app_setting(:frame_max)          || 0
+    heartbeat          = Keyword.get(options,  :heartbeat)          || app_setting(:heartbeat)          || 0
+    connection_timeout = Keyword.get(options,  :connection_timeout) || app_setting(:connection_timeout) || :infinity
+    ssl_options        = Keyword.get(options,  :ssl_options)        || app_setting(:ssl_options)        || :none
+    client_properties  = Keyword.get(options,  :client_properties)  || app_setting(:client_properties)  || []
+    socket_options     = Keyword.get(options,  :socket_options)     || app_setting(:socket_options)     || []
+
+    amqp_params_network(username:           username,
+                        password:           password,
+                        virtual_host:       virtual_host,
+                        host:               host,
+                        port:               port,
+                        channel_max:        channel_max,
+                        frame_max:          frame_max,
+                        heartbeat:          heartbeat,
+                        connection_timeout: connection_timeout,
+                        ssl_options:        ssl_options,
+                        client_properties:  client_properties,
+                        socket_options:     socket_options)
+  end
 end
