@@ -164,7 +164,7 @@ def init(_opts) do
   rabbitmq_connect
 end
 
-defp rabbitmq_connect
+defp rabbitmq_connect do
     case Connection.open("amqp://guest:guest@localhost") do
       {:ok, conn} ->
         # Get notifications when the connection goes down
