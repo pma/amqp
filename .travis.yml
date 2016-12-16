@@ -6,6 +6,7 @@ sudo: false # to use faster container based build environment
 otp_release:
   - 17.5
   - 18.1
+  - 19.0
 after_script:
   - mix deps.get --only docs
   - MIX_ENV=docs mix inch.report
