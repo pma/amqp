@@ -24,7 +24,8 @@ defmodule AMQP.Mixfile do
     [{:earmark, "~> 1.0", only: :docs},
      {:ex_doc, "~> 0.14", only: :docs},
      {:inch_ex, "~> 0.5", only: :docs},
-     {:amqp_client, "3.5.6"}]
+     {:amqp_client, "~> 3.6.7-pre.1"},
+     {:rabbit_common, "~> 3.6.7-pre.1"}]
   end
 
   defp description do
