@@ -13,3 +13,7 @@ after_script:
   - MIX_ENV=docs mix inch.report
 services:
   - rabbitmq
+matrix:
+  exclude: # disable incompatible combinations
+    - elixir: 1.1.1
+      otp_release: 19.0 # this combination fails to compile
