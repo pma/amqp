@@ -8,15 +8,13 @@ Simple Elixir wrapper for the Erlang RabbitMQ client.
 
 The API is based on Langohr, a Clojure client for RabbitMQ.
 
-Disclaimer: This wrapper library is built on top of a modified version of the Erlang RabbitMQ client, since currently the officially supported Erlang client is not rebar-friendly and is not available on Hex package manager.
-
 ## Usage
 
 Add AMQP as a dependency in your `mix.exs` file.
 
 ```elixir
 def deps do
-  [{:amqp, "0.1.4"}]
+  [{:amqp, "0.2.0-pre.1"}]
 end
 ```
 
@@ -224,16 +222,7 @@ Valid argument names in `Exchange.declare` include:
 
 * "alternate-exchange"
 
+## OTP 17 and 18
 
-## Upgrading from 0.0.6 to 0.1.0
-
-Version 0.1.0 includes the following breaking changes:
-
-  * Basic.consume now takes the consumer process pid as the third argument. This is optional
-  and defaults to the caller.
-  * When registering a consumer process with Basic.consume, this process will receive the
-  messages consumed from the Queue as the tuple `{:basic_deliver, payload, meta}` instead of
-  the previous format `{payload, meta}`.
-  * A consumer process registered with Basic.consume will have to handle (or ignore) the
-  following additional messages: `{:basic_consume_ok, %{consumer_tag: consumer_tag}}`, `{:basic_cancel, %{consumer_tag: consumer_tag}}`
-  and `{:basic_cancel_ok, %{consumer_tag: consumer_tag}}`.
+OTP 17 and 18 are supported only on [version 0.1.x](https://github.com/pma/amqp/tree/v0.1).
+Please understand that we won't make further changes to 0.1 except for major security issues.
