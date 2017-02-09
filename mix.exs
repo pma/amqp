@@ -11,7 +11,7 @@ defmodule AMQP.Mixfile do
      package: package(),
      source_url: "https://github.com/pma/amqp",
      deps: deps(),
-     docs: [extras: ["README.md"], main: "extra-readme",
+     docs: [extras: ["README.md"], main: "readme",
             source_ref: "v#{@version}",
             source_url: "https://github.com/pma/amqp"]]
   end
