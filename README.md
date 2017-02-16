@@ -238,9 +238,9 @@ You want to investigate if...
 - a message processing took long time.
 
 If you use GenServer in consumer, try storing number of messages the server is
-currently processing to its state.
-If the number equals `prefetch\_count`, those messages were left without
-acknowledgements and that's why consumer would have stopped receiving more
+currently processing to the GenServer state.
+If the number equals `prefetch_count`, those messages were left without
+acknowledgements and that's why consumer have stopped receiving more
 messages.
 
 #### Old version of Elixir or OTP
