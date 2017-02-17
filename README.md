@@ -104,23 +104,26 @@ defmodule Consumer do
   end
 
   defp consume(channel, tag, redelivered, payload) do
-    try do
-      number = String.to_integer(payload)
-      if number <= 10 do
-        Basic.ack channel, tag
-        IO.puts "Consumed a #{number}."
-      else
-        Basic.reject channel, tag, requeue: false
-        IO.puts "#{number} is too big and was rejected."
-      end
-    rescue
-      exception ->
-        # Requeue unless it's a redelivered message.
-        # This means we will retry consuming a message once in case of exception
-        # before we give up and have it moved to the error queue
-        Basic.reject channel, tag, requeue: not redelivered
-        IO.puts "Error converting #{payload} to integer"
+    number = String.to_integer(payload)
+    if number <= 10 do
+      Basic.ack channel, tag
+      IO.puts "Consumed a #{number}."
+    else
+      Basic.reject channel, tag, requeue: false
+      IO.puts "#{number} is too big and was rejected."
     end
+
+  rescue
+    # Requeue unless it's a redelivered message.
+    # This means we will retry consuming a message once in case of exception
+    # before we give up and have it moved to the error queue
+    #
+    # You might also want to catch :exit signal in production code.
+    # Make sure you call ack, nack or reject otherwise comsumer will stop
+    # receiving messages.
+    exception ->
+      Basic.reject channel, tag, requeue: not redelivered
+      IO.puts "Error converting #{payload} to integer"
   end
 end
 ```
@@ -222,7 +225,25 @@ Valid argument names in `Exchange.declare` include:
 
 * "alternate-exchange"
 
-## OTP 17 and 18
+## Troubleshooting
+
+#### Consumer stops receiving messages
+
+Most popular cause is your code not sending acknowledgement(ack, nack or reject)
+after receiving a message.
+You want to investigate if...
+
+- an exception was raised and how it would be handled
+- :exit signal was thrown and how it would be handled
+- a message processing took long time.
+
+If you use GenServer in consumer, try storing number of messages the server is
+currently processing to the GenServer state.
+If the number equals `prefetch_count`, those messages were left without
+acknowledgements and that's why consumer have stopped receiving more
+messages.
+
+#### Old version of Elixir or OTP
 
 OTP 17 and 18 are supported only on [version 0.1.x](https://github.com/pma/amqp/tree/v0.1).
 Please understand that we won't make further changes to 0.1 except for major security issues.
