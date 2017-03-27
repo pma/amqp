@@ -68,6 +68,9 @@ defmodule AMQP.Connection do
       iex> AMQP.Connection.open \"amqp://guest:guest@localhost\"
       {:ok, %AMQP.Connection{}}
 
+      iex> AMQP.Connection.open {:system, \"AMQP_URL\"}
+      {:ok, %AMQP.Connection{}}
+
   """
   def open(options \\ [])
 
@@ -98,6 +101,10 @@ defmodule AMQP.Connection do
       {:ok, amqp_params} -> do_open(amqp_params)
       error              -> error
     end
+  end
+
+  def open({:system, env}) when is_binary(env) do
+    open(System.get_env(env))
   end
 
   @doc """
