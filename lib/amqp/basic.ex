@@ -70,7 +70,7 @@ defmodule AMQP.Basic do
               user_id:          Keyword.get(options, :user_id,          :undefined),
               app_id:           Keyword.get(options, :app_id,           :undefined),
               cluster_id:       Keyword.get(options, :cluster_id,       :undefined))
-    :amqp_channel.cast pid, basic_publish, amqp_msg(props: p_basic, payload: payload)
+    :amqp_channel.call pid, basic_publish, amqp_msg(props: p_basic, payload: payload)
   end
 
   @doc """
