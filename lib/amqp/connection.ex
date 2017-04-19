@@ -101,6 +101,71 @@ defmodule AMQP.Connection do
   end
 
   @doc """
+  Opens an new direct Connection to an AMQP broker.
+
+  Direct connection is the special type of connection that is
+  supported by RabbitMQ broker, where Erlang distribution protocol is
+  used to communicate with broker. It's a bit faster than the regular
+  AMQP protocol, as there is no need to serialize and deserialize AMQP
+  frames (especially when we are using this library at the same BEAM
+  node where the RabbitMQ runs). But it's less secure, as giving
+  direct access to a client means it has full control over RabbitMQ
+  node.
+
+  The connections created by this function are not restaretd
+  automatically, see open/1 for more details.
+
+  The connection parameters are passed as a keyword list with the
+  following options available:
+
+  # Options
+    * `:username` - The name of a user registered with the broker (defaults to `:none`);
+    * `:password` - The password of the user (defaults to `:none`);
+    * `:virtual_host` - The name of a virtual host in the broker (defaults to \"/\");
+    * `:node` - Erlang node name to connect to (defaults to the current node);
+    * `:client_properties` - A list of extra client properties to be sent to the server, defaults to `[]`;
+
+  # Adapter options
+
+  Additional details can be provided when a direct connection is used
+  to provide connectivity for some non-AMQP protocol (like it happens
+  in STOMP and MQTT plugins for RabbitMQ). We assume that you know
+  what you are doing in this case, here is the options that maps to
+  corresponding fields of `#amqp_adapter_info{}` record:
+  `:adapter_host`, `:adapter_port`, `:adapter_peer_host`,
+  `:adapter_peer_port`, `:adapter_name`, `:adapter_protocol`,
+  `:adapter_additional_info`.
+
+  ## Examples
+
+      iex> AMQP.Connection.open node: :rabbit@localhost
+      {:ok, %AMQP.Connection{}}
+
+  """
+  def open_direct(options \\ [])
+
+  def open_direct(options) when is_list(options) do
+    adapter_info = amqp_adapter_info(
+      host: Keyword.get(options, :adapter_host, :unknown),
+      port: Keyword.get(options, :adapter_port, :unknown),
+      peer_host: Keyword.get(options, :adapter_peer_host, :unknown),
+      peer_port: Keyword.get(options, :adapter_peer_port, :unknown),
+      name: Keyword.get(options, :adapter_name, :unknown),
+      protocol: Keyword.get(options, :adapter_protocol, :unknown),
+      additional_info: Keyword.get(options, :adapter_additional_info, []))
+
+    amqp_params = amqp_params_direct(
+      username: Keyword.get(options, :username, :none),
+      password: Keyword.get(options, :password, :none),
+      virtual_host: Keyword.get(options, :virtual_host, "/"),
+      node: Keyword.get(options, :node, node()),
+      adapter_info: adapter_info,
+      client_properties: Keyword.get(options, :client_properties, []))
+
+    do_open(amqp_params)
+  end
+
+  @doc """
   Closes an open Connection.
   """
   def close(conn) do
