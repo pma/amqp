@@ -44,4 +44,18 @@ defmodule AMQP.Confirm do
     :amqp_channel.wait_for_confirms_or_die(pid, timeout)
   end
 
+  @doc """
+  Registers a process as a confirmation handler for the given channel.
+  """
+  def register_confirm_handler(%Channel{pid: pid}, handler_pid) do
+    :amqp_channel.register_confirm_handler(pid, handler_pid)
+  end
+
+  @doc """
+  Unregisters a process previously registered as a confirmation handler
+  for the given channel.
+  """
+  def unregister_confirm_handler(%Channel{pid: pid}) do
+    :amqp_channel.unregister_confirm_handler(pid)
+  end
 end
