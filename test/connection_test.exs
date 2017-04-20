@@ -3,18 +3,19 @@ defmodule ConnectionTest do
 
   alias AMQP.Connection
 
+  @tag :skip_ci
+  # This test assumes that we have a running RabbitMQ with short
+  # nodename 'rabbit@localhost', and that it uses the same Erlang
+  # cookie as we do. And it's better to have RabbitMQ of version
+  # equal to that of amqp_client library used. We can achieve this
+  # with following sequence of commands under the same user that
+  # will run the test-suite:
+  #
+  # wget https://github.com/rabbitmq/rabbitmq-server/releases/download/rabbitmq_v3_6_9/rabbitmq-server-generic-unix-3.6.9.tar.xz
+  # tar xJvf rabbitmq-server-generic-unix-3.6.9.tar.xz
+  # cd rabbitmq_server-3.6.9
+  # RABBITMQ_NODENAME=rabbit@localhost ./sbin/rabbitmq-server
   test "open direct connection" do
-    # This test assumes that we have a running RabbitMQ with short
-    # nodename 'rabbit@localhost', and that it uses the same Erlang
-    # cookie as we do. And it's better to have RabbitMQ of version
-    # equal to that of amqp_client library used. We can achieve this
-    # with following sequence of commands under the same user that
-    # will run the test-suite:
-    #
-    # wget https://github.com/rabbitmq/rabbitmq-server/releases/download/rabbitmq_v3_6_9/rabbitmq-server-generic-unix-3.6.9.tar.xz
-    # tar xJvf rabbitmq-server-generic-unix-3.6.9.tar.xz
-    # cd rabbitmq_server-3.6.9
-    # RABBITMQ_NODENAME=rabbit@localhost ./sbin/rabbitmq-server
     :ok = ensure_distribution()
     assert {:ok, conn} = Connection.open_direct node: :rabbit@localhost
     assert :ok = Connection.close(conn)
