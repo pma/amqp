@@ -3,12 +3,9 @@ defmodule AMQP.Basic do
   Functions to publish, consume and acknowledge messages.
   """
 
-  require Record
   import AMQP.Core
   alias AMQP.Utils
   alias AMQP.Channel
-
-  Record.defrecordp :amqp_msg, [props: p_basic(), payload: ""]
 
   @doc """
   Publishes a message to an Exchange.
@@ -305,5 +302,74 @@ defmodule AMQP.Basic do
     basic_cancel = basic_cancel(consumer_tag: consumer_tag, nowait: Keyword.get(options, :no_wait, false))
     basic_cancel_ok(consumer_tag: consumer_tag) = :amqp_channel.call pid, basic_cancel
     {:ok, consumer_tag}
+  end
+
+  @doc """
+  Registers a handler to deal with returned messages. The registered
+  process will receive `{:basic_return, payload, meta}` data structures.
+  """
+  def return(%Channel{pid: pid}, return_handler_pid) do
+    adapter_pid = spawn fn ->
+      Process.flag(:trap_exit, true)
+      Process.monitor(return_handler_pid)
+      Process.monitor(pid)
+      handle_return_messages(pid, return_handler_pid)
+    end
+
+    :amqp_channel.register_return_handler(pid, adapter_pid)
+  end
+
+  @doc """
+  Removes the return handler, if it exists. Does nothing if there is no
+  such handler.
+  """
+  def cancel_return(%Channel{pid: pid}) do
+    :amqp_channel.unregister_return_handler(pid)
+  end
+
+  defp handle_return_messages(chan_pid, return_handler_pid) do
+    receive do
+      {basic_return(reply_code: reply_code,
+                    reply_text: reply_text,
+                    exchange: exchange,
+                    routing_key: routing_key),
+       amqp_msg(props: p_basic(content_type: content_type,
+                               content_encoding: content_encoding,
+                               headers: headers,
+                               delivery_mode: delivery_mode,
+                               priority: priority,
+                               correlation_id: correlation_id,
+                               reply_to: reply_to,
+                               expiration: expiration,
+                               message_id: message_id,
+                               timestamp: timestamp,
+                               type: type,
+                               user_id: user_id,
+                               app_id: app_id,
+                               cluster_id: cluster_id), payload: payload)} ->
+        send return_handler_pid, {:basic_return, payload, %{reply_code: reply_code,
+                                                            reply_text: reply_text,
+                                                            exchange: exchange,
+                                                            routing_key: routing_key,
+                                                            content_type: content_type,
+                                                            content_encoding: content_encoding,
+                                                            headers: headers,
+                                                            persistent: delivery_mode == 2,
+                                                            priority: priority,
+                                                            correlation_id: correlation_id,
+                                                            reply_to: reply_to,
+                                                            expiration: expiration,
+                                                            message_id: message_id,
+                                                            timestamp: timestamp,
+                                                            type: type,
+                                                            user_id: user_id,
+                                                            app_id: app_id,
+                                                            cluster_id: cluster_id}}
+
+        handle_return_messages(chan_pid, return_handler_pid)
+
+      {:DOWN, _ref, :process, _pid, reason} ->
+        exit(reason)
+    end
   end
 end

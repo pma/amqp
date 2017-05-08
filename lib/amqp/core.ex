@@ -43,4 +43,5 @@ defmodule AMQP.Core do
   Record.defrecord :amqp_params_network, :'amqp_params_network', Record.extract(:'amqp_params_network', from_lib: "amqp_client/include/amqp_client.hrl")
   Record.defrecord :amqp_params_direct,  :'amqp_params_direct',  Record.extract(:'amqp_params_direct',  from_lib: "amqp_client/include/amqp_client.hrl")
   Record.defrecord :amqp_adapter_info,   :'amqp_adapter_info',   Record.extract(:'amqp_adapter_info',   from_lib: "amqp_client/include/amqp_client.hrl")
+  Record.defrecord :amqp_msg,            :'amqp_msg',            Record.extract(:'amqp_msg',            from_lib: "amqp_client/include/amqp_client.hrl")
 end
