@@ -19,4 +19,8 @@ defmodule AMQP.Utils do
   def to_type_tuple({name, value}) when is_float(value) do
     to_type_tuple {name, :float, value}
   end
+  def to_type_tuple({name, value}) when is_list(value) or is_map(value) do
+    json = Poison.Encoder.encode(value, []) |> to_string()
+    to_type_tuple {name, :longstr, json}
+  end
 end
