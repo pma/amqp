@@ -64,6 +64,6 @@ defmodule QueueTest do
   end
 
   defp rand_name do
-    :crypto.rand_bytes(8) |> Base.encode64
+    :crypto.strong_rand_bytes(8) |> Base.encode64
   end
 end
