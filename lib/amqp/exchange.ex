@@ -29,6 +29,7 @@ but only when bound to other exchanges. Internal exchanges are used to construct
 wiring that is not visible to applications.
 
   """
+  @spec declare(Channel.t, String.t, atom, keyword) :: :ok
   def declare(%Channel{pid: pid}, exchange, type \\ :direct, options \\ []) do
     exchange_declare =
       exchange_declare(exchange:    exchange,
@@ -47,6 +48,7 @@ wiring that is not visible to applications.
   Deletes an Exchange by name. When an Exchange is deleted all bindings to it are
   also deleted
   """
+  @spec delete(Channel.t, String.t, keyword) :: :ok
   def delete(%Channel{pid: pid}, exchange, options \\ []) do
     exchange_delete =
       exchange_delete(exchange:  exchange,
@@ -60,6 +62,7 @@ wiring that is not visible to applications.
   Binds an Exchange to another Exchange or a Queue using the
   exchange.bind AMQP method (a RabbitMQ-specific extension)
   """
+  @spec bind(Channel.t, String.t, String.t, keyword) :: :ok
   def bind(%Channel{pid: pid}, destination, source, options \\ []) do
     exchange_bind =
       exchange_bind(destination: destination,
@@ -75,6 +78,7 @@ wiring that is not visible to applications.
   Unbinds an Exchange from another Exchange or a Queue using the
   exchange.unbind AMQP method (a RabbitMQ-specific extension)
   """
+  @spec unbind(Channel.t, String.t, String.t, keyword) :: :ok
   def unbind(%Channel{pid: pid}, destination, source, options \\ []) do
     exchange_unbind =
       exchange_unbind(destination: destination,
@@ -89,6 +93,7 @@ wiring that is not visible to applications.
   @doc """
   Convenience function to declare an Exchange of type `direct`.
   """
+  @spec direct(Channel.t, String.t, keyword) :: :ok
   def direct(%Channel{} = channel, exchange, options \\ []) do
     declare(channel, exchange, :direct, options)
   end
@@ -96,6 +101,7 @@ wiring that is not visible to applications.
   @doc """
   Convenience function to declare an Exchange of type `fanout`.
   """
+  @spec fanout(Channel.t, String.t, keyword) :: :ok
   def fanout(%Channel{} = channel, exchange, options \\ []) do
     declare(channel, exchange, :fanout, options)
   end
@@ -103,8 +109,8 @@ wiring that is not visible to applications.
   @doc """
   Convenience function to declare an Exchange of type `topic`.
   """
+  @spec topic(Channel.t, String.t, keyword) :: :ok
   def topic(%Channel{} = channel, exchange, options \\ []) do
     declare(channel, exchange, :topic, options)
   end
-
 end

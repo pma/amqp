@@ -69,6 +69,7 @@ defmodule AMQP.Connection do
       {:ok, %AMQP.Connection{}}
 
   """
+  @spec open(keyword|String.t) :: {:ok, t} | {:error, atom} | {:error, any}
   def open(options \\ [])
 
   def open(options) when is_list(options) do
@@ -138,10 +139,11 @@ defmodule AMQP.Connection do
 
   ## Examples
 
-      iex> AMQP.Connection.open node: :rabbit@localhost
+      AMQP.Connection.open_direct node: :rabbit@localhost
       {:ok, %AMQP.Connection{}}
 
   """
+  @spec open_direct(keyword) :: {:ok, t} | {:error, atom}
   def open_direct(options \\ [])
 
   def open_direct(options) when is_list(options) do
@@ -168,6 +170,7 @@ defmodule AMQP.Connection do
   @doc """
   Closes an open Connection.
   """
+  @spec close(t) :: :ok | {:error, atom}
   def close(conn) do
     :amqp_connection.close(conn.pid)
   end
