@@ -27,7 +27,9 @@ defmodule AMQP.Mixfile do
 
       {:earmark, "~> 1.0", only: :docs},
       {:ex_doc, "~> 0.15", only: :docs},
-      {:inch_ex, "~> 0.5", only: :docs}
+      {:inch_ex, "~> 0.5", only: :docs},
+
+      {:dialyxir, "~> 0.5", only: :dev, runtime: false}
     ]
   end
 
