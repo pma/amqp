@@ -318,6 +318,7 @@ defmodule AMQP.Basic do
   Registers a handler to deal with returned messages. The registered
   process will receive `{:basic_return, payload, meta}` data structures.
   """
+  @spec return(Channel.t, pid) :: :ok
   def return(%Channel{pid: pid}, return_handler_pid) do
     adapter_pid = spawn fn ->
       Process.flag(:trap_exit, true)
@@ -333,6 +334,7 @@ defmodule AMQP.Basic do
   Removes the return handler, if it exists. Does nothing if there is no
   such handler.
   """
+  @spec cancel_return(Channel.t) :: :ok
   def cancel_return(%Channel{pid: pid}) do
     :amqp_channel.unregister_return_handler(pid)
   end
