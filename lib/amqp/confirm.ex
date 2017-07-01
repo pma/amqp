@@ -10,10 +10,12 @@ defmodule AMQP.Confirm do
   @doc """
   Activates publishing confirmations on the channel.
   """
-  @spec select(Channel.t) :: :ok
+  @spec select(Channel.t) :: :ok | AMQP.Basic.error
   def select(%Channel{pid: pid}) do
-    confirm_select_ok() = :amqp_channel.call pid, confirm_select()
-    :ok
+    case :amqp_channel.call(pid, confirm_select()) do
+      confirm_select_ok() -> :ok
+      error -> {:error, error}
+    end
   end
 
   @doc """

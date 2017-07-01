@@ -14,7 +14,7 @@ defmodule AMQP.Mixfile do
      dialyzer: [
        ignore_warnings: "dialyzer.ignore-warnings",
        plt_add_deps: :transitive,
-       flags: [:error_handling, :race_conditions, :no_opaque]
+       flags: [:error_handling, :race_conditions, :no_opaque, :underspecs]
      ],
      docs: [extras: ["README.md"], main: "readme",
             source_ref: "v#{@version}",
