@@ -11,6 +11,11 @@ defmodule AMQP.Mixfile do
      package: package(),
      source_url: "https://github.com/pma/amqp",
      deps: deps(),
+     dialyzer: [
+       ignore_warnings: "dialyzer.ignore-warnings",
+       plt_add_deps: :transitive,
+       flags: [:error_handling, :race_conditions, :no_opaque]
+     ],
      docs: [extras: ["README.md"], main: "readme",
             source_ref: "v#{@version}",
             source_url: "https://github.com/pma/amqp"]]
@@ -27,7 +32,9 @@ defmodule AMQP.Mixfile do
 
       {:earmark, "~> 1.0", only: :docs},
       {:ex_doc, "~> 0.15", only: :docs},
-      {:inch_ex, "~> 0.5", only: :docs}
+      {:inch_ex, "~> 0.5", only: :docs},
+
+      {:dialyxir, "~> 0.5", only: :dev, runtime: false}
     ]
   end
 
