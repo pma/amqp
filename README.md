@@ -8,6 +8,15 @@ Simple Elixir wrapper for the Erlang RabbitMQ client.
 
 The API is based on Langohr, a Clojure client for RabbitMQ.
 
+## WARNING - this branch is under the development
+
+We are preparing 1.0.0 release which will have some backward imcompatibilities
+against the current stable version - 0.2.x.
+
+If you are looking for a document for 0.2.x please visit to [v0.2 branch](https://github.com/pma/amqp/tree/v0.2).
+
+If you want to check the plan and progress for 1.0.0 please check out [this github issue](https://github.com/pma/amqp/issues/69).
+
 ## Usage
 
 Add AMQP as a dependency in your `mix.exs` file.
