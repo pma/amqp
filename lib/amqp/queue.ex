@@ -23,7 +23,7 @@ defmodule AMQP.Queue do
     * `:passive` - If set, raises an error unless the queue already exists
 
   """
-  @spec declare(Channel.t, String.t, keyword) :: {:ok, map}
+  @spec declare(Channel.t, String.t, keyword) :: {:ok, map} | Basic.error
   def declare(%Channel{pid: pid}, queue \\ "", options \\ []) do
     queue_declare =
       queue_declare(queue:       queue,
@@ -33,16 +33,21 @@ defmodule AMQP.Queue do
                     auto_delete: Keyword.get(options, :auto_delete, false),
                     nowait:      Keyword.get(options, :no_wait,     false),
                     arguments:   Keyword.get(options, :arguments,   []) |> Utils.to_type_tuple)
-    queue_declare_ok(queue:          queue,
-                     message_count:  message_count,
-                     consumer_count: consumer_count) = :amqp_channel.call pid, queue_declare
-    {:ok, %{queue: queue, message_count: message_count, consumer_count: consumer_count}}
+
+    case :amqp_channel.call(pid, queue_declare) do
+      queue_declare_ok(queue:          queue,
+                       message_count:  message_count,
+                       consumer_count: consumer_count) ->
+        {:ok, %{queue: queue, message_count: message_count, consumer_count: consumer_count}}
+
+      error -> {:error, error}
+    end
   end
 
   @doc """
   Binds a Queue to an Exchange
   """
-  @spec bind(Channel.t, String.t, String.t, keyword) :: :ok
+  @spec bind(Channel.t, String.t, String.t, keyword) :: :ok | Basic.error
   def bind(%Channel{pid: pid}, queue, exchange, options \\ []) do
     queue_bind =
       queue_bind(queue:       queue,
@@ -50,52 +55,63 @@ defmodule AMQP.Queue do
                  routing_key: Keyword.get(options, :routing_key, ""),
                  nowait:      Keyword.get(options, :no_wait,     false),
                  arguments:   Keyword.get(options, :arguments,   []) |> Utils.to_type_tuple)
-    queue_bind_ok() = :amqp_channel.call pid, queue_bind
-    :ok
+
+    case :amqp_channel.call(pid, queue_bind) do
+      queue_bind_ok() -> :ok
+      error -> {:error, error}
+    end
   end
 
   @doc """
   Unbinds a Queue from an Exchange
   """
-  @spec unbind(Channel.t, String.t, String.t, keyword) :: :ok
+  @spec unbind(Channel.t, String.t, String.t, keyword) :: :ok | Basic.error
   def unbind(%Channel{pid: pid}, queue, exchange, options \\ []) do
     queue_unbind =
       queue_unbind(queue:       queue,
                    exchange:    exchange,
                    routing_key: Keyword.get(options, :routing_key, ""),
                    arguments:   Keyword.get(options, :arguments,   []))
-    queue_unbind_ok() = :amqp_channel.call pid, queue_unbind
-    :ok
+
+    case :amqp_channel.call(pid, queue_unbind) do
+      queue_unbind_ok() -> :ok
+      error -> {:error, error}
+    end
   end
 
   @doc """
   Deletes a Queue by name
   """
-  @spec delete(Channel.t, String.t, keyword) :: {:ok, map}
+  @spec delete(Channel.t, String.t, keyword) :: {:ok, map} | Basic.error
   def delete(%Channel{pid: pid}, queue, options \\ []) do
     queue_delete =
       queue_delete(queue:     queue,
                    if_unused: Keyword.get(options, :if_unused, false),
                    if_empty:  Keyword.get(options, :if_empty,  false),
                    nowait:    Keyword.get(options, :no_wait,   false))
-    queue_delete_ok(message_count: message_count) = :amqp_channel.call pid, queue_delete
-    {:ok, %{message_count: message_count}}
+
+    case :amqp_channel.call(pid, queue_delete) do
+      queue_delete_ok(message_count: message_count) -> {:ok, %{message_count: message_count}}
+      error -> {:error, error}
+    end
   end
 
   @doc """
   Discards all messages in the Queue
   """
-  @spec purge(Channel.t, String.t) :: {:ok, map}
+  @spec purge(Channel.t, String.t) :: {:ok, map} | Basic.error
   def purge(%Channel{pid: pid}, queue) do
-    queue_purge_ok(message_count: message_count) = :amqp_channel.call pid, queue_purge(queue: queue)
-    {:ok, %{message_count: message_count}}
+    case :amqp_channel.call(pid, queue_purge(queue: queue)) do
+      queue_purge_ok(message_count: message_count) -> {:ok, %{message_count: message_count}}
+      error -> {:error, error}
+    end
   end
 
   @doc """
   Returns the message count and consumer count for the given queue.
   Uses Queue.declare with the `passive` option set.
   """
-  @spec status(Channel.t, String.t) :: {:ok, map}
+  @spec status(Channel.t, String.t) :: {:ok, map} | Basic.error
   def status(%Channel{} = chan, queue) do
     declare(chan, queue, passive: true)
   end
@@ -104,27 +120,34 @@ defmodule AMQP.Queue do
   Returns the number of messages that are ready for delivery (e.g. not pending acknowledgements)
   in the queue
   """
-  @spec message_count(Channel.t, String.t) :: integer
+  @spec message_count(Channel.t, String.t) :: integer | Basic.error
   def message_count(%Channel{} = channel, queue) do
-    {:ok, %{message_count: message_count}} = status(channel, queue)
-    message_count
+    case status(channel, queue) do
+      {:ok, %{message_count: message_count}} -> message_count
+      error -> error
+    end
   end
 
   @doc """
   Returns a number of active consumers on the queue
   """
-  @spec consumer_count(Channel.t, String.t) :: integer
+  @spec consumer_count(Channel.t, String.t) :: integer | Basic.error
   def consumer_count(%Channel{} = channel, queue) do
-    {:ok, %{consumer_count: consumer_count}} = status(channel, queue)
-    consumer_count
+    case status(channel, queue) do
+      {:ok, %{consumer_count: consumer_count}} -> consumer_count
+      error -> error
+    end
   end
 
   @doc """
   Returns true if queue is empty (has no messages ready), false otherwise
   """
-  @spec empty?(Channel.t, String.t) :: boolean
+  @spec empty?(Channel.t, String.t) :: boolean | Basic.error
   def empty?(%Channel{} = channel, queue) do
-    message_count(channel, queue) == 0
+    case message_count(channel, queue) do
+      number when is_integer(number) -> number == 0
+      error -> error
+    end
   end
 
   @doc """
@@ -138,7 +161,7 @@ defmodule AMQP.Queue do
 
   This convenience function will spawn a process and register it using AMQP.Basic.consume.
   """
-  @spec subscribe(Channel.t, String.t, (String.t, map -> any)) :: {:ok, String.t}
+  @spec subscribe(Channel.t, String.t, (String.t, map -> any)) :: {:ok, String.t} | Basic.error
   def subscribe(%Channel{} = channel, queue, fun) when is_function(fun, 2) do
     consumer_pid = spawn fn -> do_start_consumer(channel, fun) end
     Basic.consume(channel, queue, consumer_pid)
@@ -174,7 +197,7 @@ defmodule AMQP.Queue do
   @doc """
   Convenience to end a Queue consumer.
   """
-  @spec unsubscribe(Channel.t, String.t) :: {:ok, String.t}
+  @spec unsubscribe(Channel.t, String.t) :: {:ok, String.t} | Basic.error
   def unsubscribe(%Channel{} = channel, consumer_tag) do
     Basic.cancel(channel, consumer_tag)
   end

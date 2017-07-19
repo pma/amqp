@@ -4,6 +4,7 @@ defmodule BasicTest do
   alias AMQP.Connection
   alias AMQP.Channel
   alias AMQP.Basic
+  alias AMQP.Queue
 
   setup do
     {:ok, conn} = Connection.open
@@ -36,5 +37,63 @@ defmodule BasicTest do
     Basic.publish(meta[:chan], exchange, routing_key, payload, mandatory: true)
 
     refute_receive {:basic_return, _payload, _properties}
+  end
+
+  describe "basic consume" do
+    setup meta do
+      {:ok, %{queue: queue}} = Queue.declare(meta[:chan])
+      on_exit fn -> Queue.delete(meta[:chan], queue) end
+
+      {:ok, Map.put(meta, :queue, queue)}
+    end
+
+    test "consumer receives :basic_consume_ok message", meta do
+      {:ok, consumer_tag} = Basic.consume(meta[:chan], meta[:queue])
+      assert_receive {:basic_consume_ok, %{consumer_tag: ^consumer_tag}}
+    end
+
+    test "consumer receives :basic_deliver message", meta do
+      {:ok, consumer_tag} = Basic.consume(meta[:chan], meta[:queue])
+
+      payload = "foo"
+      correlation_id = "correlation_id"
+      exchange = ""
+      routing_key = meta[:queue]
+
+      Basic.publish(meta[:chan], exchange, routing_key, payload, correlation_id: correlation_id)
+
+      assert_receive {:basic_deliver,
+                      ^payload,
+                      %{consumer_tag: ^consumer_tag,
+                        correlation_id: ^correlation_id,
+                        routing_key: ^routing_key}}
+    end
+
+    test "consumer receives :basic_cancel_ok message", meta do
+      {:ok, consumer_tag} = Basic.consume(meta[:chan], meta[:queue])
+      {:ok, ^consumer_tag} = Basic.cancel(meta[:chan], consumer_tag)
+
+      assert_receive {:basic_cancel_ok, %{consumer_tag: ^consumer_tag}}
+    end
+
+    test "consumer receives :basic_cancel message", meta do
+      {:ok, consumer_tag} = Basic.consume(meta[:chan], meta[:queue])
+      {:ok, _} = Queue.delete(meta[:chan], meta[:queue])
+
+      assert_receive {:basic_cancel, %{consumer_tag: ^consumer_tag}}
+    end
+
+    test "cancel returns {:ok, consumer_tag}", meta do
+      {:ok, consumer_tag} = Basic.consume(meta[:chan], meta[:queue])
+
+      assert {:ok, ^consumer_tag} = Basic.cancel(meta[:chan], consumer_tag)
+    end
+
+    test "cancel returns {:error, reason} when channel is closing or blocking", meta do
+      {:ok, consumer_tag} = Basic.consume(meta[:chan], meta[:queue])
+
+      spawn fn -> Channel.close(meta[:chan]) end
+      spawn fn -> assert {:error, :closing} = Basic.cancel(meta[:chan], consumer_tag) end
+    end
   end
 end
