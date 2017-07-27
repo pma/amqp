@@ -194,17 +194,26 @@ defp rabbitmq_connect do
         {:ok, chan}
       {:error, _} ->
         # Reconnection loop
-        :timer.sleep(10000)
-        rabbitmq_connect
+        reconnect
     end
 end
 
 # 2. Implement a callback to handle DOWN notifications from the system
 #    This callback should try to reconnect to the server
 
-def handle_info({:DOWN, _, :process, _pid, _reason}, _) do
-  {:ok, chan} = rabbitmq_connect
-  {:noreply, chan}
+def handle_info({:DOWN, _, :process, _pid, _reason}, old_chan), do: connector(old_chan)
+
+def handle_info(:rabbitmq_connect, old_chan), do: connector(old_chan)
+
+defp connector(old_chan) do
+  case rabbitmq_connect do
+    {:ok, chan} -> {:noreply, chan}
+    _ -> {:noreply, old_chan}
+  end
+end
+
+defp reconnect do
+  Process.send_after(self(), :rabbitmq_connect, 1000)
 end
 ```
 
