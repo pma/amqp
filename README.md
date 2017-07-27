@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/pma/amqp.png?branch=master)](https://travis-ci.org/pma/amqp)
 [![Hex Version](http://img.shields.io/hexpm/v/amqp.svg)](https://hex.pm/packages/amqp)
+[![Deps Status](https://beta.hexfaktor.org/badge/all/github/pma/amqp.svg)](https://beta.hexfaktor.org/github/pma/amqp)
 [![Inline docs](http://inch-ci.org/github/pma/amqp.svg?branch=master)](http://inch-ci.org/github/pma/amqp)
 
 Simple Elixir wrapper for the Erlang RabbitMQ client.
