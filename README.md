@@ -194,7 +194,7 @@ def handle_info({:DOWN, _, :process, _pid, _reason}, old_chan), do: connector(ol
 
 def handle_info(:rabbitmq_connect, old_chan), do: connector(old_chan)
 
-def connector(old_chan) do
+defp connector(old_chan) do
   case rabbitmq_connect do
     {:ok, chan} -> {:noreply, chan}
     _ -> {:noreply, old_chan}
