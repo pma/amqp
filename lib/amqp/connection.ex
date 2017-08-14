@@ -80,7 +80,7 @@ defmodule AMQP.Connection do
       amqp_params_network(username:           Keyword.get(options, :username,           "guest"),
                           password:           Keyword.get(options, :password,           "guest"),
                           virtual_host:       Keyword.get(options, :virtual_host,       "/"),
-                          host:               Keyword.get(options, :host,               'localhost') |> to_char_list,
+                          host:               Keyword.get(options, :host,               'localhost') |> to_charlist,
                           port:               Keyword.get(options, :port,               :undefined),
                           channel_max:        Keyword.get(options, :channel_max,        0),
                           frame_max:          Keyword.get(options, :frame_max,          0),
@@ -95,7 +95,7 @@ defmodule AMQP.Connection do
   end
 
   def open(uri) when is_binary(uri) do
-    case uri |> to_char_list |> :amqp_uri.parse do
+    case uri |> to_charlist |> :amqp_uri.parse do
       {:ok, amqp_params} -> do_open(amqp_params)
       error              -> error
     end
@@ -185,7 +185,7 @@ defmodule AMQP.Connection do
   defp normalize_ssl_options(options) when is_list(options) do
     for {k, v} <- options do
       if k in [:cacertfile, :cacertfile, :cacertfile] do
-        {k, to_char_list(v)}
+        {k, to_charlist(v)}
       else
         {k, v}
       end
