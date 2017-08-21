@@ -169,6 +169,7 @@ connection record holds the pid of the connection itself, we can monitor it
 and get a notification when it goes down.
 
 Example implementation (only changes from the last example):
+
 ```elixir
 # 1. Extract your connect logic into a private method rabbitmq_connect
 
@@ -177,26 +178,27 @@ def init(_opts) do
 end
 
 defp rabbitmq_connect do
-    case Connection.open("amqp://guest:guest@localhost") do
-      {:ok, conn} ->
-        # Get notifications when the connection goes down
-        Process.monitor(conn.pid)
-        # Everything else remains the same
-        {:ok, chan} = Channel.open(conn)
-        Basic.qos(chan, prefetch_count: 10)
-        Queue.declare(chan, @queue_error, durable: true)
-        Queue.declare(chan, @queue, durable: true,
-                                    arguments: [{"x-dead-letter-exchange", :longstr, ""},
-                                                {"x-dead-letter-routing-key", :longstr, @queue_error}])
-        Exchange.fanout(chan, @exchange, durable: true)
-        Queue.bind(chan, @queue, @exchange)
-        {:ok, _consumer_tag} = Basic.consume(chan, @queue)
-        {:ok, chan}
-      {:error, _} ->
-        # Reconnection loop
-        :timer.sleep(10000)
-        rabbitmq_connect
-    end
+  case Connection.open("amqp://guest:guest@localhost") do
+    {:ok, conn} ->
+      # Get notifications when the connection goes down
+      Process.monitor(conn.pid)
+      # Everything else remains the same
+      {:ok, chan} = Channel.open(conn)
+      Basic.qos(chan, prefetch_count: 10)
+      Queue.declare(chan, @queue_error, durable: true)
+      Queue.declare(chan, @queue, durable: true,
+                                  arguments: [{"x-dead-letter-exchange", :longstr, ""},
+                                              {"x-dead-letter-routing-key", :longstr, @queue_error}])
+      Exchange.fanout(chan, @exchange, durable: true)
+      Queue.bind(chan, @queue, @exchange)
+      {:ok, _consumer_tag} = Basic.consume(chan, @queue)
+      {:ok, chan}
+
+    {:error, _} ->
+      # Reconnection loop
+      :timer.sleep(10000)
+      rabbitmq_connect
+  end
 end
 
 # 2. Implement a callback to handle DOWN notifications from the system
@@ -209,7 +211,8 @@ end
 ```
 
 Now, when the connection drops, or if the server is down when your application
-starts, it will try to reconnect indefinitely until it succeeds. 
+starts, it will try to reconnect indefinitely until it succeeds.
+
 ## Types of arguments and headers
 
 The parameter `arguments` in `Queue.declare`, `Exchange.declare`, `Basic.consume` and the parameter `headers` in `Basic.publish` are a list of tuples in the form `{name, type, value}`, where `name` is a binary containing the argument/header name, `type` is an atom describing the AMQP field type and `value` a term compatible with the AMQP field type.
