@@ -2,7 +2,6 @@
 
 [![Build Status](https://travis-ci.org/pma/amqp.png?branch=master)](https://travis-ci.org/pma/amqp)
 [![Hex Version](http://img.shields.io/hexpm/v/amqp.svg)](https://hex.pm/packages/amqp)
-[![Deps Status](https://beta.hexfaktor.org/badge/all/github/pma/amqp.svg)](https://beta.hexfaktor.org/github/pma/amqp)
 [![Inline docs](http://inch-ci.org/github/pma/amqp.svg?branch=master)](http://inch-ci.org/github/pma/amqp)
 
 Simple Elixir wrapper for the Erlang RabbitMQ client.
@@ -80,15 +79,10 @@ defmodule Consumer do
   def init(_opts) do
     {:ok, conn} = Connection.open("amqp://guest:guest@localhost")
     {:ok, chan} = Channel.open(conn)
+    setup_queue(chan)
+
     # Limit unacknowledged messages to 10
     Basic.qos(chan, prefetch_count: 10)
-    Queue.declare(chan, @queue_error, durable: true)
-    # Messages that cannot be delivered to any consumer in the main queue will be routed to the error queue
-    Queue.declare(chan, @queue, durable: true,
-                                arguments: [{"x-dead-letter-exchange", :longstr, ""},
-                                            {"x-dead-letter-routing-key", :longstr, @queue_error}])
-    Exchange.fanout(chan, @exchange, durable: true)
-    Queue.bind(chan, @queue, @exchange)
     # Register the GenServer process as a consumer
     {:ok, _consumer_tag} = Basic.consume(chan, @queue)
     {:ok, chan}
@@ -112,6 +106,16 @@ defmodule Consumer do
   def handle_info({:basic_deliver, payload, %{delivery_tag: tag, redelivered: redelivered}}, chan) do
     spawn fn -> consume(chan, tag, redelivered, payload) end
     {:noreply, chan}
+  end
+
+  defp setup_queue(chan) do
+    Queue.declare(chan, @queue_error, durable: true)
+    # Messages that cannot be delivered to any consumer in the main queue will be routed to the error queue
+    Queue.declare(chan, @queue, durable: true,
+                                arguments: [{"x-dead-letter-exchange", :longstr, ""},
+                                            {"x-dead-letter-routing-key", :longstr, @queue_error}])
+    Exchange.fanout(chan, @exchange, durable: true)
+    Queue.bind(chan, @queue, @exchange)
   end
 
   defp consume(channel, tag, redelivered, payload) do
@@ -184,13 +188,8 @@ defp rabbitmq_connect do
       Process.monitor(conn.pid)
       # Everything else remains the same
       {:ok, chan} = Channel.open(conn)
+      setup_queue(chan)
       Basic.qos(chan, prefetch_count: 10)
-      Queue.declare(chan, @queue_error, durable: true)
-      Queue.declare(chan, @queue, durable: true,
-                                  arguments: [{"x-dead-letter-exchange", :longstr, ""},
-                                              {"x-dead-letter-routing-key", :longstr, @queue_error}])
-      Exchange.fanout(chan, @exchange, durable: true)
-      Queue.bind(chan, @queue, @exchange)
       {:ok, _consumer_tag} = Basic.consume(chan, @queue)
       {:ok, chan}
 
