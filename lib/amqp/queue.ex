@@ -5,9 +5,7 @@ defmodule AMQP.Queue do
 
   import AMQP.Core
 
-  alias AMQP.Channel
-  alias AMQP.Basic
-  alias AMQP.Utils
+  alias AMQP.{Basic, Channel, Utils}
 
   @doc """
   Declares a queue. The optional `queue` parameter is used to set the name.

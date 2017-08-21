@@ -8,7 +8,7 @@ defmodule AMQP.Connection do
   alias AMQP.Connection
 
   defstruct [:pid]
-  @type t :: %AMQP.Connection{pid: pid}
+  @type t :: %Connection{pid: pid}
 
   @doc """
   Opens an new Connection to an AMQP broker.

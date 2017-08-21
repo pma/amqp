@@ -4,8 +4,7 @@ defmodule AMQP.Basic do
   """
 
   import AMQP.Core
-  alias AMQP.Utils
-  alias AMQP.Channel
+  alias AMQP.{Channel, Utils}
 
   @type error :: {:error, reason :: :blocked | :closing}
 
