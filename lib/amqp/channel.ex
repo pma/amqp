@@ -3,11 +3,10 @@ defmodule AMQP.Channel do
   Functions to operate on Channels.
   """
 
-  alias AMQP.Connection
-  alias AMQP.Channel
+  alias AMQP.{Connection, Channel}
 
   defstruct [:conn, :pid]
-  @type t :: %AMQP.Channel{conn: AMQP.Connection.t, pid: pid}
+  @type t :: %Channel{conn: Connection.t, pid: pid}
 
   @doc """
   Opens a new Channel in a previously opened Connection.

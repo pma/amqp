@@ -5,8 +5,7 @@ defmodule AMQP.Exchange do
 
   import AMQP.Core
 
-  alias AMQP.Basic
-  alias AMQP.Channel
+  alias AMQP.{Basic, Channel}
 
   @doc """
   Declares an Exchange. The default Exchange type is `direct`.
