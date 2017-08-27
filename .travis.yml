@@ -1,15 +1,15 @@
 language: elixir
 sudo: false # to use faster container based build environment
 elixir:
-  - 1.4.4
+  - 1.5.1
 otp_release:
-  - 19.3
+  - 20.0
 matrix:
   include:
-    - elixir: 1.4.4
-      otp_release: 19.3
-    - elixir: 1.4.5
+    - elixir: 1.5.1
       otp_release: 20.0
+    - elixir: 1.4.5
+      otp_release: 19.3
 script: mix test --exclude skip_ci
 after_script:
   - mix deps.get --only docs
