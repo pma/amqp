@@ -6,7 +6,7 @@ defmodule AMQP.Channel do
   alias AMQP.{Connection, Channel}
 
   defstruct [:conn, :pid]
-  @type t :: %Channel{conn: Connection.t, pid: pid}
+  @type t :: %Channel{conn: Connection.t | nil, pid: pid}
 
   @doc """
   Opens a new Channel in a previously opened Connection.
