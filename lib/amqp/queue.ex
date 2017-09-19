@@ -116,35 +116,44 @@ defmodule AMQP.Queue do
 
   @doc """
   Returns the number of messages that are ready for delivery (e.g. not pending acknowledgements)
-  in the queue
+  in the queue.
+
+  Returns nil when it fails to get the message count.
+  Use `status/2` to get the error detail.
   """
-  @spec message_count(Channel.t, String.t) :: integer | Basic.error
+  @spec message_count(Channel.t, String.t) :: integer | nil
   def message_count(%Channel{} = channel, queue) do
     case status(channel, queue) do
       {:ok, %{message_count: message_count}} -> message_count
-      error -> error
+      _error -> nil
     end
   end
 
   @doc """
-  Returns a number of active consumers on the queue
+  Returns a number of active consumers on the queue.
+
+  Returns nil when it fails to get the information.
+  Use `status/2` to get the error detail.
   """
-  @spec consumer_count(Channel.t, String.t) :: integer | Basic.error
+  @spec consumer_count(Channel.t, String.t) :: integer | nil
   def consumer_count(%Channel{} = channel, queue) do
     case status(channel, queue) do
       {:ok, %{consumer_count: consumer_count}} -> consumer_count
-      error -> error
+      _error -> nil
     end
   end
 
   @doc """
-  Returns true if queue is empty (has no messages ready), false otherwise
+  Returns true if queue is empty (has no messages ready), false otherwise.
+
+  Returns nil when it fails to get the information.
+  Use `status/2` to get the error detail.
   """
-  @spec empty?(Channel.t, String.t) :: boolean | Basic.error
+  @spec empty?(Channel.t, String.t) :: boolean | nil
   def empty?(%Channel{} = channel, queue) do
     case message_count(channel, queue) do
       number when is_integer(number) -> number == 0
-      error -> error
+      _error -> nil
     end
   end
 
