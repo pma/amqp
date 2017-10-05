@@ -22,8 +22,11 @@ defmodule AMQP.Channel do
   @doc """
   Closes an open Channel.
   """
-  @spec close(Channel.t) :: :ok | :closing
+  @spec close(Channel.t) :: :ok | {:error, any}
   def close(%Channel{pid: pid}) do
-    :amqp_channel.close(pid)
+    case :amqp_channel.close(pid) do
+      :ok -> :ok
+      error -> {:error, error}
+    end
   end
 end

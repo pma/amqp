@@ -170,9 +170,12 @@ defmodule AMQP.Connection do
   @doc """
   Closes an open Connection.
   """
-  @spec close(t) :: :ok | {:error, atom}
+  @spec close(t) :: :ok | {:error, any}
   def close(conn) do
-    :amqp_connection.close(conn.pid)
+    case :amqp_connection.close(conn.pid) do
+      :ok -> :ok
+      error -> {:error, error}
+    end
   end
 
   defp do_open(amqp_params) do
