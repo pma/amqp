@@ -24,7 +24,7 @@ Add AMQP as a dependency in your `mix.exs` file.
 
 ```elixir
 def deps do
-  [{:amqp, "~> 1.0.0-pre.1"}]
+  [{:amqp, "~> 1.0.0-pre.2"}]
 end
 ```
 
