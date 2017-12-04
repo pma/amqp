@@ -27,8 +27,9 @@ defmodule AMQP.Mixfile do
 
   defp deps do
     [
-      {:amqp_client, "~> 3.6.8"},
-      {:rabbit_common, "~> 3.6.8"},
+      {:amqp_client, "~> 3.6.14"},
+      {:rabbit_common, "~> 3.6.14"},
+      {:recon, "~> 2.3.2"},
 
       {:earmark, "~> 1.0", only: :docs},
       {:ex_doc, "~> 0.15", only: :docs},
