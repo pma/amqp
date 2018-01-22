@@ -5,7 +5,7 @@ defmodule AMQP.Queue do
 
   import AMQP.Core
 
-  alias AMQP.{Basic, Channel, Utils}
+  alias AMQP.{Basic, Channel, Utils, BasicError}
 
   @doc """
   Declares a queue. The optional `queue` parameter is used to set the name.
@@ -117,43 +117,34 @@ defmodule AMQP.Queue do
   @doc """
   Returns the number of messages that are ready for delivery (e.g. not pending acknowledgements)
   in the queue.
-
-  Returns nil when it fails to get the message count.
-  Use `status/2` to get the error detail.
   """
-  @spec message_count(Channel.t, String.t) :: integer | nil
+  @spec message_count(Channel.t, String.t) :: integer
   def message_count(%Channel{} = channel, queue) do
     case status(channel, queue) do
       {:ok, %{message_count: message_count}} -> message_count
-      _error -> nil
+      {:error, reason} -> raise(AMQP.BasicError, reason: reason)
     end
   end
 
   @doc """
   Returns a number of active consumers on the queue.
-
-  Returns nil when it fails to get the information.
-  Use `status/2` to get the error detail.
   """
-  @spec consumer_count(Channel.t, String.t) :: integer | nil
+  @spec consumer_count(Channel.t, String.t) :: integer
   def consumer_count(%Channel{} = channel, queue) do
     case status(channel, queue) do
       {:ok, %{consumer_count: consumer_count}} -> consumer_count
-      _error -> nil
+      {:error, reason} -> raise(AMQP.BasicError, reason: reason)
     end
   end
 
   @doc """
   Returns true if queue is empty (has no messages ready), false otherwise.
-
-  Returns nil when it fails to get the information.
-  Use `status/2` to get the error detail.
   """
-  @spec empty?(Channel.t, String.t) :: boolean | nil
+  @spec empty?(Channel.t, String.t) :: boolean
   def empty?(%Channel{} = channel, queue) do
     case message_count(channel, queue) do
       number when is_integer(number) -> number == 0
-      _error -> nil
+      {:error, reason} -> raise(AMQP.BasicError, reason: reason)
     end
   end
 
