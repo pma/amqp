@@ -1,7 +1,7 @@
 defmodule AMQP.Mixfile do
   use Mix.Project
 
-  @version "1.0.0-pre.3"
+  @version "1.0.0-pre.4"
 
   def project do
     [app: :amqp,
@@ -22,13 +22,13 @@ defmodule AMQP.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :amqp_client]]
+    [applications: [:logger, :rabbit_common, :amqp_client]]
   end
 
   defp deps do
     [
-      {:amqp_client, "~> 3.6.14"},
-      {:rabbit_common, "~> 3.6.14"},
+      {:amqp_client, "~> 3.7.3"},
+      {:rabbit_common, "~> 3.7.3"},
       {:recon, "~> 2.3.2"},
 
       {:earmark, "~> 1.0", only: :docs},
