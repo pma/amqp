@@ -82,7 +82,7 @@ defmodule Consumer do
     setup_queue(chan)
 
     # Limit unacknowledged messages to 10
-    Basic.qos(chan, prefetch_count: 10)
+    :ok = Basic.qos(chan, prefetch_count: 10)
     # Register the GenServer process as a consumer
     {:ok, _consumer_tag} = Basic.consume(chan, @queue)
     {:ok, chan}
@@ -109,22 +109,26 @@ defmodule Consumer do
   end
 
   defp setup_queue(chan) do
-    Queue.declare(chan, @queue_error, durable: true)
+    {:ok, _} = Queue.declare(chan, @queue_error, durable: true)
     # Messages that cannot be delivered to any consumer in the main queue will be routed to the error queue
-    Queue.declare(chan, @queue, durable: true,
-                                arguments: [{"x-dead-letter-exchange", :longstr, ""},
-                                            {"x-dead-letter-routing-key", :longstr, @queue_error}])
-    Exchange.fanout(chan, @exchange, durable: true)
-    Queue.bind(chan, @queue, @exchange)
+    {:ok, _} = Queue.declare(chan, @queue,
+                             durable: true,
+                             arguments: [
+                               {"x-dead-letter-exchange", :longstr, ""},
+                               {"x-dead-letter-routing-key", :longstr, @queue_error}
+                             ]
+                            )
+    :ok = Exchange.fanout(chan, @exchange, durable: true)
+    :ok = Queue.bind(chan, @queue, @exchange)
   end
 
   defp consume(channel, tag, redelivered, payload) do
     number = String.to_integer(payload)
     if number <= 10 do
-      Basic.ack channel, tag
+      :ok = Basic.ack channel, tag
       IO.puts "Consumed a #{number}."
     else
-      Basic.reject channel, tag, requeue: false
+      :ok = Basic.reject channel, tag, requeue: false
       IO.puts "#{number} is too big and was rejected."
     end
 
@@ -137,7 +141,7 @@ defmodule Consumer do
     # Make sure you call ack, nack or reject otherwise comsumer will stop
     # receiving messages.
     exception ->
-      Basic.reject channel, tag, requeue: not redelivered
+      :ok = Basic.reject channel, tag, requeue: not redelivered
       IO.puts "Error converting #{payload} to integer"
   end
 end
