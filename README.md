@@ -17,6 +17,10 @@ If you are looking for a document for 0.3.x please visit to [v0.3 branch](https:
 
 If you want to check the plan and progress for 1.0.0 please check out [this github issue](https://github.com/pma/amqp/issues/69).
 
+## Migration from 0.X to 1.0
+
+If you use amqp 0.X and plan to migrate to 1.0 please read our [migration guide](https://github.com/pma/amqp/wiki/Upgrade-from-0.X-to-1.0).
+
 ## Usage
 
 Add AMQP as a dependency in your `mix.exs` file.
