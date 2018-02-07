@@ -122,7 +122,7 @@ defmodule AMQP.Queue do
   def message_count(%Channel{} = channel, queue) do
     case status(channel, queue) do
       {:ok, %{message_count: message_count}} -> message_count
-      {:error, reason} -> raise(AMQP.BasicError, reason: reason)
+      {:error, reason} -> raise(BasicError, reason: reason)
     end
   end
 
@@ -133,7 +133,7 @@ defmodule AMQP.Queue do
   def consumer_count(%Channel{} = channel, queue) do
     case status(channel, queue) do
       {:ok, %{consumer_count: consumer_count}} -> consumer_count
-      {:error, reason} -> raise(AMQP.BasicError, reason: reason)
+      {:error, reason} -> raise(BasicError, reason: reason)
     end
   end
 
@@ -144,7 +144,7 @@ defmodule AMQP.Queue do
   def empty?(%Channel{} = channel, queue) do
     case message_count(channel, queue) do
       number when is_integer(number) -> number == 0
-      {:error, reason} -> raise(AMQP.BasicError, reason: reason)
+      {:error, reason} -> raise(BasicError, reason: reason)
     end
   end
 
