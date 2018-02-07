@@ -1,8 +1,15 @@
-%{"amqp_client": {:hex, :amqp_client, "3.6.14", "523c4a84d7cab9ce19e1ba17274c87f10627e6539735c1f26dfe5ce2d5aad75d", [:make, :rebar3], [{:rabbit_common, "3.6.14", [hex: :rabbit_common, repo: "hexpm", optional: false]}], "hexpm"},
+%{
+  "amqp_client": {:hex, :amqp_client, "3.7.3", "29a818d3871de5f8484e876ad34b0a940b2cecd6c6dfbed30d9b1679072eb9bc", [:make, :rebar3], [{:rabbit_common, "3.7.3", [hex: :rabbit_common, repo: "hexpm", optional: false]}], "hexpm"},
   "dialyxir": {:hex, :dialyxir, "0.5.1", "b331b091720fd93e878137add264bac4f644e1ddae07a70bf7062c7862c4b952", [:mix], [], "hexpm"},
   "earmark": {:hex, :earmark, "1.2.3", "206eb2e2ac1a794aa5256f3982de7a76bf4579ff91cb28d0e17ea2c9491e46a4", [:mix], [], "hexpm"},
   "ex_doc": {:hex, :ex_doc, "0.16.3", "cd2a4cfe5d26e37502d3ec776702c72efa1adfa24ed9ce723bb565f4c30bd31a", [:mix], [{:earmark, "~> 1.1", [hex: :earmark, repo: "hexpm", optional: false]}], "hexpm"},
+  "goldrush": {:hex, :goldrush, "0.1.9", "f06e5d5f1277da5c413e84d5a2924174182fb108dabb39d5ec548b27424cd106", [], [], "hexpm"},
   "inch_ex": {:hex, :inch_ex, "0.5.6", "418357418a553baa6d04eccd1b44171936817db61f4c0840112b420b8e378e67", [:mix], [{:poison, "~> 1.5 or ~> 2.0 or ~> 3.0", [hex: :poison, repo: "hexpm", optional: false]}], "hexpm"},
+  "jsx": {:hex, :jsx, "2.8.2", "7acc7d785b5abe8a6e9adbde926a24e481f29956dd8b4df49e3e4e7bcc92a018", [], [], "hexpm"},
+  "lager": {:hex, :lager, "3.5.1", "63897a61af646c59bb928fee9756ce8bdd02d5a1a2f3551d4a5e38386c2cc071", [], [{:goldrush, "0.1.9", [hex: :goldrush, repo: "hexpm", optional: false]}], "hexpm"},
   "poison": {:hex, :poison, "3.1.0", "d9eb636610e096f86f25d9a46f35a9facac35609a7591b3be3326e99a0484665", [:mix], [], "hexpm"},
-  "rabbit_common": {:hex, :rabbit_common, "3.6.14", "dc134cd7228f656367e6e6ac88f1f4ef4a63d8a78a2238f52990a4de467708a1", [:make, :rebar3], [{:recon, "2.3.2", [hex: :recon, repo: "hexpm", optional: false]}], "hexpm"},
-  "recon": {:hex, :recon, "2.3.2", "4444c879be323b1b133eec5241cb84bd3821ea194c740d75617e106be4744318", [:rebar3], [], "hexpm"}}
+  "rabbit_common": {:hex, :rabbit_common, "3.7.3", "f23ed393e12150e3d3b6ef640be7bfddfefce72a65e2ce27d44249ef84287c96", [:make, :rebar3], [{:jsx, "2.8.2", [hex: :jsx, repo: "hexpm", optional: false]}, {:lager, "3.5.1", [hex: :lager, repo: "hexpm", optional: false]}, {:ranch, "1.4.0", [hex: :ranch, repo: "hexpm", optional: false]}, {:ranch_proxy_protocol, "1.4.4", [hex: :ranch_proxy_protocol, repo: "hexpm", optional: false]}, {:recon, "2.3.2", [hex: :recon, repo: "hexpm", optional: false]}], "hexpm"},
+  "ranch": {:hex, :ranch, "1.4.0", "10272f95da79340fa7e8774ba7930b901713d272905d0012b06ca6d994f8826b", [], [], "hexpm"},
+  "ranch_proxy_protocol": {:hex, :ranch_proxy_protocol, "1.4.4", "8853b11757a9798e86c7d6d0ff783a8e2e87f77052aad7f1c91108f254ba4a9c", [], [{:ranch, "1.4.0", [hex: :ranch, repo: "hexpm", optional: false]}], "hexpm"},
+  "recon": {:hex, :recon, "2.3.2", "4444c879be323b1b133eec5241cb84bd3821ea194c740d75617e106be4744318", [:rebar3], [], "hexpm"},
+}

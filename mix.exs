@@ -22,13 +22,21 @@ defmodule AMQP.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :amqp_client]]
+    [applications: [:lager, :logger, :amqp_client]]
   end
 
   defp deps do
     [
-      {:amqp_client, "~> 3.6.14"},
-      {:rabbit_common, "~> 3.6.14"},
+      {:amqp_client, "~> 3.7.3"},
+      {:rabbit_common, "~> 3.7.3"},
+
+      # We have an issue on rebar3 dependencies.
+      # https://github.com/pma/amqp/issues/78
+      {:goldrush, "~> 0.1.0"},
+      {:jsx, "~> 2.8"},
+      {:lager, "~> 3.5"},
+      {:ranch, "~> 1.4"},
+      {:ranch_proxy_protocol, "~> 1.4"},
       {:recon, "~> 2.3.2"},
 
       {:earmark, "~> 1.0", only: :docs},
