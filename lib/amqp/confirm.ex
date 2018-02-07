@@ -49,5 +49,4 @@ defmodule AMQP.Confirm do
   def wait_for_confirms_or_die(%Channel{pid: pid}, timeout) do
     :amqp_channel.wait_for_confirms_or_die(pid, timeout)
   end
-
 end
