@@ -1,11 +1,13 @@
 language: elixir
 sudo: false # to use faster container based build environment
 elixir:
-  - 1.5.1
+  - 1.6.1
 otp_release:
   - 20.0
 matrix:
   include:
+    - elixir: 1.6.1
+      otp_release: 20.0
     - elixir: 1.5.1
       otp_release: 20.0
     - elixir: 1.4.5
