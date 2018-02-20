@@ -85,7 +85,7 @@ defmodule AMQP.Connection do
                           channel_max:        Keyword.get(options, :channel_max,        0),
                           frame_max:          Keyword.get(options, :frame_max,          0),
                           heartbeat:          Keyword.get(options, :heartbeat,          10),
-                          connection_timeout: Keyword.get(options, :connection_timeout, :infinity),
+                          connection_timeout: Keyword.get(options, :connection_timeout, 60000),
                           ssl_options:        Keyword.get(options, :ssl_options,        :none),
                           client_properties:  Keyword.get(options, :client_properties,  []),
                           socket_options:     Keyword.get(options, :socket_options,     []),
