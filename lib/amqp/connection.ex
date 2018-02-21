@@ -31,8 +31,8 @@ defmodule AMQP.Connection do
     * `:port` - The port the broker is listening on (defaults to `5672`);
     * `:channel_max` - The channel_max handshake parameter (defaults to `0`);
     * `:frame_max` - The frame_max handshake parameter (defaults to `0`);
-    * `:heartbeat` - The hearbeat interval in seconds (defaults to `0` - turned off);
-    * `:connection_timeout` - The connection timeout in milliseconds (defaults to `infinity`);
+    * `:heartbeat` - The hearbeat interval in seconds (defaults to `10`);
+    * `:connection_timeout` - The connection timeout in milliseconds (defaults to `60000`);
     * `:ssl_options` - Enable SSL by setting the location to cert files (defaults to `none`);
     * `:client_properties` - A list of extra client properties to be sent to the server, defaults to `[]`;
     * `:socket_options` - Extra socket options. These are appended to the default options. \
