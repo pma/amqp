@@ -33,10 +33,10 @@ defmodule AMQP.Mixfile do
       # We have an issue on rebar3 dependencies.
       # https://github.com/pma/amqp/issues/78
       {:goldrush, "~> 0.1.0"},
-      {:jsx, ">= 2.8.0 and < 3.0.0"},
+      {:jsx, "~> 2.8 or ~> 2.9"},
       {:lager, "~> 3.5"},
-      {:ranch, "~> 1.5"},
-      {:ranch_proxy_protocol, "~> 1.5"},
+      {:ranch, "~> 1.4 or ~> 1.5"},
+      {:ranch_proxy_protocol, "~> 1.4 or ~> 1.5"},
       {:recon, "~> 2.3.2"},
 
       {:earmark, "~> 1.0", only: :docs},
