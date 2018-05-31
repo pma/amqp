@@ -121,7 +121,7 @@ defmodule AMQP.Connection do
 
   defp normalize_ssl_options(options) when is_list(options) do
     for {k, v} <- options do
-      if k in [:cacertfile, :cacertfile, :cacertfile] do
+      if k in [:cacertfile, :certfile, :keyfile] do
         {k, to_charlist(v)}
       else
         {k, v}
