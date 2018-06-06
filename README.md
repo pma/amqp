@@ -56,6 +56,8 @@ iex> AMQP.Basic.publish chan, "test_exchange", "", "Hello, World!"
 Received: Hello, World!
 ```
 
+To avoid problems with terminate in 60 seconds as you opened the connection, pass `heartbet: 30` to `AMQP.Connection.opne()` like argument.
+
 ### Setup a consumer GenServer
 
 ```elixir
