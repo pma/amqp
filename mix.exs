@@ -36,7 +36,7 @@ defmodule AMQP.Mixfile do
       {:jsx, "~> 2.8"},
       {:lager, "~> 3.5"},
       {:ranch, "~> 1.4"},
-      {:ranch_proxy_protocol, "~> 1.4"},
+      {:ranch_proxy_protocol, "~> 2.0", override: true},
       {:recon, "~> 2.3.2"},
 
       {:earmark, "~> 1.0", only: :docs},
