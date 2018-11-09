@@ -266,3 +266,41 @@ In case the connection is dropped automatically, consider enabling heartbeats.
 You can set `heartbeat` option when you open a connection.
 
 For more details, read [this article](http://www.rabbitmq.com/heartbeats.html#tcp-proxies)
+
+#### Log related to amqp supervisors are too verbose
+
+Try the following configuration.
+
+```elixir
+config :logger, handle_otp_reports: false
+```
+
+#### Lager conflicts with Elixir logger
+
+Lager is used by rabbit_common and it is not Elixir's best friend yet.
+You need a workaround.
+
+In mix.exs, you have to load :larger before :logger.
+
+```elixir
+  extra_applications: [:lager, :logger, :amqp]
+```
+
+Here is a sample configuration to silent rabbit_common logging.
+
+```elixir
+config :lager,
+  error_logger_redirect: false,
+  handlers: [level: :critical]
+```
+
+Check out
+[Lager](https://github.com/erlang-lager/lager#configuration) and [RabbitMQ
+documentation](https://www.rabbitmq.com/logging.html#advanced-configuration) for
+more information.
+
+#### Compile error on ranch_proxy_protocol with OTP 21
+
+Currently we are waiting for amqp_client 3.7.9 to be released.
+
+Meanwhile You can find a workaround [here](https://github.com/pma/amqp/issues/99).
