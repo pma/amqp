@@ -259,3 +259,10 @@ messages.
 
 OTP 17 and 18 are supported only on [version 0.1.x](https://github.com/pma/amqp/tree/v0.1).
 Please understand that we won't make further changes to 0.1 except for major security issues.
+
+#### Heartbeats
+
+In case the connection is dropped automatically, consider enabling heartbeats.
+You can set `heartbeat` option when you open a connection.
+
+For more details, read [this article](http://www.rabbitmq.com/heartbeats.html#tcp-proxies)
