@@ -8,5 +8,5 @@ config :lager,
 
 config :logger, [
   level: :info,
-  #handle_otp_reports: false
+  handle_otp_reports: false
 ]
