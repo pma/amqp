@@ -42,7 +42,9 @@ defmodule BasicTest do
   describe "basic consume" do
     setup meta do
       {:ok, %{queue: queue}} = Queue.declare(meta[:chan])
-      on_exit fn -> Queue.delete(meta[:chan], queue) end
+      on_exit fn ->
+        if Process.alive?(meta[:chan].pid), do: Queue.delete(meta[:chan], queue)
+      end
 
       {:ok, Map.put(meta, :queue, queue)}
     end
@@ -94,6 +96,11 @@ defmodule BasicTest do
 
       spawn fn -> Channel.close(meta[:chan]) end
       spawn fn -> assert {:error, :closing} = Basic.cancel(meta[:chan], consumer_tag) end
+    end
+
+    test "receives {:DOWN, _, _, _} message when queue does not exist", meta do
+      catch_exit(Basic.consume(meta[:chan], "non-existent-queue"))
+      assert_receive {:DOWN, _, _, _, _}
     end
   end
 end

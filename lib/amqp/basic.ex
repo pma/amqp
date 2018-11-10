@@ -268,6 +268,8 @@ defmodule AMQP.Basic do
       basic_consume_ok(consumer_tag: consumer_tag) ->
         send consumer_pid, {:basic_consume_ok, %{consumer_tag: consumer_tag}}
         do_consume(chan, consumer_pid, consumer_tag)
+      error ->
+        send consumer_pid, error
     end
   end
 
