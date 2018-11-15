@@ -8,6 +8,13 @@ defmodule AMQP.Basic do
 
   @type error :: {:error, reason :: :blocked | :closing}
 
+  @type exchange :: String.t
+  @type queue :: String.t
+  @type routing_key :: String.t
+  @type payload :: String.t
+  @type delivery_tag :: integer
+  @type consumer_tag :: String.t
+
   @doc """
   Publishes a message to an Exchange.
 
@@ -47,7 +54,7 @@ defmodule AMQP.Basic do
       :ok
 
   """
-  @spec publish(Channel.t, String.t, String.t, String.t, keyword) :: :ok | error
+  @spec publish(Channel.t, exchange, routing_key, payload, keyword) :: :ok | error
   def publish(%Channel{pid: pid}, exchange, routing_key, payload, options \\ []) do
     basic_publish =
       basic_publish(exchange:    exchange,
@@ -96,7 +103,7 @@ defmodule AMQP.Basic do
   Acknowledges one or more messages. If `multiple` is set to `true`, all messages up to the one
   specified by `delivery_tag` are considered acknowledged by the server.
   """
-  @spec ack(Channel.t, String.t, keyword) :: :ok | error
+  @spec ack(Channel.t, delivery_tag, keyword) :: :ok | error
   def ack(%Channel{pid: pid}, delivery_tag, options \\ []) do
     basic_ack = basic_ack(delivery_tag: delivery_tag,
                           multiple: Keyword.get(options, :multiple, false))
@@ -110,7 +117,7 @@ defmodule AMQP.Basic do
   @doc """
   Rejects (and, optionally, requeues) a message.
   """
-  @spec reject(Channel.t, String.t, keyword) :: :ok | error
+  @spec reject(Channel.t, delivery_tag, keyword) :: :ok | error
   def reject(%Channel{pid: pid}, delivery_tag, options \\ []) do
     basic_reject = basic_reject(delivery_tag: delivery_tag,
                                 requeue: Keyword.get(options, :requeue, true))
@@ -129,7 +136,7 @@ defmodule AMQP.Basic do
   This is a RabbitMQ specific extension to AMQP 0.9.1. It is equivalent to reject, but allows rejecting
   multiple messages using the `multiple` option.
   """
-  @spec nack(Channel.t, String.t, keyword) :: :ok | error
+  @spec nack(Channel.t, delivery_tag, keyword) :: :ok | error
   def nack(%Channel{pid: pid}, delivery_tag, options \\ []) do
     basic_nack = basic_nack(delivery_tag: delivery_tag,
                             multiple: Keyword.get(options, :multiple, false),
@@ -156,7 +163,7 @@ defmodule AMQP.Basic do
   has taken responsibility for it. In general, a lot of applications will not want these semantics, rather, they
   will want to explicitly acknowledge the receipt of a message and have `no_ack` with the default value of false.
   """
-  @spec get(Channel.t, String.t, keyword) :: {:ok, String.t, map} | {:empty, map} | error
+  @spec get(Channel.t, queue, keyword) :: {:ok, String.t, map} | {:empty, map} | error
   def get(%Channel{pid: pid}, queue, options \\ []) do
     case :amqp_channel.call pid, basic_get(queue: queue, no_ack: Keyword.get(options, :no_ack, false)) do
       {basic_get_ok(delivery_tag: delivery_tag,
