@@ -301,6 +301,4 @@ more information.
 
 #### Compile error on ranch_proxy_protocol with OTP 21
 
-Currently we are waiting for amqp_client 3.7.9 to be released.
-
-Meanwhile You can find a workaround [here](https://github.com/pma/amqp/issues/99).
+Update amqp to [1.1.0](https://github.com/pma/amqp/releases/tag/v1.1.0) or a greater version.
