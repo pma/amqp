@@ -27,7 +27,7 @@ defmodule AMQP.Exchange do
     * `:internal:` If set, the exchange may not be used directly by publishers, but only when bound to other exchanges. Internal exchanges are used to construct wiring that is not visible to applications.
 
   """
-  @spec declare(Channel.t, String.t, atom, keyword) :: :ok | Basic.error
+  @spec declare(Channel.t, Basic.exchange, type :: atom, keyword) :: :ok | Basic.error
   def declare(%Channel{pid: pid}, exchange, type \\ :direct, options \\ []) do
     exchange_declare =
       exchange_declare(exchange:    exchange,
@@ -49,7 +49,7 @@ defmodule AMQP.Exchange do
   Deletes an Exchange by name. When an Exchange is deleted all bindings to it are
   also deleted
   """
-  @spec delete(Channel.t, String.t, keyword) :: :ok | Basic.error
+  @spec delete(Channel.t, Basic.exchange, keyword) :: :ok | Basic.error
   def delete(%Channel{pid: pid}, exchange, options \\ []) do
     exchange_delete =
       exchange_delete(exchange:  exchange,
@@ -66,7 +66,7 @@ defmodule AMQP.Exchange do
   Binds an Exchange to another Exchange or a Queue using the
   exchange.bind AMQP method (a RabbitMQ-specific extension)
   """
-  @spec bind(Channel.t, String.t, String.t, keyword) :: :ok | Basic.error
+  @spec bind(Channel.t, destination :: String.t, source :: String.t, keyword) :: :ok | Basic.error
   def bind(%Channel{pid: pid}, destination, source, options \\ []) do
     exchange_bind =
       exchange_bind(destination: destination,
@@ -85,7 +85,7 @@ defmodule AMQP.Exchange do
   Unbinds an Exchange from another Exchange or a Queue using the
   exchange.unbind AMQP method (a RabbitMQ-specific extension)
   """
-  @spec unbind(Channel.t, String.t, String.t, keyword) :: :ok | Basic.error
+  @spec unbind(Channel.t, destination :: String.t, source :: String.t, keyword) :: :ok | Basic.error
   def unbind(%Channel{pid: pid}, destination, source, options \\ []) do
     exchange_unbind =
       exchange_unbind(destination: destination,
@@ -103,7 +103,7 @@ defmodule AMQP.Exchange do
   @doc """
   Convenience function to declare an Exchange of type `direct`.
   """
-  @spec direct(Channel.t, String.t, keyword) :: :ok | Basic.error
+  @spec direct(Channel.t, Basic.exchange, keyword) :: :ok | Basic.error
   def direct(%Channel{} = channel, exchange, options \\ []) do
     declare(channel, exchange, :direct, options)
   end
@@ -111,7 +111,7 @@ defmodule AMQP.Exchange do
   @doc """
   Convenience function to declare an Exchange of type `fanout`.
   """
-  @spec fanout(Channel.t, String.t, keyword) :: :ok | Basic.error
+  @spec fanout(Channel.t, Basic.exchange, keyword) :: :ok | Basic.error
   def fanout(%Channel{} = channel, exchange, options \\ []) do
     declare(channel, exchange, :fanout, options)
   end
@@ -119,7 +119,7 @@ defmodule AMQP.Exchange do
   @doc """
   Convenience function to declare an Exchange of type `topic`.
   """
-  @spec topic(Channel.t, String.t, keyword) :: :ok | Basic.error
+  @spec topic(Channel.t, Basic.exchange, keyword) :: :ok | Basic.error
   def topic(%Channel{} = channel, exchange, options \\ []) do
     declare(channel, exchange, :topic, options)
   end
