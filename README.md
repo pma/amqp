@@ -280,7 +280,7 @@ config :logger, handle_otp_reports: false
 Lager is used by rabbit_common and it is not Elixir's best friend yet.
 You need a workaround.
 
-In mix.exs, you have to load :larger before :logger.
+In mix.exs, you have to load :lager before :logger.
 
 ```elixir
   extra_applications: [:lager, :logger, :amqp]
