@@ -15,7 +15,6 @@ If you use amqp 0.X and plan to migrate to 1.0 please read our [migration guide]
 ## Usage
 
 Add AMQP as a dependency in your `mix.exs` file.
-(If you want to use the stable version, set `~> 0.2.3` to the version instead)
 
 ```elixir
 def deps do
