@@ -251,7 +251,7 @@ You want to investigate if...
 
 If you use GenServer in consumer, try storing number of messages the server is
 currently processing to the GenServer state.
-If the number equals `prefetch_count`, those messages were left without
+If the number equals `prefetch\_count`, those messages were left without
 acknowledgements and that's why consumer have stopped receiving more
 messages.
 
@@ -274,6 +274,18 @@ Try the following configuration.
 ```elixir
 config :logger, handle_otp_reports: false
 ```
+
+Or try filtering out the messages at your application start:
+
+```elixir
+:logger.add_primary_filter(
+  :ignore_rabbitmq_progress_reports,
+  {&:logger_filters.domain/2, {:stop, :equal, [:progress]}}
+)
+```
+
+See [this comment](https://github.com/pma/amqp/issues/110#issuecomment-442761299) for the
+details.
 
 #### Lager conflicts with Elixir logger
 
