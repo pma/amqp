@@ -236,7 +236,7 @@ Valid argument names in `Exchange.declare` include:
 
 * "alternate-exchange"
 
-## Troubleshooting
+## Troubleshooting / FAQ
 
 #### Consumer stops receiving messages
 
@@ -313,3 +313,7 @@ more information.
 #### Compile error on ranch_proxy_protocol with OTP 21
 
 Update amqp to [1.1.0](https://github.com/pma/amqp/releases/tag/v1.1.0) or a greater version.
+
+#### Does the library support AMQP 1.0?
+
+Currently the library doesn't support AMQP 1.0 and there is no plan to do so at the moment. Our main aim here (at least for now) is to provide a thin wrapper around [amqp_client](https://hex.pm/packages/amqp_client) for Elixir programmers.
