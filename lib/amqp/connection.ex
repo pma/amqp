@@ -32,7 +32,7 @@ defmodule AMQP.Connection do
     * `:channel_max` - The channel_max handshake parameter (defaults to `0`);
     * `:frame_max` - The frame_max handshake parameter (defaults to `0`);
     * `:heartbeat` - The hearbeat interval in seconds (defaults to `10`);
-    * `:connection_timeout` - The connection timeout in milliseconds (defaults to `60000`);
+    * `:connection_timeout` - The connection timeout in milliseconds (defaults to `50000`);
     * `:ssl_options` - Enable SSL by setting the location to cert files (defaults to `:none`);
     * `:client_properties` - A list of extra client properties to be sent to the server, defaults to `[]`;
     * `:socket_options` - Extra socket options. These are appended to the default options. \
@@ -85,7 +85,7 @@ defmodule AMQP.Connection do
                           channel_max:        Keyword.get(options, :channel_max,        0),
                           frame_max:          Keyword.get(options, :frame_max,          0),
                           heartbeat:          Keyword.get(options, :heartbeat,          10),
-                          connection_timeout: Keyword.get(options, :connection_timeout, 60000),
+                          connection_timeout: Keyword.get(options, :connection_timeout, 50000),
                           ssl_options:        Keyword.get(options, :ssl_options,        :none),
                           client_properties:  Keyword.get(options, :client_properties,  []),
                           socket_options:     Keyword.get(options, :socket_options,     []),
