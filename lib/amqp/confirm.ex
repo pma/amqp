@@ -68,7 +68,6 @@ defmodule AMQP.Confirm do
   The `seqno` (delivery_tag) is an integer, the sequence number of the message.
   `multiple` is a boolean, when `true` means multiple messages confirm, upto `seqno`.
   see https://www.rabbitmq.com/confirms.html
-
   """
   @spec register_handler(Channel.t, pid) :: :ok
   def register_handler(%Channel{pid: pid}, handler_pid) do
@@ -81,6 +80,11 @@ defmodule AMQP.Confirm do
     :amqp_channel.register_confirm_handler(pid, adapter_pid)
   end
 
+  @doc """
+  Remove the return handler.
+
+  It does nothing if there is no such handler.
+  """
   @spec unregister_handler(Channel.t) :: :ok
   def unregister_handler(%Channel{pid: pid}) do
     :amqp_channel.unregister_confirm_handler(pid)
@@ -97,7 +101,7 @@ defmodule AMQP.Confirm do
         handle_confirm(handler_pid)
 
       {:DOWN, _ref, :process, _pid, reason} ->
-          exit(reason)
+        exit(reason)
     end
   end
 end
