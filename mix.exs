@@ -36,7 +36,7 @@ defmodule AMQP.Mixfile do
       {:jsx, "~> 2.9"},
       {:lager, "~> 3.6.5"},
       {:ranch, "~> 1.7"},
-      {:recon, "~> 2.3.6"},
+      {:recon, "~> 2.3"},
 
       {:earmark, "~> 1.0", only: :docs},
       {:ex_doc, "~> 0.15", only: :docs},
