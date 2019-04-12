@@ -6,14 +6,14 @@ otp_release:
   - 20.0
 matrix:
   include:
+    - elixir: 1.8.1
+      otp_release: 21.3.2
     - elixir: 1.7.4
       otp_release: 21.0
     - elixir: 1.6.1
       otp_release: 20.0
     - elixir: 1.5.1
       otp_release: 20.0
-    - elixir: 1.4.5
-      otp_release: 19.3
 script: mix test --exclude skip_ci
 after_script:
   - mix deps.get --only docs
