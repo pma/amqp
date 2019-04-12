@@ -98,7 +98,8 @@ defmodule Consumer do
   end
 
   def handle_info({:basic_deliver, payload, %{delivery_tag: tag, redelivered: redelivered}}, chan) do
-    spawn fn -> consume(chan, tag, redelivered, payload) end
+    # You might want to run payload consumption in separate Tasks in production
+    consume(chan, tag, redelivered, payload)
     {:noreply, chan}
   end
 
