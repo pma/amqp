@@ -60,6 +60,12 @@ defmodule AMQP.Connection do
                                      fail_if_no_peer_cert: true]
   ```
 
+  # Connection name
+  RabbitMQ supports user-specified connection names since version 3.6.2.
+
+  Connection names are human-readable strings that will be displayed in the management UI.
+  Connection names do not have to be unique and cannot be used as connection identifiers.
+
   ## Examples
 
       iex> AMQP.Connection.open host: \"localhost\", port: 5672, virtual_host: \"/\", username: \"guest\", password: \"guest\"
@@ -68,11 +74,13 @@ defmodule AMQP.Connection do
       iex> AMQP.Connection.open \"amqp://guest:guest@localhost\"
       {:ok, %AMQP.Connection{}}
 
+      iex> AMQP.Connection.open \"amqp://guest:guest@localhost\", \"a-connection-with-a-name\"
+      {:ok, %AMQP.Connection{}}
   """
-  @spec open(keyword|String.t) :: {:ok, t} | {:error, atom} | {:error, any}
-  def open(options \\ [])
+  @spec open(keyword|String.t, String.t|:undefined) :: {:ok, t} | {:error, atom} | {:error, any}
+  def open(options \\ [], name \\ :undefined)
 
-  def open(options) when is_list(options) do
+  def open(options, name) when is_list(options) do
     options = options
     |> normalize_ssl_options
 
@@ -91,12 +99,12 @@ defmodule AMQP.Connection do
                           socket_options:     Keyword.get(options, :socket_options,     []),
                           auth_mechanisms:    Keyword.get(options, :auth_mechanisms,    [&:amqp_auth_mechanisms.plain/3, &:amqp_auth_mechanisms.amqplain/3]))
 
-    do_open(amqp_params)
+    do_open(amqp_params, name)
   end
 
-  def open(uri) when is_binary(uri) do
+  def open(uri, name) when is_binary(uri) do
     case uri |> to_charlist |> :amqp_uri.parse do
-      {:ok, amqp_params} -> do_open(amqp_params)
+      {:ok, amqp_params} -> do_open(amqp_params, name)
       error              -> error
     end
   end
@@ -112,8 +120,8 @@ defmodule AMQP.Connection do
     end
   end
 
-  defp do_open(amqp_params) do
-    case :amqp_connection.start(amqp_params) do
+  defp do_open(amqp_params, name) do
+    case :amqp_connection.start(amqp_params, name) do
       {:ok, pid} -> {:ok, %Connection{pid: pid}}
       error      -> error
     end
