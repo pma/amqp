@@ -22,7 +22,10 @@ defmodule AMQP.Mixfile do
   end
 
   def application do
-    [applications: [:lager, :amqp_client]]
+    [
+      applications: [:lager, :amqp_client],
+      mod: {AMQP.Application, []}
+    ]
   end
 
   defp deps do
