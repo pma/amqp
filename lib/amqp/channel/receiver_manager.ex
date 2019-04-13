@@ -20,9 +20,8 @@ defmodule AMQP.Channel.ReceiverManager do
     pid: pid(),
     channel: pid(),
     client: pid(),
-    count: integer()
   }
-  defstruct [:pid, :channel, :client, {:count, 0}]
+  defstruct [:pid, :channel, :client]
 
   @doc false
   @spec start_link(map) :: GenServer.on_start()
@@ -37,23 +36,33 @@ defmodule AMQP.Channel.ReceiverManager do
 
   @doc """
   Returns a receiver pid for the channel and client.
-
-  When check_in option is true, it counts up the handlers and responds unregister properly.
   """
-  @spec get_receiver(pid(), pid(), keyword()) :: pid()
-  def get_receiver(channel, client, opts \\ []) do
-    GenServer.call(__MODULE__, {:get, channel, client, opts})
+  @spec get_receiver(pid(), pid()) :: pid()
+  def get_receiver(channel, client) do
+    GenServer.call(__MODULE__, {:get, channel, client})
+  end
+
+  @doc """
+  Unregisters a receiver from GenServer.
+  """
+  @spec unregister_receiver(pid(), pid()) :: pid()
+  def unregister_receiver(channel, client) do
+    GenServer.call(__MODULE__, {:unregister, channel, client})
   end
 
   @impl true
-  def handle_call({:get, channel, client, opts}, _from, receivers) do
+  def handle_call({:get, channel, client}, _from, receivers) do
     receiver =
       receivers
       |> get_or_spawn_receiver(channel, client)
-      |> check_in(opts[:check_in])
 
     key = get_key(channel, client)
     {:reply, receiver, Map.put(receivers, key, receiver)}
+  end
+
+  def handle_call({:unregister, channel, client}, _from, receivers) do
+    key = get_key(channel, client)
+    {:reply, :ok, Map.delete(receivers, key)}
   end
 
   defp get_or_spawn_receiver(receivers, channel, client) do
@@ -84,8 +93,4 @@ defmodule AMQP.Channel.ReceiverManager do
   defp get_key(channel, client) do
     "#{inspect channel}-#{inspect client}"
   end
-
-  defp check_in(receiver, true),
-    do: Map.put(receiver, :count, receiver.count + 1)
-  defp check_in(receiver, _), do: receiver
 end
