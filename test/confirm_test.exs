@@ -23,10 +23,11 @@ defmodule ConfirmTest do
 
   describe "register_handler" do
     test "handler receive confirm with message seqno", ctx do
+      :ok = Confirm.register_handler(ctx[:chan], self())
       seq_no = Confirm.next_publish_seqno(ctx[:chan])
       :ok = AMQP.Basic.publish(ctx[:chan], "", "", "foo")
-      :ok = Confirm.register_handler(ctx[:chan], self())
-      assert_receive {:basic_ack, seq_no, false}
+
+      assert_receive {:basic_ack, ^seq_no, false}
       :ok = Confirm.unregister_handler(ctx[:chan])
     end
   end
