@@ -5,6 +5,7 @@ defmodule AMQP.Basic do
 
   import AMQP.Core
   alias AMQP.{Channel, Utils}
+  alias AMQP.Channel.ReceiverManager
 
   @type error :: {:error, reason :: :blocked | :closing}
 
@@ -257,82 +258,11 @@ defmodule AMQP.Basic do
 
     consumer_pid = consumer_pid || self()
 
-    adapter_pid = spawn fn ->
-      Process.flag(:trap_exit, true)
-      Process.monitor(consumer_pid)
-      Process.monitor(chan.pid)
-      do_start_consumer(chan, consumer_pid)
-    end
+    receiver = ReceiverManager.register_handler(chan.pid, consumer_pid, :consume)
 
-    case :amqp_channel.subscribe(chan.pid, basic_consume, adapter_pid) do
+    case :amqp_channel.subscribe(chan.pid, basic_consume, receiver.pid) do
       basic_consume_ok(consumer_tag: consumer_tag) -> {:ok, consumer_tag}
       error -> {:error, error}
-    end
-  end
-
-  defp do_start_consumer(chan, consumer_pid) do
-    receive do
-      basic_consume_ok(consumer_tag: consumer_tag) ->
-        send consumer_pid, {:basic_consume_ok, %{consumer_tag: consumer_tag}}
-        do_consume(chan, consumer_pid, consumer_tag)
-      error ->
-        send consumer_pid, error
-    end
-  end
-
-  defp do_consume(chan, consumer_pid, consumer_tag) do
-    receive do
-      {basic_deliver(consumer_tag: consumer_tag,
-                     delivery_tag: delivery_tag,
-                     redelivered: redelivered,
-                     exchange: exchange,
-                     routing_key: routing_key),
-       amqp_msg(props: p_basic(content_type: content_type,
-                               content_encoding: content_encoding,
-                               headers: headers,
-                               delivery_mode: delivery_mode,
-                               priority: priority,
-                               correlation_id: correlation_id,
-                               reply_to: reply_to,
-                               expiration: expiration,
-                               message_id: message_id,
-                               timestamp: timestamp,
-                               type: type,
-                               user_id: user_id,
-                               app_id: app_id,
-                               cluster_id: cluster_id), payload: payload)} ->
-        send consumer_pid, {:basic_deliver, payload, %{consumer_tag: consumer_tag,
-                                                       delivery_tag: delivery_tag,
-                                                       redelivered: redelivered,
-                                                       exchange: exchange,
-                                                       routing_key: routing_key,
-                                                       content_type: content_type,
-                                                       content_encoding: content_encoding,
-                                                       headers: headers,
-                                                       persistent: delivery_mode == 2,
-                                                       priority: priority,
-                                                       correlation_id: correlation_id,
-                                                       reply_to: reply_to,
-                                                       expiration: expiration,
-                                                       message_id: message_id,
-                                                       timestamp: timestamp,
-                                                       type: type,
-                                                       user_id: user_id,
-                                                       app_id: app_id,
-                                                       cluster_id: cluster_id}}
-        do_consume(chan, consumer_pid, consumer_tag)
-      basic_consume_ok(consumer_tag: consumer_tag) ->
-        send consumer_pid, {:basic_consume_ok, %{consumer_tag: consumer_tag}}
-        do_consume(chan, consumer_pid, consumer_tag)
-      basic_cancel_ok(consumer_tag: consumer_tag) ->
-        send consumer_pid, {:basic_cancel_ok, %{consumer_tag: consumer_tag}}
-      basic_cancel(consumer_tag: consumer_tag, nowait: no_wait) ->
-        send consumer_pid, {:basic_cancel, %{consumer_tag: consumer_tag, no_wait: no_wait}}
-      {:DOWN, _ref, :process, ^consumer_pid, reason} ->
-        cancel(chan, consumer_tag)
-        exit(reason)
-      {:DOWN, _ref, :process, _pid, reason} ->
-        exit(reason)
     end
   end
 

@@ -72,7 +72,7 @@ defmodule AMQP.Confirm do
   """
   @spec register_handler(Channel.t, pid) :: :ok
   def register_handler(%Channel{pid: chan_pid}, handler_pid) do
-    receiver = ReceiverManager.get_receiver(chan_pid, handler_pid)
+    receiver = ReceiverManager.register_handler(chan_pid, handler_pid, :confirm)
     :amqp_channel.register_confirm_handler(chan_pid, receiver.pid)
   end
 

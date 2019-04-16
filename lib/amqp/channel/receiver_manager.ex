@@ -37,7 +37,7 @@ defmodule AMQP.Channel.ReceiverManager do
   @doc """
   Returns a receiver pid for the channel and client.
   """
-  @spec get_receiver(pid(), pid()) :: pid()
+  @spec get_receiver(pid(), pid()) :: t() | nil
   def get_receiver(channel, client) do
     GenServer.call(__MODULE__, {:get, channel, client})
   end
@@ -45,19 +45,23 @@ defmodule AMQP.Channel.ReceiverManager do
   @doc """
   Unregisters a receiver from GenServer.
   """
-  @spec unregister_receiver(pid(), pid()) :: pid()
+  @spec unregister_receiver(pid(), pid()) :: :ok
   def unregister_receiver(channel, client) do
     GenServer.call(__MODULE__, {:unregister, channel, client})
   end
 
+  @doc """
+  Registers a receiver pid for the channel and client.
+  """
+  @spec register_handler(pid(), pid(), atom(), keyword()) :: t() | nil
+  def register_handler(channel, client, handler, opts \\ []) do
+    GenServer.call(__MODULE__, {:register_handler, channel, client, handler, opts})
+  end
+
   @impl true
   def handle_call({:get, channel, client}, _from, receivers) do
-    receiver =
-      receivers
-      |> get_or_spawn_receiver(channel, client)
-
     key = get_key(channel, client)
-    {:reply, receiver, Map.put(receivers, key, receiver)}
+    {:reply, Map.get(receivers, key), receivers}
   end
 
   def handle_call({:unregister, channel, client}, _from, receivers) do
@@ -65,22 +69,44 @@ defmodule AMQP.Channel.ReceiverManager do
     {:reply, :ok, Map.delete(receivers, key)}
   end
 
-  defp get_or_spawn_receiver(receivers, channel, client) do
+  def handle_call({:register_handler, channel, client, handler, opts}, _from, receivers) do
+    receiver =
+      receivers
+      |> get_or_spawn_receiver(channel, client)
+      |> add_handler(handler, opts)
+
+    key = get_key(channel, client)
+    {:reply, receiver, Map.put(receivers, key, receiver)}
+  end
+
+  defp get_receiver(receivers, channel, client) do
     key = get_key(channel, client)
     if (receiver = receivers[key]) && Process.alive?(receiver.pid) do
+      receiver
+    else
+      nil
+    end
+  end
+
+  defp get_or_spawn_receiver(receivers, channel, client) do
+    if receiver = get_receiver(receivers, channel, client) do
       receiver
     else
       spawn_receiver(channel, client)
     end
   end
 
+  defp add_handler(receiver, handler, opts) do
+    send(receiver.pid, {:add_handler, handler, opts})
+    receiver
+  end
+
   defp spawn_receiver(channel, client) do
     receiver_pid = spawn fn ->
       Process.flag(:trap_exit, true)
       Process.monitor(channel)
-      Process.monitor(client)
       Process.monitor(self())
-      Receiver.handle_message(channel, client)
+      Receiver.handle_message(channel, client, %{})
     end
 
     %__MODULE__{
