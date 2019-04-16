@@ -299,6 +299,8 @@ defmodule AMQP.Basic do
   """
   @spec cancel_return(Channel.t) :: :ok
   def cancel_return(%Channel{pid: pid}) do
+    # Currently we don't remove the receiver.
+    # The receiver will be deleted automatically when channel is closed.
     :amqp_channel.unregister_return_handler(pid)
   end
 end

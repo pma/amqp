@@ -83,6 +83,8 @@ defmodule AMQP.Confirm do
   """
   @spec unregister_handler(Channel.t) :: :ok
   def unregister_handler(%Channel{pid: pid}) do
+    # Currently we don't remove the receiver.
+    # The receiver will be deleted automatically when channel is closed.
     :amqp_channel.unregister_confirm_handler(pid)
   end
 end
