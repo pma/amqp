@@ -98,6 +98,8 @@ defmodule BasicTest do
 
     test "removes a receiver when queue does not exist", meta do
       catch_exit(Basic.consume(meta[:chan], "non-existent-queue"))
+
+      :timer.sleep(100)
       receiver = ReceiverManager.get_receiver(meta[:chan].pid, self())
       refute receiver
     end
