@@ -178,9 +178,47 @@ defmodule AMQP.Channel.Receiver do
     handlers
   end
 
-  # -- Unhandled message
-  defp do_handle_message(client_pid, handlers, maybe_error) do
-    send(client_pid, maybe_error)
+  defp do_handle_message(client_pid, handlers,{
+    basic_return(reply_code: reply_code,
+                 reply_text: reply_text,
+                 exchange: exchange,
+                 routing_key: routing_key),
+    amqp_msg(props: p_basic(content_type: content_type,
+                            content_encoding: content_encoding,
+                            headers: headers,
+                            delivery_mode: delivery_mode,
+                            priority: priority,
+                            correlation_id: correlation_id,
+                            reply_to: reply_to,
+                            expiration: expiration,
+                            message_id: message_id,
+                            timestamp: timestamp,
+                            type: type,
+                            user_id: user_id,
+                            app_id: app_id,
+                            cluster_id: cluster_id), payload: payload)
+    })
+  do
+    send(client_pid, {:basic_return, payload, %{
+      reply_code: reply_code,
+      reply_text: reply_text,
+      exchange: exchange,
+      routing_key: routing_key,
+      content_type: content_type,
+      content_encoding: content_encoding,
+      headers: headers,
+      persistent: delivery_mode == 2,
+      priority: priority,
+      correlation_id: correlation_id,
+      reply_to: reply_to,
+      expiration: expiration,
+      message_id: message_id,
+      timestamp: timestamp,
+      type: type,
+      user_id: user_id,
+      app_id: app_id,
+      cluster_id: cluster_id
+    }})
 
     handlers
   end

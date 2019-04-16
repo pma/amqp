@@ -289,14 +289,8 @@ defmodule AMQP.Basic do
   """
   @spec return(Channel.t, pid) :: :ok
   def return(%Channel{pid: pid}, return_handler_pid) do
-    adapter_pid = spawn fn ->
-      Process.flag(:trap_exit, true)
-      Process.monitor(return_handler_pid)
-      Process.monitor(pid)
-      handle_return_messages(pid, return_handler_pid)
-    end
-
-    :amqp_channel.register_return_handler(pid, adapter_pid)
+    receiver = ReceiverManager.register_handler(pid, return_handler_pid, :return)
+    :amqp_channel.register_return_handler(pid, receiver.pid)
   end
 
   @doc """
@@ -306,51 +300,5 @@ defmodule AMQP.Basic do
   @spec cancel_return(Channel.t) :: :ok
   def cancel_return(%Channel{pid: pid}) do
     :amqp_channel.unregister_return_handler(pid)
-  end
-
-  defp handle_return_messages(chan_pid, return_handler_pid) do
-    receive do
-      {basic_return(reply_code: reply_code,
-                    reply_text: reply_text,
-                    exchange: exchange,
-                    routing_key: routing_key),
-       amqp_msg(props: p_basic(content_type: content_type,
-                               content_encoding: content_encoding,
-                               headers: headers,
-                               delivery_mode: delivery_mode,
-                               priority: priority,
-                               correlation_id: correlation_id,
-                               reply_to: reply_to,
-                               expiration: expiration,
-                               message_id: message_id,
-                               timestamp: timestamp,
-                               type: type,
-                               user_id: user_id,
-                               app_id: app_id,
-                               cluster_id: cluster_id), payload: payload)} ->
-        send return_handler_pid, {:basic_return, payload, %{reply_code: reply_code,
-                                                            reply_text: reply_text,
-                                                            exchange: exchange,
-                                                            routing_key: routing_key,
-                                                            content_type: content_type,
-                                                            content_encoding: content_encoding,
-                                                            headers: headers,
-                                                            persistent: delivery_mode == 2,
-                                                            priority: priority,
-                                                            correlation_id: correlation_id,
-                                                            reply_to: reply_to,
-                                                            expiration: expiration,
-                                                            message_id: message_id,
-                                                            timestamp: timestamp,
-                                                            type: type,
-                                                            user_id: user_id,
-                                                            app_id: app_id,
-                                                            cluster_id: cluster_id}}
-
-        handle_return_messages(chan_pid, return_handler_pid)
-
-      {:DOWN, _ref, :process, _pid, reason} ->
-        exit(reason)
-    end
   end
 end
