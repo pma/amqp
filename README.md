@@ -174,42 +174,60 @@ and get a notification when it goes down.
 Example implementation:
 
 ```elixir
-# 1. Extract your connect logic into a private method rabbitmq_connect
+defmodule MyApp.AMQP do
+  use GenServer
+  require Logger
+  alias AMQP.Connection
 
-def init(_opts) do
-  rabbitmq_connect
-end
+  @host "amqp://localhost"
+  @reconnect_interval 10_000
 
-defp rabbitmq_connect do
-  case Connection.open("amqp://guest:guest@localhost") do
-    {:ok, conn} ->
-      # Get notifications when the connection goes down
-      Process.monitor(conn.pid)
-      # Everything else remains the same
-      {:ok, chan} = Channel.open(conn)
-      setup_queue(chan)
-      Basic.qos(chan, prefetch_count: 10)
-      {:ok, _consumer_tag} = Basic.consume(chan, @queue)
-      {:ok, chan}
-
-    {:error, _} ->
-      # Reconnection loop
-      :timer.sleep(10000)
-      rabbitmq_connect
+  def start_link(opts \\ [name: __MODULE__]) do
+    GenServer.start_link(__MODULE__, nil, opts)
   end
-end
 
-# 2. Implement a callback to handle DOWN notifications from the system
-#    This callback should try to reconnect to the server
+  def init(_) do
+    send(self(), :connect)
+    {:ok, nil}
+  end
 
-def handle_info({:DOWN, _, :process, _pid, _reason}, _) do
-  {:ok, chan} = rabbitmq_connect
-  {:noreply, chan}
+  def get_connection do
+    case GenServer.call(__MODULE__, :get) do
+      nil -> {:error, :not_connected}
+      conn -> {:ok, conn}
+    end
+  end
+
+  def handle_call(:get, _, conn) do
+    {:reply, conn, conn}
+  end
+
+  def handle_info(:connect, conn) do
+    case Connection.open(@host) do
+      {:ok, conn} ->
+        # Get notifications when the connection goes down
+        Process.monitor(conn.pid)
+        {:noreply, conn}
+
+      {:error, _} ->
+        Logger.error("Failed to connect #{@host}. Reconnecting later...")
+        # Retry later
+        Process.send_after(self(), :connect, @reconnect_interval)
+        {:noreply, nil}
+    end
+  end
+
+  def handle_info({:DOWN, _, :process, _pid, reason}, _) do
+    # Stop GenServer. Will be restarted by Supervisor.
+    {:stop, {:connection_lost, reason}, nil}
+  end
 end
 ```
 
-Now, when the connection drops, or if the server is down when your application
-starts, it will try to reconnect indefinitely until it succeeds.
+Now, when the server starts, it will try to reconnect indefinitely until it succeeds.
+When the connection drops or the server is down, the GenServer will stop.
+If you have put the GenServer module to your application tree, the Supervisor will automatically restart it.
+Then it will try to reconnect indefinitely until it succeeds.
 
 ## Types of arguments and headers
 
