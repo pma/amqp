@@ -8,7 +8,7 @@ Simple Elixir wrapper for the Erlang RabbitMQ client.
 
 The API is based on Langohr, a Clojure client for RabbitMQ.
 
-## Migration from 0.X to 1.0
+## Migration from 0.X to 1.X
 
 If you use amqp 0.X and plan to migrate to 1.0 please read our [migration guide](https://github.com/pma/amqp/wiki/Upgrade-from-0.X-to-1.0).
 
@@ -171,7 +171,7 @@ Luckily, implementing a reconnection logic is quite straight forward. Since the
 connection record holds the pid of the connection itself, we can monitor it
 and get a notification when it goes down.
 
-Example implementation (only changes from the last example):
+Example implementation:
 
 ```elixir
 # 1. Extract your connect logic into a private method rabbitmq_connect
@@ -238,6 +238,21 @@ Valid argument names in `Exchange.declare` include:
 * "alternate-exchange"
 
 ## Troubleshooting / FAQ
+
+#### Connections and Channels
+
+If this is your first time using RabbitMQ, we recommend you to start designing your application like this way:
+
+- Open and manage a single connection for an application
+- Open/close a channel per process (don't share a channel between multiple processes)
+
+Then you can consider optimising the performance by increasing number of connections etc.
+
+Note it's completely safe to share a single connection between multiple processes.
+However it is not recommended to share a channel between multiple processes.
+It's technically possible but you want to understand the implications when you do.
+
+Make sure you close the channel after used to avoid any potential memory leaks and warnings from RabbitMQ client library.
 
 #### Consumer stops receiving messages
 
