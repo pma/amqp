@@ -1,10 +1,8 @@
 defmodule BasicTest do
   use ExUnit.Case
 
-  alias AMQP.Connection
-  alias AMQP.Channel
-  alias AMQP.Basic
-  alias AMQP.Queue
+  alias AMQP.{Basic, Connection, Channel, Queue}
+  alias Channel.ReceiverManager
 
   setup do
     {:ok, conn} = Connection.open
@@ -91,16 +89,21 @@ defmodule BasicTest do
       assert {:ok, ^consumer_tag} = Basic.cancel(meta[:chan], consumer_tag)
     end
 
-    test "cancel returns {:error, reason} when channel is closing or blocking", meta do
+    test "cancel exits the process when channel is closed", meta do
       {:ok, consumer_tag} = Basic.consume(meta[:chan], meta[:queue])
 
-      spawn fn -> Channel.close(meta[:chan]) end
-      spawn fn -> assert {:error, :closing} = Basic.cancel(meta[:chan], consumer_tag) end
+      Channel.close(meta[:chan])
+
+      Process.flag(:trap_exit, true)
+      assert {:normal, _} = catch_exit(Basic.cancel(meta[:chan], consumer_tag))
     end
 
-    test "receives {:DOWN, _, _, _} message when queue does not exist", meta do
+    test "removes a receiver when queue does not exist", meta do
       catch_exit(Basic.consume(meta[:chan], "non-existent-queue"))
-      assert_receive {:DOWN, _, _, _, _}
+
+      :timer.sleep(100)
+      receiver = ReceiverManager.get_receiver(meta[:chan].pid, self())
+      refute receiver
     end
   end
 end

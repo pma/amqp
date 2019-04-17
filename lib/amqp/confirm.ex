@@ -5,6 +5,7 @@ defmodule AMQP.Confirm do
 
   import AMQP.Core
   alias AMQP.{Basic, Channel}
+  alias AMQP.Channel.ReceiverManager
 
   @doc """
   Activates publishing confirmations on the channel.
@@ -70,14 +71,9 @@ defmodule AMQP.Confirm do
   see https://www.rabbitmq.com/confirms.html
   """
   @spec register_handler(Channel.t, pid) :: :ok
-  def register_handler(%Channel{pid: pid}, handler_pid) do
-    adapter_pid = spawn fn ->
-      Process.flag(:trap_exit, true)
-      Process.monitor(handler_pid)
-      Process.monitor(pid)
-      handle_confirm(handler_pid)
-    end
-    :amqp_channel.register_confirm_handler(pid, adapter_pid)
+  def register_handler(%Channel{pid: chan_pid}, handler_pid) do
+    receiver = ReceiverManager.register_handler(chan_pid, handler_pid, :confirm)
+    :amqp_channel.register_confirm_handler(chan_pid, receiver.pid)
   end
 
   @doc """
@@ -87,22 +83,8 @@ defmodule AMQP.Confirm do
   """
   @spec unregister_handler(Channel.t) :: :ok
   def unregister_handler(%Channel{pid: pid}) do
+    # Currently we don't remove the receiver.
+    # The receiver will be deleted automatically when channel is closed.
     :amqp_channel.unregister_confirm_handler(pid)
   end
-
-  defp handle_confirm(handler_pid) do
-    receive do
-      basic_ack(delivery_tag: delivery_tag, multiple: multiple) ->
-        send(handler_pid, {:basic_ack, delivery_tag, multiple})
-        handle_confirm(handler_pid)
-
-      basic_nack(delivery_tag: delivery_tag, multiple: multiple) ->
-        send(handler_pid, {:basic_nack, delivery_tag, multiple})
-        handle_confirm(handler_pid)
-
-      {:DOWN, _ref, :process, _pid, reason} ->
-        exit(reason)
-    end
-  end
 end
-
