@@ -31,21 +31,29 @@ After you are done, run `mix deps.get` in your shell to fetch and compile AMQP. 
 ```elixir
 iex> {:ok, conn} = AMQP.Connection.open()
 # {:ok, %AMQP.Connection{pid: #PID<0.165.0>}}
+
 iex> {:ok, chan} = AMQP.Channel.open(conn)
 # {:ok, %AMQP.Channel{conn: %AMQP.Connection{pid: #PID<0.165.0>}, pid: #PID<0.177.0>}
+
 iex> AMQP.Queue.declare(chan, "test_queue")
 # {:ok, %{consumer_count: 0, message_count: 0, queue: "test_queue"}}
+
 iex> AMQP.Exchange.declare(chan, "test_exchange")
 # :ok
+
 iex> AMQP.Queue.bind(chan, "test_queue", "test_exchange")
 # :ok
+
 iex> AMQP.Basic.publish(chan, "test_exchange", "", "Hello, World!")
 # :ok
+
 iex> {:ok, payload, meta} = AMQP.Basic.get(chan, "test_queue")
 iex> payload
 # "Hello, World!"
-iex> AMQP.Queue.subscribe(chan, "test_queue", fn(payload, _meta) -> IO.puts("Received: #{payload}") end)
+
+iex> AMQP.Queue.subscribe(chan, "test_queue", fn payload, _meta -> IO.puts("Received: #{payload}") end)
 # {:ok, "amq.ctag-5L8U-n0HU5doEsNTQpaXWg"}
+
 iex> AMQP.Basic.publish(chan, "test_exchange", "", "Hello, World!")
 # :ok
 # Received: Hello, World!
