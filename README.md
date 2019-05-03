@@ -268,7 +268,7 @@ If this is your first time using RabbitMQ, we recommend you to start designing y
 - Open and manage a single connection for an application
 - Open/close a channel per process (don't share a channel between multiple processes)
 
-Then you can consider optimising the performance by increasing number of connections etc.
+Once you saw things in action you can now consider optimising the performance by increasing number of connections etc.
 
 Note it's completely safe to share a single connection between multiple processes.
 However it is not recommended to share a channel between multiple processes.
@@ -278,8 +278,7 @@ Make sure you close the channel after used to avoid any potential memory leaks a
 
 #### Consumer stops receiving messages
 
-Most popular cause is your code not sending acknowledgement(ack, nack or reject)
-after receiving a message.
+It usually happens when your code doesn't send acknowledgement(ack, nack or reject) after receiving a message.
 You want to investigate if...
 
 - an exception was raised and how it would be handled
@@ -288,7 +287,7 @@ You want to investigate if...
 
 If you use GenServer in consumer, try storing number of messages the server is
 currently processing to the GenServer state.
-If the number equals `prefetch\_count`, those messages were left without
+If the number equals `prefetch_count`, those messages were left without
 acknowledgements and that's why consumer have stopped receiving more
 messages.
 
