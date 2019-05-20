@@ -2,7 +2,6 @@ defmodule AMQP.Channel.Receiver do
   @moduledoc false
 
   import AMQP.Core
-  alias AMQP.{Basic, Channel, Confirm}
   alias AMQP.Channel.ReceiverManager
 
   @doc """
@@ -63,27 +62,6 @@ defmodule AMQP.Channel.Receiver do
 
   defp remove_handler(handlers, handler, _) do
     Map.delete(handlers, handler)
-  end
-
-  defp cancel_handlers(chan_pid, handlers) do
-    handlers
-    |> Enum.each(fn {handler, value} -> cancel_handler(chan_pid, handler, value) end)
-  end
-
-  defp cancel_handler(chan_pid, :confirm, true) do
-    Confirm.unregister_handler(%Channel{pid: chan_pid})
-  end
-
-  defp cancel_handler(chan_pid, :return, true) do
-    Basic.cancel_return(%Channel{pid: chan_pid})
-  end
-
-  defp cancel_handler(chan_pid, :consume, tags) do
-    chan = %Channel{pid: chan_pid}
-    tags
-    |> Enum.each(fn consumer_tag ->
-      Basic.cancel(chan, consumer_tag)
-    end)
   end
 
   # -- Confirm.register_handler
