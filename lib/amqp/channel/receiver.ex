@@ -12,12 +12,9 @@ defmodule AMQP.Channel.Receiver do
     receive do
       {:DOWN, _ref, :process, _pid, reason} ->
         ReceiverManager.unregister_receiver(chan_pid, client_pid)
-        handle_message(chan_pid, client_pid, handlers)
-        exit(reason)
 
       {:EXIT, _ref, reason} ->
         ReceiverManager.unregister_receiver(chan_pid, client_pid)
-        exit(reason)
 
       {:add_handler, handler, opts} ->
         new_handlers = add_handler(handlers, handler, opts)
