@@ -1,5 +1,6 @@
 language: elixir
 sudo: false # to use faster container based build environment
+dist: trusty
 elixir:
   - 1.6.1
 otp_release:
