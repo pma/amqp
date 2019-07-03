@@ -7,7 +7,9 @@ defmodule BasicTest do
   setup do
     {:ok, conn} = Connection.open
     {:ok, chan} = Channel.open(conn)
-    on_exit fn -> :ok = Connection.close(conn) end
+    on_exit fn ->
+      :ok = Connection.close(conn)
+    end
     {:ok, conn: conn, chan: chan}
   end
 
@@ -41,7 +43,10 @@ defmodule BasicTest do
     setup meta do
       {:ok, %{queue: queue}} = Queue.declare(meta[:chan])
       on_exit fn ->
-        if Process.alive?(meta[:chan].pid), do: Queue.delete(meta[:chan], queue)
+        if Process.alive?(meta[:chan].pid) do
+          Queue.delete(meta[:chan], queue)
+          Channel.close(meta[:chan])
+        end
       end
 
       {:ok, Map.put(meta, :queue, queue)}
@@ -50,6 +55,7 @@ defmodule BasicTest do
     test "consumer receives :basic_consume_ok message", meta do
       {:ok, consumer_tag} = Basic.consume(meta[:chan], meta[:queue])
       assert_receive {:basic_consume_ok, %{consumer_tag: ^consumer_tag}}
+      {:ok, ^consumer_tag} = Basic.cancel(meta[:chan], consumer_tag)
     end
 
     test "consumer receives :basic_deliver message", meta do
@@ -67,6 +73,8 @@ defmodule BasicTest do
                       %{consumer_tag: ^consumer_tag,
                         correlation_id: ^correlation_id,
                         routing_key: ^routing_key}}
+
+      {:ok, ^consumer_tag} = Basic.cancel(meta[:chan], consumer_tag)
     end
 
     test "consumer receives :basic_cancel_ok message", meta do
