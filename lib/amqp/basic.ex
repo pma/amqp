@@ -33,7 +33,7 @@ defmodule AMQP.Basic do
   # Options
 
     * `:mandatory` - If set, returns an error if the broker can't route the message to a queue (default `false`);
-    * `:immediate` - If set, returns an error if the broker can't deliver te message to a consumer immediately (default `false`);
+    * `:immediate` - If set, returns an error if the broker can't deliver the message to a consumer immediately (default `false`);
     * `:content_type` - MIME Content type;
     * `:content_encoding` - MIME Content encoding;
     * `:headers` - Message headers. Can be used with headers Exchanges;
