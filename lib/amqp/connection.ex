@@ -9,6 +9,16 @@ defmodule AMQP.Connection do
 
   defstruct [:pid]
   @type t :: %Connection{pid: pid}
+  
+  @doc """
+  Opens a new connection without a name.
+
+  Behaves exactly like `open(options_or_uri, :undefined)`. See `open/2`.
+  """
+  @spec open(keyword | String.t()) :: {:ok, t()} | {:error, atom()} | {:error, any()}
+  def open(options_or_uri \\ []) when is_binary(options_or_uri) or is_list(options_or_uri) do
+    open(options_or_uri, :undefined)
+  end
 
   @doc """
   Opens an new Connection to an AMQP broker.
@@ -17,17 +27,20 @@ defmodule AMQP.Connection do
   Please note that connections do not get restarted automatically by the supervision tree in
   case of a failure. If you need robust connections and channels, use monitors on the returned
   connection PID.
-
-  The connection parameters can be passed as a keyword list or as a AMQP URI.
-
-  When using a keyword list, the following options can be used:
+  
+  This function can be called in three ways:
+  
+    * with a list of options and a name
+    * with an AMQP URI and a name
+    * with an AMQP URI and a list of options (in this case, the options are merged with
+      the AMQP URI, taking precedence on same keys)
 
   # Options
 
-    * `:username` - The name of a user registered with the broker (defaults to \"guest\");
-    * `:password` - The password of user (defaults to \"guest\");
-    * `:virtual_host` - The name of a virtual host in the broker (defaults to \"/\");
-    * `:host` - The hostname of the broker (defaults to \"localhost\");
+    * `:username` - The name of a user registered with the broker (defaults to `"guest"`);
+    * `:password` - The password of user (defaults to `"guest"`);
+    * `:virtual_host` - The name of a virtual host in the broker (defaults to `"/"`);
+    * `:host` - The hostname of the broker (defaults to `"localhost"`);
     * `:port` - The port the broker is listening on (defaults to `5672`);
     * `:channel_max` - The channel_max handshake parameter (defaults to `0`);
     * `:frame_max` - The frame_max handshake parameter (defaults to `0`);
@@ -60,53 +73,88 @@ defmodule AMQP.Connection do
                                      fail_if_no_peer_cert: true]
   ```
 
-  # Connection name
+  ## Connection name
+
   RabbitMQ supports user-specified connection names since version 3.6.2.
 
   Connection names are human-readable strings that will be displayed in the management UI.
   Connection names do not have to be unique and cannot be used as connection identifiers.
+  
+  If the name is `:undefined`, the connection is not registered with any name.
 
   ## Examples
 
-      iex> AMQP.Connection.open host: \"localhost\", port: 5672, virtual_host: \"/\", username: \"guest\", password: \"guest\"
+      iex> options = [host: "localhost", port: 5672, virtual_host: "/", username: "guest", password: "guest"]
+      iex> AMQP.Connection.open(options, :undefined)
       {:ok, %AMQP.Connection{}}
 
-      iex> AMQP.Connection.open \"amqp://guest:guest@localhost\"
+      iex> AMQP.Connection.open("amqp://guest:guest@localhost", port: 5673)
       {:ok, %AMQP.Connection{}}
 
-      iex> AMQP.Connection.open \"amqp://guest:guest@localhost\", \"a-connection-with-a-name\"
+      iex> AMQP.Connection.open("amqp://guest:guest@localhost", "a-connection-with-a-name")
       {:ok, %AMQP.Connection{}}
+
   """
-  @spec open(keyword|String.t, String.t|:undefined) :: {:ok, t} | {:error, atom} | {:error, any}
-  def open(options \\ [], name \\ :undefined)
+  @spec open(keyword | String.t(), String.t() | :undefined | keyword) ::
+          {:ok, t()} | {:error, atom()} | {:error, any()}
+  def open(options_or_uri, options_or_name)
 
-  def open(options, name) when is_list(options) do
-    options = options
-    |> normalize_ssl_options
-
-    amqp_params =
-      amqp_params_network(username:           Keyword.get(options, :username,           "guest"),
-                          password:           Keyword.get(options, :password,           "guest"),
-                          virtual_host:       Keyword.get(options, :virtual_host,       "/"),
-                          host:               Keyword.get(options, :host,               'localhost') |> to_charlist,
-                          port:               Keyword.get(options, :port,               :undefined),
-                          channel_max:        Keyword.get(options, :channel_max,        0),
-                          frame_max:          Keyword.get(options, :frame_max,          0),
-                          heartbeat:          Keyword.get(options, :heartbeat,          10),
-                          connection_timeout: Keyword.get(options, :connection_timeout, 50000),
-                          ssl_options:        Keyword.get(options, :ssl_options,        :none),
-                          client_properties:  Keyword.get(options, :client_properties,  []),
-                          socket_options:     Keyword.get(options, :socket_options,     []),
-                          auth_mechanisms:    Keyword.get(options, :auth_mechanisms,    [&:amqp_auth_mechanisms.plain/3, &:amqp_auth_mechanisms.amqplain/3]))
-
-    do_open(amqp_params, name)
+  def open(uri, name) when is_binary(uri) and (is_binary(name) or name == :undefined) do
+    open(uri, name, _options = [])
   end
 
-  def open(uri, name) when is_binary(uri) do
-    case uri |> to_charlist |> :amqp_uri.parse do
-      {:ok, amqp_params} -> do_open(amqp_params, name)
-      error              -> error
+  def open(options, name) when is_list(options) and (is_binary(name) or name == :undefined) do
+    amqp_params_network()
+    |> merge_options_to_amqp_params(options)
+    |> do_open(name)
+  end
+
+  def open(uri, options) when is_binary(uri) and is_list(options) do
+    open(uri, :undefined, options)
+  end
+
+  @doc """
+  Opens a new connection with a name, merging the given AMQP URI and options.
+
+  This function opens a new connection by merging the given AMQP URI `uri` and
+  the given `options` and assigns it the name `name`.
+
+  The options in `options` take precedence over the values in `uri`.
+
+  See `open/2` for options.
+
+  ## Examples
+
+      iex> AMQP.Connection.open("amqp://guest:guest@localhost", "a-connection-name", port: 5673)
+      {:ok, %AMQP.Connection{}}
+
+  """
+  @spec open(String.t, String.t | :undefined, keyword) :: {:ok, t()} | {:error, atom()} | {:error, any()}
+  def open(uri, name, options) when is_binary(uri) and is_list(options) do
+    case uri |> String.to_charlist() |> :amqp_uri.parse() do
+      {:ok, amqp_params} -> amqp_params |> merge_options_to_amqp_params(options) |> do_open(name)
+      error -> error
     end
+  end
+
+  defp merge_options_to_amqp_params(amqp_params, options) do
+    options = normalize_ssl_options(options)
+
+    amqp_params_network(amqp_params,
+                        username:           Keyword.get(options, :username, "guest"),
+                        password:           Keyword.get(options, :password, "guest"),
+                        virtual_host:       Keyword.get(options, :virtual_host, "/"),
+                        host:               Keyword.get(options, :host, 'localhost') |> to_charlist,
+                        port:               Keyword.get(options, :port, :undefined),
+                        channel_max:        Keyword.get(options, :channel_max, 0),
+                        frame_max:          Keyword.get(options, :frame_max, 0),
+                        heartbeat:          Keyword.get(options, :heartbeat, 10),
+                        connection_timeout: Keyword.get(options, :connection_timeout, 50000),
+                        ssl_options:        Keyword.get(options, :ssl_options, :none),
+                        client_properties:  Keyword.get(options, :client_properties, []),
+                        socket_options:     Keyword.get(options, :socket_options, []),
+                        auth_mechanisms:    Keyword.get(options, :auth_mechanisms, [&:amqp_auth_mechanisms.plain/3,
+                                                                                    &:amqp_auth_mechanisms.amqplain/3]))
   end
 
   @doc """
