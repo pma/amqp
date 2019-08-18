@@ -12,10 +12,10 @@ defmodule AMQP.Exchange do
 
   AMQP 0-9-1 brokers provide four pre-declared exchanges:
 
-  *   Direct exchange: (empty string) or `amq.direct`
-  *   Fanout exchange: `amq.fanout`
-  *   Topic exchange: `amq.topic`
-  *   Headers exchange: `amq.match` (and `amq.headers` in RabbitMQ)
+  *   `:direct` exchange: (empty string) or `amq.direct`
+  *   `:fanout` exchange: `amq.fanout`
+  *   `:topic` exchange: `amq.topic`
+  *   `:headers` exchange: `amq.match` (and `amq.headers` in RabbitMQ)
 
   Besides the exchange name and type, the following options can be used:
 
@@ -25,6 +25,10 @@ defmodule AMQP.Exchange do
     * `:auto_delete`: If set, deletes the Exchange once all queues unbind from it;
     * `:passive`: If set, returns an error if the Exchange does not already exist;
     * `:internal:` If set, the exchange may not be used directly by publishers, but only when bound to other exchanges. Internal exchanges are used to construct wiring that is not visible to applications.
+    * `:no_wait` - If set, the declare operation is asynchronous. Defaults to
+      `false`.
+    * `:arguments` - A list of arguments to pass when declaring. See the
+      README for more information. Defaults to `[]`.
 
   """
   @spec declare(Channel.t, Basic.exchange, type :: atom, keyword) :: :ok | Basic.error
@@ -47,7 +51,15 @@ defmodule AMQP.Exchange do
 
   @doc """
   Deletes an Exchange by name. When an Exchange is deleted all bindings to it are
-  also deleted
+  also deleted.
+  
+  # Options
+  
+    * `:if_unused` - If set, the server will only delete the exchange if it has no queue
+      bindings.
+    * `:no_wait` - If set, the delete operation is asynchronous. Defaults to
+      `false`.
+
   """
   @spec delete(Channel.t, Basic.exchange, keyword) :: :ok | Basic.error
   def delete(%Channel{pid: pid}, exchange, options \\ []) do
@@ -63,8 +75,17 @@ defmodule AMQP.Exchange do
   end
 
   @doc """
-  Binds an Exchange to another Exchange or a Queue using the
-  exchange.bind AMQP method (a RabbitMQ-specific extension)
+  Binds an Exchange to another Exchange using the
+  exchange.bind AMQP method (a RabbitMQ-specific extension).
+  
+  # Options
+  
+    * `:routing_key` - the routing key to use for the binding. Defaults to `""`.
+    * `:no_wait` - If set, the bind operation is asynchronous. Defaults to
+      `false`.
+    * `:arguments` - A list of arguments to pass when binding. See the
+      README for more information. Defaults to `[]`.
+
   """
   @spec bind(Channel.t, destination :: String.t, source :: String.t, keyword) :: :ok | Basic.error
   def bind(%Channel{pid: pid}, destination, source, options \\ []) do
@@ -83,7 +104,16 @@ defmodule AMQP.Exchange do
 
   @doc """
   Unbinds an Exchange from another Exchange or a Queue using the
-  exchange.unbind AMQP method (a RabbitMQ-specific extension)
+  exchange.unbind AMQP method (a RabbitMQ-specific extension).
+  
+  # Options
+  
+    * `:routing_key` - the routing key to use for the binding. Defaults to `""`.
+    * `:no_wait` - If set, the declare operation is asynchronous. Defaults to
+      `false`.
+    * `:arguments` - A list of arguments to pass when declaring. See the
+      README for more information. Defaults to `[]`.
+
   """
   @spec unbind(Channel.t, destination :: String.t, source :: String.t, keyword) :: :ok | Basic.error
   def unbind(%Channel{pid: pid}, destination, source, options \\ []) do
@@ -102,22 +132,34 @@ defmodule AMQP.Exchange do
 
   @doc """
   Convenience function to declare an Exchange of type `direct`.
+
+  # Options
+
+  This function takes the same options as `declare/4`.
   """
   @spec direct(Channel.t, Basic.exchange, keyword) :: :ok | Basic.error
   def direct(%Channel{} = channel, exchange, options \\ []) do
     declare(channel, exchange, :direct, options)
   end
-
+  
   @doc """
   Convenience function to declare an Exchange of type `fanout`.
+
+  # Options
+
+  This function takes the same options as `declare/4`.
   """
   @spec fanout(Channel.t, Basic.exchange, keyword) :: :ok | Basic.error
   def fanout(%Channel{} = channel, exchange, options \\ []) do
     declare(channel, exchange, :fanout, options)
   end
-
+  
   @doc """
   Convenience function to declare an Exchange of type `topic`.
+
+  # Options
+
+  This function takes the same options as `declare/4`.
   """
   @spec topic(Channel.t, Basic.exchange, keyword) :: :ok | Basic.error
   def topic(%Channel{} = channel, exchange, options \\ []) do
