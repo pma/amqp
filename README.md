@@ -291,10 +291,9 @@ If the number equals `prefetch_count`, those messages were left without
 acknowledgements and that's why consumer have stopped receiving more
 messages.
 
-#### Old version of Elixir or OTP
+#### What are Elixir, OTP and RabbitMQ versions supported?
 
-OTP 17 and 18 are supported only on [version 0.1.x](https://github.com/pma/amqp/tree/v0.1).
-Please understand that we won't make further changes to 0.1 except for major security issues.
+Please see [this wiki article](https://github.com/pma/amqp/wiki/Versions-and-Compatibilities) for the details.
 
 #### Heartbeats
 
