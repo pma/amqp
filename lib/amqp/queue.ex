@@ -13,7 +13,7 @@ defmodule AMQP.Queue do
 
   Besides the queue name, the following options can be used:
 
-  # Options
+  ## Options
 
     * `:durable` - If set, keeps the Queue between restarts of the broker.
       Defaults to `false`.
@@ -53,7 +53,7 @@ defmodule AMQP.Queue do
   @doc """
   Binds a Queue to an Exchange.
 
-  # Options
+  ## Options
 
     * `:routing_key` - The routing key used to bind the queue to the exchange.
       Defaults to `""`.
@@ -80,7 +80,7 @@ defmodule AMQP.Queue do
   @doc """
   Unbinds a Queue from an Exchange.
 
-  # Options
+  ## Options
 
     * `:routing_key` - The routing queue for removing the binding. Defaults to `""`.
     * `:arguments` - A list of arguments to pass when unbinding. See the README
@@ -104,7 +104,7 @@ defmodule AMQP.Queue do
   @doc """
   Deletes a Queue by name.
 
-  # Options
+  ## Options
 
     * `:if_unused` - If set, the server will only delete the queue if it has no
       consumers. If the queue has consumers, it's not deleted and an error is

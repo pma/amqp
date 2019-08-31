@@ -19,7 +19,7 @@ defmodule AMQP.Exchange do
 
   Besides the exchange name and type, the following options can be used:
 
-  # Options
+  ## Options
 
     * `:durable`: If set, keeps the Exchange between restarts of the broker;
     * `:auto_delete`: If set, deletes the Exchange once all queues unbind from it;
@@ -53,7 +53,7 @@ defmodule AMQP.Exchange do
   Deletes an Exchange by name. When an Exchange is deleted all bindings to it are
   also deleted.
   
-  # Options
+  ## Options
   
     * `:if_unused` - If set, the server will only delete the exchange if it has no queue
       bindings.
@@ -78,7 +78,7 @@ defmodule AMQP.Exchange do
   Binds an Exchange to another Exchange using the
   exchange.bind AMQP method (a RabbitMQ-specific extension).
   
-  # Options
+  ## Options
   
     * `:routing_key` - the routing key to use for the binding. Defaults to `""`.
     * `:no_wait` - If set, the bind operation is asynchronous. Defaults to
@@ -106,7 +106,7 @@ defmodule AMQP.Exchange do
   Unbinds an Exchange from another Exchange or a Queue using the
   exchange.unbind AMQP method (a RabbitMQ-specific extension).
   
-  # Options
+  ## Options
   
     * `:routing_key` - the routing key to use for the binding. Defaults to `""`.
     * `:no_wait` - If set, the declare operation is asynchronous. Defaults to
@@ -133,7 +133,7 @@ defmodule AMQP.Exchange do
   @doc """
   Convenience function to declare an Exchange of type `direct`.
 
-  # Options
+  ## Options
 
   This function takes the same options as `declare/4`.
   """
@@ -145,7 +145,7 @@ defmodule AMQP.Exchange do
   @doc """
   Convenience function to declare an Exchange of type `fanout`.
 
-  # Options
+  ## Options
 
   This function takes the same options as `declare/4`.
   """
@@ -157,7 +157,7 @@ defmodule AMQP.Exchange do
   @doc """
   Convenience function to declare an Exchange of type `topic`.
 
-  # Options
+  ## Options
 
   This function takes the same options as `declare/4`.
   """

@@ -30,7 +30,7 @@ defmodule AMQP.Basic do
 
   In addition to the previous parameters, the following options can be used:
 
-  # Options
+  ## Options
 
     * `:mandatory` - If set, returns an error if the broker can't route the message to a queue (default `false`);
     * `:immediate` - If set, returns an error if the broker can't deliver the message to a consumer immediately (default `false`);
@@ -87,7 +87,7 @@ defmodule AMQP.Basic do
   @doc """
   Sets the message prefetch count or prefetech size (in bytes).
 
-  # Options
+  ## Options
 
     * `:prefetch_size` - the prefetch size (in bytes). Defaults to `0`.
     * `:prefetch_count` - the prefetch count. Defaults to `0`.
@@ -110,7 +110,7 @@ defmodule AMQP.Basic do
   @doc """
   Acknowledges one or more messages.
 
-  # Options
+  ## Options
 
     * `:multiple` - If set, all messages up to the one specified by `delivery_tag`
       are acknowledged. Defaults to `false`.
@@ -130,7 +130,7 @@ defmodule AMQP.Basic do
   @doc """
   Rejects (and, optionally, requeues) a message.
 
-  # Options
+  ## Options
 
     * `:requeue` - If set, the message is requeued by the server, otherwise
       it's discarded. Defaults to `true`.
@@ -153,7 +153,7 @@ defmodule AMQP.Basic do
   This is a RabbitMQ specific extension to AMQP 0.9.1. It is equivalent to `reject/3`, but allows
   rejecting multiple messages using the `multiple` option.
 
-  # Options
+  ## Options
 
     * `:multiple` - If set, all messages up to the one specified by `delivery_tag`
       are considered as not acknowledged by the server. Defaults to `false`.
@@ -183,7 +183,7 @@ defmodule AMQP.Basic do
   Receiving messages by polling a queue is not as as efficient as subscribing a consumer to a queue,
   so consideration should be taken when receiving large volumes of messages.
 
-  # Options
+  ## Options
 
     * `:no_ack` - If set, the broker is told that the received will not send an acknoledgement
       of the message. Once the broker believes it has delivered the message, then it's free to
@@ -243,7 +243,7 @@ defmodule AMQP.Basic do
   @doc """
   Asks the server to redeliver all unacknowledged messages on a specified channel.
 
-  # Options
+  ## Options
 
     * `:requeue` - If set, the server will attempt to requeue the message,
       potentially delivering it to another subscriber. Otherwise it will be redelivered
@@ -276,7 +276,7 @@ defmodule AMQP.Basic do
   broker when the consumer is unexpectedly cancelled (such as after a queue deletion)
     * `{:basic_cancel_ok, %{consumer_tag: consumer_tag}}` - Sent to the consumer process after a call to Basic.cancel
 
-  # Options
+  ## Options
 
     * `:consumer_tag` - Specifies the consumer tag for this consumer (as a string).
       This tag is local to the given channel `chan`, so different channels can have
@@ -328,7 +328,7 @@ defmodule AMQP.Basic do
   `consumer_tag` identifies the "subscription" to cancel, that is, the subscription of a
   consumer to a specific queue. The consumer tag is returned by `consume/4`.
   
-  # Options
+  ## Options
   
     * `:no_wait` - If set, the cancel operation is asynchronous. Defaults to
       `false`.

@@ -22,7 +22,7 @@ defmodule AMQP.Connection do
 
   When using a keyword list, the following options can be used:
 
-  # Options
+  ## Options
 
     * `:username` - The name of a user registered with the broker (defaults to \"guest\");
     * `:password` - The password of user (defaults to \"guest\");
