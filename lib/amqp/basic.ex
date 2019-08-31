@@ -85,8 +85,15 @@ defmodule AMQP.Basic do
   end
 
   @doc """
-  Sets the message prefetch count or prefetech size (in bytes). If `global` is set to `true` this
-  applies to the entire Connection, otherwise it applies only to the specified Channel.
+  Sets the message prefetch count or prefetech size (in bytes).
+
+  # Options
+
+    * `:prefetch_size` - the prefetch size (in bytes). Defaults to `0`.
+    * `:prefetch_count` - the prefetch count. Defaults to `0`.
+    * `:global` - If set, this applies to the entire Connection, otherwise
+      it applies only to the given Channel. Defaults to `false`.
+
   """
   @spec qos(Channel.t, keyword) :: :ok | error
   def qos(%Channel{pid: pid}, options \\ []) do
@@ -101,8 +108,13 @@ defmodule AMQP.Basic do
   end
 
   @doc """
-  Acknowledges one or more messages. If `multiple` is set to `true`, all messages up to the one
-  specified by `delivery_tag` are considered acknowledged by the server.
+  Acknowledges one or more messages.
+
+  # Options
+
+    * `:multiple` - If set, all messages up to the one specified by `delivery_tag`
+      are acknowledged. Defaults to `false`.
+
   """
   @spec ack(Channel.t, delivery_tag, keyword) :: :ok | error
   def ack(%Channel{pid: pid}, delivery_tag, options \\ []) do
@@ -117,6 +129,12 @@ defmodule AMQP.Basic do
 
   @doc """
   Rejects (and, optionally, requeues) a message.
+
+  # Options
+
+    * `:requeue` - If set, the message is requeued by the server, otherwise
+      it's discarded. Defaults to `true`.
+
   """
   @spec reject(Channel.t, delivery_tag, keyword) :: :ok | error
   def reject(%Channel{pid: pid}, delivery_tag, options \\ []) do
@@ -130,12 +148,18 @@ defmodule AMQP.Basic do
   end
 
   @doc """
-  Negative acknowledge of one or more messages. If `multiple` is set to `true`, all messages up to the
-  one specified by `delivery_tag` are considered as not acknowledged by the server. If `requeue` is set
-  to `true`, the message will be returned to the queue and redelivered to the next available consumer.
+  Negative acknowledges of one or more messages.
 
-  This is a RabbitMQ specific extension to AMQP 0.9.1. It is equivalent to reject, but allows rejecting
-  multiple messages using the `multiple` option.
+  This is a RabbitMQ specific extension to AMQP 0.9.1. It is equivalent to `reject/3`, but allows
+  rejecting multiple messages using the `multiple` option.
+
+  # Options
+
+    * `:multiple` - If set, all messages up to the one specified by `delivery_tag`
+      are considered as not acknowledged by the server. Defaults to `false`.
+    * `:requeue` - If set, the message will be returned to the queue and redelivered
+      to the next available consumer. Defaults to `true`.
+
   """
   @spec nack(Channel.t, delivery_tag, keyword) :: :ok | error
   def nack(%Channel{pid: pid}, delivery_tag, options \\ []) do
@@ -152,17 +176,22 @@ defmodule AMQP.Basic do
   @doc """
   Polls a queue for an existing message.
 
-  Returns the tuple `{:empty, meta}` if the queue is empty or the tuple {:ok, payload, meta} if at least
-  one message exists in the queue. The returned meta map includes the entry `message_count` with the
+  Returns the tuple `{:empty, meta}` if the queue is empty or the tuple `{:ok, payload, meta}` if at least
+  one message exists in the queue. The returned `meta` map includes the entry `:message_count` with the
   current number of messages in the queue.
 
   Receiving messages by polling a queue is not as as efficient as subscribing a consumer to a queue,
   so consideration should be taken when receiving large volumes of messages.
 
-  Setting the `no_ack` option to true will tell the broker that the receiver will not send an acknowledgement of
-  the message. Once it believes it has delivered a message, then it is free to assume that the consuming application
-  has taken responsibility for it. In general, a lot of applications will not want these semantics, rather, they
-  will want to explicitly acknowledge the receipt of a message and have `no_ack` with the default value of false.
+  # Options
+
+    * `:no_ack` - If set, the broker is told that the received will not send an acknoledgement
+      of the message. Once the broker believes it has delivered the message, then it's free to
+      assume that the consuming application has taken responsibility for it. In general, a lot
+      of applications will not want these semantics, rather, they will want to explicitly
+      acknowledge the receipt of a message (through `ack/3`). Defaults to `false` (meaning
+      explicit acks).
+
   """
   @spec get(Channel.t, queue, keyword) :: {:ok, String.t, map} | {:empty, map} | error
   def get(%Channel{pid: pid}, queue, options \\ []) do
@@ -214,9 +243,12 @@ defmodule AMQP.Basic do
   @doc """
   Asks the server to redeliver all unacknowledged messages on a specified channel.
 
-  If `requeue` is set to `true` the server will attempt to requeue the message,
-  potentially delivering it to another subscriber. Otherwise it will be redelivered
-  to the original recipient.
+  # Options
+
+    * `:requeue` - If set, the server will attempt to requeue the message,
+      potentially delivering it to another subscriber. Otherwise it will be redelivered
+      to the original recipient. Defaults to `false`.
+
   """
   @spec recover(Channel.t, keyword) :: :ok | error
   def recover(%Channel{pid: pid}, options \\ []) do
@@ -244,6 +276,26 @@ defmodule AMQP.Basic do
   broker when the consumer is unexpectedly cancelled (such as after a queue deletion)
     * `{:basic_cancel_ok, %{consumer_tag: consumer_tag}}` - Sent to the consumer process after a call to Basic.cancel
 
+  # Options
+
+    * `:consumer_tag` - Specifies the consumer tag for this consumer (as a string).
+      This tag is local to the given channel `chan`, so different channels can have
+      consumers that use the same consumer tag. If the given consumer tag is `""`,
+      then the server autogenerates the tag. Defaults to `""`.
+    * `:no_local` - If set, the server won't send messages to the connection
+      that published them. Defaults to `false`.
+    * `:no_ack` - If set, the server will not expect message acks from the consumer and
+      will consider every message that it believes was delivered to the consumer as
+      acknowledged. Defaults to `false`, meaning that messages need to be acked
+      explicitly through `ack/3`.
+    * `:exclusive` - If set, requests exclusive consumer access, meaning that only
+      this consumer can consume from the given `queue`. Note that the client cannot
+      have exclusive access to a queue that already has consumers.
+    * `:no_wait` - If set, the consume operation is asynchronous. Defaults to
+      `false`.
+    * `:arguments` - A list of arguments to pass when consuming. See the
+      README for more information. Defaults to `[]`.
+
   """
   @spec consume(Channel.t, String.t, pid | nil, keyword) :: {:ok, String.t} | error
   def consume(%Channel{} = chan, queue, consumer_pid \\ nil, options \\ []) do
@@ -267,11 +319,20 @@ defmodule AMQP.Basic do
   end
 
   @doc """
-  End a queue consumer.
+  Stops the given consumer from consuming.
 
   This method cancels a consumer. This does not affect already delivered messages, but it does
   mean the server will not send any more messages for that consumer. The client may receive an
   arbitrary number of messages in between sending the cancel method and receiving the reply.
+  
+  `consumer_tag` identifies the "subscription" to cancel, that is, the subscription of a
+  consumer to a specific queue. The consumer tag is returned by `consume/4`.
+  
+  # Options
+  
+    * `:no_wait` - If set, the cancel operation is asynchronous. Defaults to
+      `false`.
+
   """
   @spec cancel(Channel.t, String.t, keyword) :: {:ok, String.t} | error
   def cancel(%Channel{pid: pid}, consumer_tag, options \\ []) do
@@ -284,8 +345,9 @@ defmodule AMQP.Basic do
   end
 
   @doc """
-  Registers a handler to deal with returned messages. The registered
-  process will receive `{:basic_return, payload, meta}` data structures.
+  Registers a handler to deal with returned messages.
+  
+  The registered process will receive `{:basic_return, payload, meta}` tuples.
   """
   @spec return(Channel.t, pid) :: :ok
   def return(%Channel{pid: pid}, return_handler_pid) do

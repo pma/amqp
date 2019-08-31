@@ -15,10 +15,18 @@ defmodule AMQP.Queue do
 
   # Options
 
-    * `:durable` - If set, keeps the Queue between restarts of the broker
-    * `:auto_delete` - If set, deletes the Queue once all subscribers disconnect
-    * `:exclusive` - If set, only one subscriber can consume from the Queue
-    * `:passive` - If set, raises an error unless the queue already exists
+    * `:durable` - If set, keeps the Queue between restarts of the broker.
+      Defaults to `false`.
+    * `:auto_delete` - If set, deletes the Queue once all subscribers disconnect.
+      Defaults to `false`.
+    * `:exclusive` - If set, only one subscriber can consume from the Queue.
+      Defaults to `false`.
+    * `:passive` - If set, raises an error unless the queue already exists.
+      Defaults to `false`.
+    * `:no_wait` - If set, the declare operation is asynchronous. Defaults to
+      `false`.
+    * `:arguments` - A list of arguments to pass when declaring. See the
+      README for more information. Defaults to `[]`.
 
   """
   @spec declare(Channel.t, Basic.queue, keyword) :: {:ok, map} | Basic.error
@@ -43,7 +51,16 @@ defmodule AMQP.Queue do
   end
 
   @doc """
-  Binds a Queue to an Exchange
+  Binds a Queue to an Exchange.
+
+  # Options
+
+    * `:routing_key` - The routing key used to bind the queue to the exchange.
+      Defaults to `""`.
+    * `:no_wait` - If `true`, the binding is not synchronous. Defaults to `false`.
+    * `:arguments` - A list of arguments to pass when binding. See the
+      README for more information. Defaults to `[]`.
+
   """
   @spec bind(Channel.t, Basic.queue, Basic.exchange, keyword) :: :ok | Basic.error
   def bind(%Channel{pid: pid}, queue, exchange, options \\ []) do
@@ -61,7 +78,14 @@ defmodule AMQP.Queue do
   end
 
   @doc """
-  Unbinds a Queue from an Exchange
+  Unbinds a Queue from an Exchange.
+
+  # Options
+
+    * `:routing_key` - The routing queue for removing the binding. Defaults to `""`.
+    * `:arguments` - A list of arguments to pass when unbinding. See the README
+      for more information. Defaults to `[]`.
+
   """
   @spec unbind(Channel.t, Basic.queue, Basic.exchange, keyword) :: :ok | Basic.error
   def unbind(%Channel{pid: pid}, queue, exchange, options \\ []) do
@@ -78,7 +102,16 @@ defmodule AMQP.Queue do
   end
 
   @doc """
-  Deletes a Queue by name
+  Deletes a Queue by name.
+
+  # Options
+
+    * `:if_unused` - If set, the server will only delete the queue if it has no
+      consumers. If the queue has consumers, it's not deleted and an error is
+      returned.
+    * `:if_empty` - If set, the server will only delete the queue if it has no messages.
+    * `:no_wait` - If set, the delete operation is asynchronous.
+
   """
   @spec delete(Channel.t, Basic.queue, keyword) :: {:ok, map} | Basic.error
   def delete(%Channel{pid: pid}, queue, options \\ []) do
@@ -95,7 +128,7 @@ defmodule AMQP.Queue do
   end
 
   @doc """
-  Discards all messages in the Queue
+  Discards all messages in the Queue.
   """
   @spec purge(Channel.t, Basic.queue) :: {:ok, map} | Basic.error
   def purge(%Channel{pid: pid}, queue) do
@@ -107,7 +140,7 @@ defmodule AMQP.Queue do
 
   @doc """
   Returns the message count and consumer count for the given queue.
-  Uses Queue.declare with the `passive` option set.
+  Uses `declare/3` with the `:passive` option set.
   """
   @spec status(Channel.t, Basic.queue) :: {:ok, map} | Basic.error
   def status(%Channel{} = chan, queue) do
@@ -190,7 +223,9 @@ defmodule AMQP.Queue do
   end
 
   @doc """
-  Convenience to end a Queue consumer.
+  Stops the consumer identified by `consumer_tag` from consuming.
+
+  Internally just calls `AMQP.Basic.cancel/2`.
   """
   @spec unsubscribe(Channel.t, Basic.consumer_tag) :: {:ok, String.t} | Basic.error
   def unsubscribe(%Channel{} = channel, consumer_tag) do
