@@ -324,12 +324,12 @@ defmodule AMQP.Basic do
   This method cancels a consumer. This does not affect already delivered messages, but it does
   mean the server will not send any more messages for that consumer. The client may receive an
   arbitrary number of messages in between sending the cancel method and receiving the reply.
-  
+
   `consumer_tag` identifies the "subscription" to cancel, that is, the subscription of a
   consumer to a specific queue. The consumer tag is returned by `consume/4`.
-  
+
   ## Options
-  
+
     * `:no_wait` - If set, the cancel operation is asynchronous. Defaults to
       `false`.
 
@@ -346,7 +346,7 @@ defmodule AMQP.Basic do
 
   @doc """
   Registers a handler to deal with returned messages.
-  
+
   The registered process will receive `{:basic_return, payload, meta}` tuples.
   """
   @spec return(Channel.t, pid) :: :ok
