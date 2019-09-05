@@ -52,9 +52,9 @@ defmodule AMQP.Exchange do
   @doc """
   Deletes an Exchange by name. When an Exchange is deleted all bindings to it are
   also deleted.
-  
+
   ## Options
-  
+
     * `:if_unused` - If set, the server will only delete the exchange if it has no queue
       bindings.
     * `:no_wait` - If set, the delete operation is asynchronous. Defaults to
@@ -77,9 +77,9 @@ defmodule AMQP.Exchange do
   @doc """
   Binds an Exchange to another Exchange using the
   exchange.bind AMQP method (a RabbitMQ-specific extension).
-  
+
   ## Options
-  
+
     * `:routing_key` - the routing key to use for the binding. Defaults to `""`.
     * `:no_wait` - If set, the bind operation is asynchronous. Defaults to
       `false`.
@@ -105,9 +105,9 @@ defmodule AMQP.Exchange do
   @doc """
   Unbinds an Exchange from another Exchange or a Queue using the
   exchange.unbind AMQP method (a RabbitMQ-specific extension).
-  
+
   ## Options
-  
+
     * `:routing_key` - the routing key to use for the binding. Defaults to `""`.
     * `:no_wait` - If set, the declare operation is asynchronous. Defaults to
       `false`.
@@ -141,7 +141,7 @@ defmodule AMQP.Exchange do
   def direct(%Channel{} = channel, exchange, options \\ []) do
     declare(channel, exchange, :direct, options)
   end
-  
+
   @doc """
   Convenience function to declare an Exchange of type `fanout`.
 
@@ -153,7 +153,7 @@ defmodule AMQP.Exchange do
   def fanout(%Channel{} = channel, exchange, options \\ []) do
     declare(channel, exchange, :fanout, options)
   end
-  
+
   @doc """
   Convenience function to declare an Exchange of type `topic`.
 
