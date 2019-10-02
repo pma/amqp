@@ -25,8 +25,8 @@ defmodule AMQP.Queue do
       Defaults to `false`.
     * `:no_wait` - If set, the declare operation is asynchronous. Defaults to
       `false`.
-    * `:arguments` - A list of arguments to pass when declaring. See the
-      README for more information. Defaults to `[]`.
+    * `:arguments` - A list of arguments to pass when declaring (of type `t:AMQP.arguments/0`).
+      See the README for more information. Defaults to `[]`.
 
   """
   @spec declare(Channel.t, Basic.queue, keyword) :: {:ok, map} | Basic.error
@@ -58,8 +58,8 @@ defmodule AMQP.Queue do
     * `:routing_key` - The routing key used to bind the queue to the exchange.
       Defaults to `""`.
     * `:no_wait` - If `true`, the binding is not synchronous. Defaults to `false`.
-    * `:arguments` - A list of arguments to pass when binding. See the
-      README for more information. Defaults to `[]`.
+    * `:arguments` - A list of arguments to pass when binding (of type `t:AMQP.arguments/0`).
+      See the README for more information. Defaults to `[]`.
 
   """
   @spec bind(Channel.t, Basic.queue, Basic.exchange, keyword) :: :ok | Basic.error
@@ -83,8 +83,8 @@ defmodule AMQP.Queue do
   ## Options
 
     * `:routing_key` - The routing queue for removing the binding. Defaults to `""`.
-    * `:arguments` - A list of arguments to pass when unbinding. See the README
-      for more information. Defaults to `[]`.
+    * `:arguments` - A list of arguments to pass when unbinding (of type `t:AMQP.arguments/0`).
+      See the README for more information. Defaults to `[]`.
 
   """
   @spec unbind(Channel.t, Basic.queue, Basic.exchange, keyword) :: :ok | Basic.error
