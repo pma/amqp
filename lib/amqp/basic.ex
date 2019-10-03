@@ -36,7 +36,7 @@ defmodule AMQP.Basic do
     * `:immediate` - If set, returns an error if the broker can't deliver the message to a consumer immediately (default `false`);
     * `:content_type` - MIME Content type;
     * `:content_encoding` - MIME Content encoding;
-    * `:headers` - Message headers. Can be used with headers Exchanges;
+    * `:headers` - Message headers of type `t:AMQP.arguments/0`. Can be used with headers Exchanges;
     * `:persistent` - If set, uses persistent delivery mode. Messages marked as `persistent` that are delivered to `durable` \
                       queues will be logged to disk;
     * `:correlation_id` - application correlation identifier;
@@ -293,8 +293,8 @@ defmodule AMQP.Basic do
       have exclusive access to a queue that already has consumers.
     * `:no_wait` - If set, the consume operation is asynchronous. Defaults to
       `false`.
-    * `:arguments` - A list of arguments to pass when consuming. See the
-      README for more information. Defaults to `[]`.
+    * `:arguments` - A list of arguments to pass when consuming (of type `t:AMQP.arguments/0`).
+      See the README for more information. Defaults to `[]`.
 
   """
   @spec consume(Channel.t, String.t, pid | nil, keyword) :: {:ok, String.t} | error
