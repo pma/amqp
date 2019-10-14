@@ -21,10 +21,10 @@ defmodule AMQP.Exchange do
 
   ## Options
 
-    * `:durable`: If set, keeps the Exchange between restarts of the broker;
-    * `:auto_delete`: If set, deletes the Exchange once all queues unbind from it;
-    * `:passive`: If set, returns an error if the Exchange does not already exist;
-    * `:internal:` If set, the exchange may not be used directly by publishers, but only when bound to other exchanges. Internal exchanges are used to construct wiring that is not visible to applications.
+    * `:durable` - If set, keeps the Exchange between restarts of the broker;
+    * `:auto_delete` - If set, deletes the Exchange once all queues unbind from it;
+    * `:passive` - If set, returns an error if the Exchange does not already exist;
+    * `:internal` - If set, the exchange may not be used directly by publishers, but only when bound to other exchanges. Internal exchanges are used to construct wiring that is not visible to applications.
     * `:no_wait` - If set, the declare operation is asynchronous. Defaults to
       `false`.
     * `:arguments` - A list of arguments to pass when declaring (of type `t:AMQP.arguments/0`).
