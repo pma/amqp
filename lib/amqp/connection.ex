@@ -129,7 +129,8 @@ defmodule AMQP.Connection do
       {:ok, %AMQP.Connection{}}
 
   """
-  @spec open(String.t, String.t | :undefined, keyword) :: {:ok, t()} | {:error, atom()} | {:error, any()}
+  @spec open(String.t(), String.t() | :undefined, keyword) ::
+          {:ok, t()} | {:error, atom()} | {:error, any()}
   def open(uri, name, options) when is_binary(uri) and is_list(options) do
     case uri |> String.to_charlist() |> :amqp_uri.parse() do
       {:ok, amqp_params} -> amqp_params |> merge_options_to_amqp_params(options) |> do_open(name)
@@ -141,22 +142,22 @@ defmodule AMQP.Connection do
   @spec merge_options_to_amqp_params(tuple, keyword) :: tuple
   def merge_options_to_amqp_params(amqp_params, options) do
     options = normalize_ssl_options(options)
-    params  = amqp_params_network(amqp_params)
+    params = amqp_params_network(amqp_params)
 
     amqp_params_network(
-      username:           keys_get(options, params, :username),
-      password:           keys_get(options, params, :password),
-      virtual_host:       keys_get(options, params, :virtual_host),
-      host:               keys_get(options, params, :host) |> to_charlist,
-      port:               keys_get(options, params, :port),
-      channel_max:        keys_get(options, params, :channel_max),
-      frame_max:          keys_get(options, params, :frame_max),
-      heartbeat:          keys_get(options, params, :heartbeat),
+      username: keys_get(options, params, :username),
+      password: keys_get(options, params, :password),
+      virtual_host: keys_get(options, params, :virtual_host),
+      host: keys_get(options, params, :host) |> to_charlist,
+      port: keys_get(options, params, :port),
+      channel_max: keys_get(options, params, :channel_max),
+      frame_max: keys_get(options, params, :frame_max),
+      heartbeat: keys_get(options, params, :heartbeat),
       connection_timeout: keys_get(options, params, :connection_timeout),
-      ssl_options:        keys_get(options, params, :ssl_options),
-      client_properties:  keys_get(options, params, :client_properties),
-      socket_options:     keys_get(options, params, :socket_options),
-      auth_mechanisms:    keys_get(options, params, :auth_mechanisms)
+      ssl_options: keys_get(options, params, :ssl_options),
+      client_properties: keys_get(options, params, :client_properties),
+      socket_options: keys_get(options, params, :socket_options),
+      auth_mechanisms: keys_get(options, params, :auth_mechanisms)
     )
   end
 
@@ -167,19 +168,23 @@ defmodule AMQP.Connection do
 
   defp merge_options_to_default(options) do
     amqp_params_network(
-      username:           Keyword.get(options, :username, "guest"),
-      password:           Keyword.get(options, :password, "guest"),
-      virtual_host:       Keyword.get(options, :virtual_host, "/"),
-      host:               Keyword.get(options, :host, 'localhost') |> to_charlist,
-      port:               Keyword.get(options, :port, :undefined),
-      channel_max:        Keyword.get(options, :channel_max, 0),
-      frame_max:          Keyword.get(options, :frame_max, 0),
-      heartbeat:          Keyword.get(options, :heartbeat, 10),
+      username: Keyword.get(options, :username, "guest"),
+      password: Keyword.get(options, :password, "guest"),
+      virtual_host: Keyword.get(options, :virtual_host, "/"),
+      host: Keyword.get(options, :host, 'localhost') |> to_charlist,
+      port: Keyword.get(options, :port, :undefined),
+      channel_max: Keyword.get(options, :channel_max, 0),
+      frame_max: Keyword.get(options, :frame_max, 0),
+      heartbeat: Keyword.get(options, :heartbeat, 10),
       connection_timeout: Keyword.get(options, :connection_timeout, 50000),
-      ssl_options:        Keyword.get(options, :ssl_options, :none),
-      client_properties:  Keyword.get(options, :client_properties, []),
-      socket_options:     Keyword.get(options, :socket_options, []),
-      auth_mechanisms:    Keyword.get(options, :auth_mechanisms, [&:amqp_auth_mechanisms.plain/3, &:amqp_auth_mechanisms.amqplain/3])
+      ssl_options: Keyword.get(options, :ssl_options, :none),
+      client_properties: Keyword.get(options, :client_properties, []),
+      socket_options: Keyword.get(options, :socket_options, []),
+      auth_mechanisms:
+        Keyword.get(options, :auth_mechanisms, [
+          &:amqp_auth_mechanisms.plain/3,
+          &:amqp_auth_mechanisms.amqplain/3
+        ])
     )
   end
 
@@ -197,7 +202,7 @@ defmodule AMQP.Connection do
   defp do_open(amqp_params, name) do
     case :amqp_connection.start(amqp_params, name) do
       {:ok, pid} -> {:ok, %Connection{pid: pid}}
-      error      -> error
+      error -> error
     end
   end
 
@@ -210,5 +215,6 @@ defmodule AMQP.Connection do
       end
     end
   end
+
   defp normalize_ssl_options(options), do: options
 end

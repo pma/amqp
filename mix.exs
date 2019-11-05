@@ -4,21 +4,26 @@ defmodule AMQP.Mixfile do
   @version "1.3.2"
 
   def project do
-    [app: :amqp,
-     version: @version,
-     elixir: "~> 1.3",
-     description: description(),
-     package: package(),
-     source_url: "https://github.com/pma/amqp",
-     deps: deps(),
-     dialyzer: [
-       ignore_warnings: "dialyzer.ignore-warnings",
-       plt_add_deps: :transitive,
-       flags: [:error_handling, :race_conditions, :no_opaque, :underspecs]
-     ],
-     docs: [extras: ["README.md"], main: "readme",
-            source_ref: "v#{@version}",
-            source_url: "https://github.com/pma/amqp"]]
+    [
+      app: :amqp,
+      version: @version,
+      elixir: "~> 1.3",
+      description: description(),
+      package: package(),
+      source_url: "https://github.com/pma/amqp",
+      deps: deps(),
+      dialyzer: [
+        ignore_warnings: "dialyzer.ignore-warnings",
+        plt_add_deps: :transitive,
+        flags: [:error_handling, :race_conditions, :no_opaque, :underspecs]
+      ],
+      docs: [
+        extras: ["README.md"],
+        main: "readme",
+        source_ref: "v#{@version}",
+        source_url: "https://github.com/pma/amqp"
+      ]
+    ]
   end
 
   def application do
@@ -41,10 +46,12 @@ defmodule AMQP.Mixfile do
       {:ranch, "~> 1.7"},
       {:recon, "~> 2.3"},
 
+      # Docs dependencies.
       {:earmark, "~> 1.0", only: :docs},
       {:ex_doc, "~> 0.15", only: :docs},
       {:inch_ex, "~> 0.5", only: :docs},
 
+      # Dev dependencies.
       {:dialyxir, "~> 0.5", only: :dev, runtime: false}
     ]
   end
@@ -56,9 +63,11 @@ defmodule AMQP.Mixfile do
   end
 
   defp package do
-    [files: ["lib", "mix.exs", "README.md", "LICENSE"],
-     maintainers: ["Paulo Almeida", "Eduardo Gurgel"],
-     licenses: ["MIT"],
-     links: %{"GitHub" => "https://github.com/pma/amqp"}]
+    [
+      files: ["lib", "mix.exs", "README.md", "LICENSE"],
+      maintainers: ["Paulo Almeida", "Eduardo Gurgel"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/pma/amqp"}
+    ]
   end
 end

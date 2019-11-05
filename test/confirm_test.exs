@@ -6,12 +6,14 @@ defmodule ConfirmTest do
   alias AMQP.Confirm
 
   setup do
-    {:ok, conn} = Connection.open
+    {:ok, conn} = Connection.open()
     {:ok, chan} = Channel.open(conn)
     :ok = Confirm.select(chan)
-    on_exit fn ->
+
+    on_exit(fn ->
       :ok = Connection.close(conn)
-    end
+    end)
+
     {:ok, chan: chan}
   end
 

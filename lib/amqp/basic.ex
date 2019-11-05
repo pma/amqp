@@ -9,12 +9,12 @@ defmodule AMQP.Basic do
 
   @type error :: {:error, reason :: :blocked | :closing}
 
-  @type exchange :: String.t
-  @type queue :: String.t
-  @type routing_key :: String.t
-  @type payload :: String.t
+  @type exchange :: String.t()
+  @type queue :: String.t()
+  @type routing_key :: String.t()
+  @type payload :: String.t()
   @type delivery_tag :: integer
-  @type consumer_tag :: String.t
+  @type consumer_tag :: String.t()
 
   @doc """
   Publishes a message to an Exchange.
@@ -55,28 +55,33 @@ defmodule AMQP.Basic do
       :ok
 
   """
-  @spec publish(Channel.t, exchange, routing_key, payload, keyword) :: :ok | error
+  @spec publish(Channel.t(), exchange, routing_key, payload, keyword) :: :ok | error
   def publish(%Channel{pid: pid}, exchange, routing_key, payload, options \\ []) do
     basic_publish =
-      basic_publish(exchange:    exchange,
-                    routing_key: routing_key,
-                    mandatory:   Keyword.get(options, :mandatory, false),
-                    immediate:   Keyword.get(options, :immediate, false))
+      basic_publish(
+        exchange: exchange,
+        routing_key: routing_key,
+        mandatory: Keyword.get(options, :mandatory, false),
+        immediate: Keyword.get(options, :immediate, false)
+      )
+
     p_basic =
-      p_basic(content_type:     Keyword.get(options, :content_type,     :undefined),
-              content_encoding: Keyword.get(options, :content_encoding, :undefined),
-              headers:          Keyword.get(options, :headers,          :undefined) |> Utils.to_type_tuple,
-              delivery_mode:    if(options[:persistent], do: 2, else: 1),
-              priority:         Keyword.get(options, :priority,         :undefined),
-              correlation_id:   Keyword.get(options, :correlation_id,   :undefined),
-              reply_to:         Keyword.get(options, :reply_to,         :undefined),
-              expiration:       Keyword.get(options, :expiration,       :undefined),
-              message_id:       Keyword.get(options, :message_id,       :undefined),
-              timestamp:        Keyword.get(options, :timestamp,        :undefined),
-              type:             Keyword.get(options, :type,             :undefined),
-              user_id:          Keyword.get(options, :user_id,          :undefined),
-              app_id:           Keyword.get(options, :app_id,           :undefined),
-              cluster_id:       Keyword.get(options, :cluster_id,       :undefined))
+      p_basic(
+        content_type: Keyword.get(options, :content_type, :undefined),
+        content_encoding: Keyword.get(options, :content_encoding, :undefined),
+        headers: Keyword.get(options, :headers, :undefined) |> Utils.to_type_tuple(),
+        delivery_mode: if(options[:persistent], do: 2, else: 1),
+        priority: Keyword.get(options, :priority, :undefined),
+        correlation_id: Keyword.get(options, :correlation_id, :undefined),
+        reply_to: Keyword.get(options, :reply_to, :undefined),
+        expiration: Keyword.get(options, :expiration, :undefined),
+        message_id: Keyword.get(options, :message_id, :undefined),
+        timestamp: Keyword.get(options, :timestamp, :undefined),
+        type: Keyword.get(options, :type, :undefined),
+        user_id: Keyword.get(options, :user_id, :undefined),
+        app_id: Keyword.get(options, :app_id, :undefined),
+        cluster_id: Keyword.get(options, :cluster_id, :undefined)
+      )
 
     case :amqp_channel.call(pid, basic_publish, amqp_msg(props: p_basic, payload: payload)) do
       :ok -> :ok
@@ -95,11 +100,14 @@ defmodule AMQP.Basic do
       it applies only to the given Channel. Defaults to `false`.
 
   """
-  @spec qos(Channel.t, keyword) :: :ok | error
+  @spec qos(Channel.t(), keyword) :: :ok | error
   def qos(%Channel{pid: pid}, options \\ []) do
-    basic_qos = basic_qos(prefetch_size:  Keyword.get(options, :prefetch_size,  0),
-                          prefetch_count: Keyword.get(options, :prefetch_count, 0),
-                          global:         Keyword.get(options, :global,         false))
+    basic_qos =
+      basic_qos(
+        prefetch_size: Keyword.get(options, :prefetch_size, 0),
+        prefetch_count: Keyword.get(options, :prefetch_count, 0),
+        global: Keyword.get(options, :global, false)
+      )
 
     case :amqp_channel.call(pid, basic_qos) do
       basic_qos_ok() -> :ok
@@ -116,10 +124,13 @@ defmodule AMQP.Basic do
       are acknowledged. Defaults to `false`.
 
   """
-  @spec ack(Channel.t, delivery_tag, keyword) :: :ok | error
+  @spec ack(Channel.t(), delivery_tag, keyword) :: :ok | error
   def ack(%Channel{pid: pid}, delivery_tag, options \\ []) do
-    basic_ack = basic_ack(delivery_tag: delivery_tag,
-                          multiple: Keyword.get(options, :multiple, false))
+    basic_ack =
+      basic_ack(
+        delivery_tag: delivery_tag,
+        multiple: Keyword.get(options, :multiple, false)
+      )
 
     case :amqp_channel.call(pid, basic_ack) do
       :ok -> :ok
@@ -136,10 +147,13 @@ defmodule AMQP.Basic do
       it's discarded. Defaults to `true`.
 
   """
-  @spec reject(Channel.t, delivery_tag, keyword) :: :ok | error
+  @spec reject(Channel.t(), delivery_tag, keyword) :: :ok | error
   def reject(%Channel{pid: pid}, delivery_tag, options \\ []) do
-    basic_reject = basic_reject(delivery_tag: delivery_tag,
-                                requeue: Keyword.get(options, :requeue, true))
+    basic_reject =
+      basic_reject(
+        delivery_tag: delivery_tag,
+        requeue: Keyword.get(options, :requeue, true)
+      )
 
     case :amqp_channel.call(pid, basic_reject) do
       :ok -> :ok
@@ -161,11 +175,14 @@ defmodule AMQP.Basic do
       to the next available consumer. Defaults to `true`.
 
   """
-  @spec nack(Channel.t, delivery_tag, keyword) :: :ok | error
+  @spec nack(Channel.t(), delivery_tag, keyword) :: :ok | error
   def nack(%Channel{pid: pid}, delivery_tag, options \\ []) do
-    basic_nack = basic_nack(delivery_tag: delivery_tag,
-                            multiple: Keyword.get(options, :multiple, false),
-                            requeue: Keyword.get(options, :requeue,   true))
+    basic_nack =
+      basic_nack(
+        delivery_tag: delivery_tag,
+        multiple: Keyword.get(options, :multiple, false),
+        requeue: Keyword.get(options, :requeue, true)
+      )
 
     case :amqp_channel.call(pid, basic_nack) do
       :ok -> :ok
@@ -193,50 +210,67 @@ defmodule AMQP.Basic do
       explicit acks).
 
   """
-  @spec get(Channel.t, queue, keyword) :: {:ok, String.t, map} | {:empty, map} | error
+  @spec get(Channel.t(), queue, keyword) :: {:ok, String.t(), map} | {:empty, map} | error
   def get(%Channel{pid: pid}, queue, options \\ []) do
-    case :amqp_channel.call pid, basic_get(queue: queue, no_ack: Keyword.get(options, :no_ack, false)) do
-      {basic_get_ok(delivery_tag: delivery_tag,
-                    redelivered: redelivered,
-                    exchange: exchange,
-                    routing_key: routing_key,
-                    message_count: message_count),
-       amqp_msg(props: p_basic(content_type: content_type,
-                               content_encoding: content_encoding,
-                               headers: headers,
-                               delivery_mode: delivery_mode,
-                               priority: priority,
-                               correlation_id: correlation_id,
-                               reply_to: reply_to,
-                               expiration: expiration,
-                               message_id: message_id,
-                               timestamp: timestamp,
-                               type: type,
-                               user_id: user_id,
-                               app_id: app_id,
-                               cluster_id: cluster_id), payload: payload)} ->
-        {:ok, payload, %{delivery_tag: delivery_tag,
-                         redelivered: redelivered,
-                         exchange: exchange,
-                         routing_key: routing_key,
-                         message_count: message_count,
-                         content_type: content_type,
-                         content_encoding: content_encoding,
-                         headers: headers,
-                         persistent: delivery_mode == 2,
-                         priority: priority,
-                         correlation_id: correlation_id,
-                         reply_to: reply_to,
-                         expiration: expiration,
-                         message_id: message_id,
-                         timestamp: timestamp,
-                         type: type,
-                         user_id: user_id,
-                         app_id: app_id,
-                         cluster_id: cluster_id}}
+    case :amqp_channel.call(
+           pid,
+           basic_get(queue: queue, no_ack: Keyword.get(options, :no_ack, false))
+         ) do
+      {basic_get_ok(
+         delivery_tag: delivery_tag,
+         redelivered: redelivered,
+         exchange: exchange,
+         routing_key: routing_key,
+         message_count: message_count
+       ),
+       amqp_msg(
+         props:
+           p_basic(
+             content_type: content_type,
+             content_encoding: content_encoding,
+             headers: headers,
+             delivery_mode: delivery_mode,
+             priority: priority,
+             correlation_id: correlation_id,
+             reply_to: reply_to,
+             expiration: expiration,
+             message_id: message_id,
+             timestamp: timestamp,
+             type: type,
+             user_id: user_id,
+             app_id: app_id,
+             cluster_id: cluster_id
+           ),
+         payload: payload
+       )} ->
+        {:ok, payload,
+         %{
+           delivery_tag: delivery_tag,
+           redelivered: redelivered,
+           exchange: exchange,
+           routing_key: routing_key,
+           message_count: message_count,
+           content_type: content_type,
+           content_encoding: content_encoding,
+           headers: headers,
+           persistent: delivery_mode == 2,
+           priority: priority,
+           correlation_id: correlation_id,
+           reply_to: reply_to,
+           expiration: expiration,
+           message_id: message_id,
+           timestamp: timestamp,
+           type: type,
+           user_id: user_id,
+           app_id: app_id,
+           cluster_id: cluster_id
+         }}
+
       basic_get_empty(cluster_id: cluster_id) ->
         {:empty, %{cluster_id: cluster_id}}
-      error -> {:error, error}
+
+      error ->
+        {:error, error}
     end
   end
 
@@ -250,7 +284,7 @@ defmodule AMQP.Basic do
       to the original recipient. Defaults to `false`.
 
   """
-  @spec recover(Channel.t, keyword) :: :ok | error
+  @spec recover(Channel.t(), keyword) :: :ok | error
   def recover(%Channel{pid: pid}, options \\ []) do
     basic_recover = basic_recover(requeue: Keyword.get(options, :requeue, false))
 
@@ -297,16 +331,18 @@ defmodule AMQP.Basic do
       See the README for more information. Defaults to `[]`.
 
   """
-  @spec consume(Channel.t, String.t, pid | nil, keyword) :: {:ok, String.t} | error
+  @spec consume(Channel.t(), String.t(), pid | nil, keyword) :: {:ok, String.t()} | error
   def consume(%Channel{} = chan, queue, consumer_pid \\ nil, options \\ []) do
     basic_consume =
-      basic_consume(queue: queue,
-                    consumer_tag: Keyword.get(options, :consumer_tag, ""),
-                    no_local:     Keyword.get(options, :no_local,     false),
-                    no_ack:       Keyword.get(options, :no_ack,       false),
-                    exclusive:    Keyword.get(options, :exclusive,    false),
-                    nowait:       Keyword.get(options, :no_wait,      false),
-                    arguments:    Keyword.get(options, :arguments,    []))
+      basic_consume(
+        queue: queue,
+        consumer_tag: Keyword.get(options, :consumer_tag, ""),
+        no_local: Keyword.get(options, :no_local, false),
+        no_ack: Keyword.get(options, :no_ack, false),
+        exclusive: Keyword.get(options, :exclusive, false),
+        nowait: Keyword.get(options, :no_wait, false),
+        arguments: Keyword.get(options, :arguments, [])
+      )
 
     consumer_pid = consumer_pid || self()
 
@@ -334,9 +370,10 @@ defmodule AMQP.Basic do
       `false`.
 
   """
-  @spec cancel(Channel.t, String.t, keyword) :: {:ok, String.t} | error
+  @spec cancel(Channel.t(), String.t(), keyword) :: {:ok, String.t()} | error
   def cancel(%Channel{pid: pid}, consumer_tag, options \\ []) do
-    basic_cancel = basic_cancel(consumer_tag: consumer_tag, nowait: Keyword.get(options, :no_wait, false))
+    basic_cancel =
+      basic_cancel(consumer_tag: consumer_tag, nowait: Keyword.get(options, :no_wait, false))
 
     case :amqp_channel.call(pid, basic_cancel) do
       basic_cancel_ok(consumer_tag: consumer_tag) -> {:ok, consumer_tag}
@@ -349,7 +386,7 @@ defmodule AMQP.Basic do
 
   The registered process will receive `{:basic_return, payload, meta}` tuples.
   """
-  @spec return(Channel.t, pid) :: :ok
+  @spec return(Channel.t(), pid) :: :ok
   def return(%Channel{pid: pid}, return_handler_pid) do
     receiver = ReceiverManager.register_handler(pid, return_handler_pid, :return)
     :amqp_channel.register_return_handler(pid, receiver.pid)
@@ -359,7 +396,7 @@ defmodule AMQP.Basic do
   Removes the return handler, if it exists. Does nothing if there is no
   such handler.
   """
-  @spec cancel_return(Channel.t) :: :ok
+  @spec cancel_return(Channel.t()) :: :ok
   def cancel_return(%Channel{pid: pid}) do
     # Currently we don't remove the receiver.
     # The receiver will be deleted automatically when channel is closed.

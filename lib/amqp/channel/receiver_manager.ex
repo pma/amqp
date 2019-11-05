@@ -1,5 +1,6 @@
 defmodule AMQP.Channel.ReceiverManager do
   @moduledoc false
+
   # Manages receivers.
   #
   # AMQP relays messages from a channel to a client and convert
@@ -17,10 +18,10 @@ defmodule AMQP.Channel.ReceiverManager do
 
   @enforce_keys [:pid, :channel, :client]
   @type t :: %__MODULE__{
-    pid: pid(),
-    channel: pid(),
-    client: pid(),
-  }
+          pid: pid(),
+          channel: pid(),
+          client: pid()
+        }
   defstruct [:pid, :channel, :client]
 
   @doc false
@@ -81,6 +82,7 @@ defmodule AMQP.Channel.ReceiverManager do
 
   defp get_receiver(receivers, channel, client) do
     key = get_key(channel, client)
+
     if (receiver = receivers[key]) && Process.alive?(receiver.pid) do
       receiver
     else
@@ -102,12 +104,13 @@ defmodule AMQP.Channel.ReceiverManager do
   end
 
   defp spawn_receiver(channel, client) do
-    receiver_pid = spawn fn ->
-      Process.flag(:trap_exit, true)
-      Process.monitor(channel)
-      Process.monitor(client)
-      Receiver.handle_message(channel, client, %{})
-    end
+    receiver_pid =
+      spawn(fn ->
+        Process.flag(:trap_exit, true)
+        Process.monitor(channel)
+        Process.monitor(client)
+        Receiver.handle_message(channel, client, %{})
+      end)
 
     %__MODULE__{
       pid: receiver_pid,
@@ -117,6 +120,6 @@ defmodule AMQP.Channel.ReceiverManager do
   end
 
   defp get_key(channel, client) do
-    "#{inspect channel}-#{inspect client}"
+    "#{inspect(channel)}-#{inspect(client)}"
   end
 end
