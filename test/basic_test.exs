@@ -5,11 +5,13 @@ defmodule BasicTest do
   alias Channel.ReceiverManager
 
   setup do
-    {:ok, conn} = Connection.open
+    {:ok, conn} = Connection.open()
     {:ok, chan} = Channel.open(conn)
-    on_exit fn ->
+
+    on_exit(fn ->
       :ok = Connection.close(conn)
-    end
+    end)
+
     {:ok, conn: conn, chan: chan}
   end
 
@@ -26,11 +28,8 @@ defmodule BasicTest do
 
     Basic.publish(meta[:chan], exchange, routing_key, payload, mandatory: true)
 
-    assert_receive {:basic_return,
-                     ^payload,
-                     %{routing_key: ^routing_key,
-                       exchange: ^exchange,
-                       reply_text: "NO_ROUTE"}}
+    assert_receive {:basic_return, ^payload,
+                    %{routing_key: ^routing_key, exchange: ^exchange, reply_text: "NO_ROUTE"}}
 
     :ok = Basic.cancel_return(meta[:chan])
 
@@ -42,12 +41,13 @@ defmodule BasicTest do
   describe "basic consume" do
     setup meta do
       {:ok, %{queue: queue}} = Queue.declare(meta[:chan])
-      on_exit fn ->
+
+      on_exit(fn ->
         if Process.alive?(meta[:chan].pid) do
           Queue.delete(meta[:chan], queue)
           Channel.close(meta[:chan])
         end
-      end
+      end)
 
       {:ok, Map.put(meta, :queue, queue)}
     end
@@ -68,11 +68,12 @@ defmodule BasicTest do
 
       Basic.publish(meta[:chan], exchange, routing_key, payload, correlation_id: correlation_id)
 
-      assert_receive {:basic_deliver,
-                      ^payload,
-                      %{consumer_tag: ^consumer_tag,
+      assert_receive {:basic_deliver, ^payload,
+                      %{
+                        consumer_tag: ^consumer_tag,
                         correlation_id: ^correlation_id,
-                        routing_key: ^routing_key}}
+                        routing_key: ^routing_key
+                      }}
 
       {:ok, ^consumer_tag} = Basic.cancel(meta[:chan], consumer_tag)
     end

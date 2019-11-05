@@ -6,9 +6,9 @@ defmodule ExchangeTest do
   alias AMQP.Exchange
 
   setup do
-    {:ok, conn} = Connection.open
+    {:ok, conn} = Connection.open()
     {:ok, chan} = Channel.open(conn)
-    on_exit fn -> :ok = Connection.close(conn) end
+    on_exit(fn -> :ok = Connection.close(conn) end)
     {:ok, conn: conn, chan: chan}
   end
 
@@ -62,7 +62,7 @@ defmodule ExchangeTest do
 
   test "bind and unbind exchange to/from another exchange", meta do
     destination = rand_name()
-    source      = rand_name()
+    source = rand_name()
     assert :ok = Exchange.fanout(meta[:chan], destination)
     assert :ok = Exchange.fanout(meta[:chan], source)
     assert :ok = Exchange.bind(meta[:chan], destination, source)
@@ -72,6 +72,6 @@ defmodule ExchangeTest do
   end
 
   defp rand_name do
-    :crypto.strong_rand_bytes(8) |> Base.encode64
+    :crypto.strong_rand_bytes(8) |> Base.encode64()
   end
 end

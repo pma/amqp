@@ -31,17 +31,19 @@ defmodule AMQP.Exchange do
       See the README for more information. Defaults to `[]`.
 
   """
-  @spec declare(Channel.t, Basic.exchange, type :: atom, keyword) :: :ok | Basic.error
+  @spec declare(Channel.t(), Basic.exchange(), type :: atom, keyword) :: :ok | Basic.error()
   def declare(%Channel{pid: pid}, exchange, type \\ :direct, options \\ []) do
     exchange_declare =
-      exchange_declare(exchange:    exchange,
-                       type:        Atom.to_string(type),
-                       passive:     Keyword.get(options, :passive,     false),
-                       durable:     Keyword.get(options, :durable,     false),
-                       auto_delete: Keyword.get(options, :auto_delete, false),
-                       internal:    Keyword.get(options, :internal,    false),
-                       nowait:      Keyword.get(options, :no_wait,     false),
-                       arguments:   Keyword.get(options, :arguments,   []))
+      exchange_declare(
+        exchange: exchange,
+        type: Atom.to_string(type),
+        passive: Keyword.get(options, :passive, false),
+        durable: Keyword.get(options, :durable, false),
+        auto_delete: Keyword.get(options, :auto_delete, false),
+        internal: Keyword.get(options, :internal, false),
+        nowait: Keyword.get(options, :no_wait, false),
+        arguments: Keyword.get(options, :arguments, [])
+      )
 
     case :amqp_channel.call(pid, exchange_declare) do
       exchange_declare_ok() -> :ok
@@ -61,12 +63,14 @@ defmodule AMQP.Exchange do
       `false`.
 
   """
-  @spec delete(Channel.t, Basic.exchange, keyword) :: :ok | Basic.error
+  @spec delete(Channel.t(), Basic.exchange(), keyword) :: :ok | Basic.error()
   def delete(%Channel{pid: pid}, exchange, options \\ []) do
     exchange_delete =
-      exchange_delete(exchange:  exchange,
-                      if_unused: Keyword.get(options, :if_unused, false),
-                      nowait:    Keyword.get(options, :no_wait,   false))
+      exchange_delete(
+        exchange: exchange,
+        if_unused: Keyword.get(options, :if_unused, false),
+        nowait: Keyword.get(options, :no_wait, false)
+      )
 
     case :amqp_channel.call(pid, exchange_delete) do
       exchange_delete_ok() -> :ok
@@ -87,14 +91,17 @@ defmodule AMQP.Exchange do
       See the README for more information. Defaults to `[]`.
 
   """
-  @spec bind(Channel.t, destination :: String.t, source :: String.t, keyword) :: :ok | Basic.error
+  @spec bind(Channel.t(), destination :: String.t(), source :: String.t(), keyword) ::
+          :ok | Basic.error()
   def bind(%Channel{pid: pid}, destination, source, options \\ []) do
     exchange_bind =
-      exchange_bind(destination: destination,
-                    source:      source,
-                    routing_key: Keyword.get(options, :routing_key, ""),
-                    nowait:      Keyword.get(options, :no_wait,     false),
-                    arguments:   Keyword.get(options, :arguments,   []))
+      exchange_bind(
+        destination: destination,
+        source: source,
+        routing_key: Keyword.get(options, :routing_key, ""),
+        nowait: Keyword.get(options, :no_wait, false),
+        arguments: Keyword.get(options, :arguments, [])
+      )
 
     case :amqp_channel.call(pid, exchange_bind) do
       exchange_bind_ok() -> :ok
@@ -115,14 +122,17 @@ defmodule AMQP.Exchange do
       See the README for more information. Defaults to `[]`.
 
   """
-  @spec unbind(Channel.t, destination :: String.t, source :: String.t, keyword) :: :ok | Basic.error
+  @spec unbind(Channel.t(), destination :: String.t(), source :: String.t(), keyword) ::
+          :ok | Basic.error()
   def unbind(%Channel{pid: pid}, destination, source, options \\ []) do
     exchange_unbind =
-      exchange_unbind(destination: destination,
-                      source:      source,
-                      routing_key: Keyword.get(options, :routing_key, ""),
-                      nowait:      Keyword.get(options, :no_wait,     false),
-                      arguments:   Keyword.get(options, :arguments,   []))
+      exchange_unbind(
+        destination: destination,
+        source: source,
+        routing_key: Keyword.get(options, :routing_key, ""),
+        nowait: Keyword.get(options, :no_wait, false),
+        arguments: Keyword.get(options, :arguments, [])
+      )
 
     case :amqp_channel.call(pid, exchange_unbind) do
       exchange_unbind_ok() -> :ok
@@ -137,7 +147,7 @@ defmodule AMQP.Exchange do
 
   This function takes the same options as `declare/4`.
   """
-  @spec direct(Channel.t, Basic.exchange, keyword) :: :ok | Basic.error
+  @spec direct(Channel.t(), Basic.exchange(), keyword) :: :ok | Basic.error()
   def direct(%Channel{} = channel, exchange, options \\ []) do
     declare(channel, exchange, :direct, options)
   end
@@ -149,7 +159,7 @@ defmodule AMQP.Exchange do
 
   This function takes the same options as `declare/4`.
   """
-  @spec fanout(Channel.t, Basic.exchange, keyword) :: :ok | Basic.error
+  @spec fanout(Channel.t(), Basic.exchange(), keyword) :: :ok | Basic.error()
   def fanout(%Channel{} = channel, exchange, options \\ []) do
     declare(channel, exchange, :fanout, options)
   end
@@ -161,7 +171,7 @@ defmodule AMQP.Exchange do
 
   This function takes the same options as `declare/4`.
   """
-  @spec topic(Channel.t, Basic.exchange, keyword) :: :ok | Basic.error
+  @spec topic(Channel.t(), Basic.exchange(), keyword) :: :ok | Basic.error()
   def topic(%Channel{} = channel, exchange, options \\ []) do
     declare(channel, exchange, :topic, options)
   end

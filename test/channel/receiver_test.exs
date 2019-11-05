@@ -14,6 +14,7 @@ defmodule AMQP.Channel.ReceiverTest do
       :ok = Channel.close(chan)
       :ok = Connection.close(conn)
     end)
+
     {:ok, conn: conn, chan: chan, queue: queue}
   end
 
@@ -35,11 +36,12 @@ defmodule AMQP.Channel.ReceiverTest do
   test "closes the receiver when the client is closed", meta do
     {:ok, chan} = Channel.open(meta.conn)
 
-    task = Task.async(fn ->
-      {:ok, consumer_tag} = Basic.consume(chan, meta.queue)
-      assert_receive {:basic_consume_ok, %{consumer_tag: ^consumer_tag}}
-      ReceiverManager.get_receiver(chan.pid, self())
-    end)
+    task =
+      Task.async(fn ->
+        {:ok, consumer_tag} = Basic.consume(chan, meta.queue)
+        assert_receive {:basic_consume_ok, %{consumer_tag: ^consumer_tag}}
+        ReceiverManager.get_receiver(chan.pid, self())
+      end)
 
     receiver = Task.await(task)
     :timer.sleep(100)

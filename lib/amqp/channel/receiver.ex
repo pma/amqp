@@ -47,6 +47,7 @@ defmodule AMQP.Channel.Receiver do
   defp remove_handler(handlers, :consume, opts) do
     if handlers[:consume] && opts[:tag] do
       consumer_tags = List.delete(handlers[:consume], opts[:tag])
+
       if length(consumer_tags) == 0 do
         Map.delete(handlers, :consume)
       else
@@ -63,137 +64,155 @@ defmodule AMQP.Channel.Receiver do
 
   # -- Confirm.register_handler
 
-  defp do_handle_message(client_pid, handlers,
-    basic_ack(delivery_tag: delivery_tag, multiple: multiple))
-  do
+  defp do_handle_message(
+         client_pid,
+         handlers,
+         basic_ack(delivery_tag: delivery_tag, multiple: multiple)
+       ) do
     send(client_pid, {:basic_ack, delivery_tag, multiple})
     handlers
   end
 
-  defp do_handle_message(client_pid, handlers,
-    basic_nack(delivery_tag: delivery_tag, multiple: multiple))
-  do
+  defp do_handle_message(
+         client_pid,
+         handlers,
+         basic_nack(delivery_tag: delivery_tag, multiple: multiple)
+       ) do
     send(client_pid, {:basic_nack, delivery_tag, multiple})
     handlers
   end
 
   # -- Basic.consume
 
-  defp do_handle_message(client_pid, handlers,
-    basic_consume_ok(consumer_tag: consumer_tag))
-  do
+  defp do_handle_message(client_pid, handlers, basic_consume_ok(consumer_tag: consumer_tag)) do
     send(client_pid, {:basic_consume_ok, %{consumer_tag: consumer_tag}})
     add_handler(handlers, :consume, tag: consumer_tag)
   end
 
-  defp do_handle_message(client_pid, handlers,
-    basic_cancel_ok(consumer_tag: consumer_tag))
-  do
+  defp do_handle_message(client_pid, handlers, basic_cancel_ok(consumer_tag: consumer_tag)) do
     send(client_pid, {:basic_cancel_ok, %{consumer_tag: consumer_tag}})
     remove_handler(handlers, :consume, tag: consumer_tag)
   end
 
-  defp do_handle_message(client_pid, handlers,
-    basic_cancel(consumer_tag: consumer_tag, nowait: no_wait))
-  do
+  defp do_handle_message(
+         client_pid,
+         handlers,
+         basic_cancel(consumer_tag: consumer_tag, nowait: no_wait)
+       ) do
     send(client_pid, {:basic_cancel, %{consumer_tag: consumer_tag, no_wait: no_wait}})
     remove_handler(handlers, :consume, tag: consumer_tag)
   end
 
   defp do_handle_message(client_pid, handlers, {
-    basic_deliver(
-      consumer_tag: consumer_tag,
-      delivery_tag: delivery_tag,
-      redelivered: redelivered,
-      exchange: exchange,
-      routing_key: routing_key
-    ),
-    amqp_msg(
-      props: p_basic(
-        content_type: content_type,
-        content_encoding: content_encoding,
-        headers: headers,
-        delivery_mode: delivery_mode,
-        priority: priority,
-        correlation_id: correlation_id,
-        reply_to: reply_to,
-        expiration: expiration,
-        message_id: message_id,
-        timestamp: timestamp,
-        type: type,
-        user_id: user_id,
-        app_id: app_id,
-        cluster_id: cluster_id
-      ),
-      payload: payload
-    )})
-  do
-    send(client_pid, {:basic_deliver, payload, %{
-      consumer_tag: consumer_tag,
-      delivery_tag: delivery_tag,
-      redelivered: redelivered,
-      exchange: exchange,
-      routing_key: routing_key,
-      content_type: content_type,
-      content_encoding: content_encoding,
-      headers: headers,
-      persistent: delivery_mode == 2,
-      priority: priority,
-      correlation_id: correlation_id,
-      reply_to: reply_to,
-      expiration: expiration,
-      message_id: message_id,
-      timestamp: timestamp,
-      type: type,
-      user_id: user_id,
-      app_id: app_id,
-      cluster_id: cluster_id
-    }})
+         basic_deliver(
+           consumer_tag: consumer_tag,
+           delivery_tag: delivery_tag,
+           redelivered: redelivered,
+           exchange: exchange,
+           routing_key: routing_key
+         ),
+         amqp_msg(
+           props:
+             p_basic(
+               content_type: content_type,
+               content_encoding: content_encoding,
+               headers: headers,
+               delivery_mode: delivery_mode,
+               priority: priority,
+               correlation_id: correlation_id,
+               reply_to: reply_to,
+               expiration: expiration,
+               message_id: message_id,
+               timestamp: timestamp,
+               type: type,
+               user_id: user_id,
+               app_id: app_id,
+               cluster_id: cluster_id
+             ),
+           payload: payload
+         )
+       }) do
+    send(
+      client_pid,
+      {:basic_deliver, payload,
+       %{
+         consumer_tag: consumer_tag,
+         delivery_tag: delivery_tag,
+         redelivered: redelivered,
+         exchange: exchange,
+         routing_key: routing_key,
+         content_type: content_type,
+         content_encoding: content_encoding,
+         headers: headers,
+         persistent: delivery_mode == 2,
+         priority: priority,
+         correlation_id: correlation_id,
+         reply_to: reply_to,
+         expiration: expiration,
+         message_id: message_id,
+         timestamp: timestamp,
+         type: type,
+         user_id: user_id,
+         app_id: app_id,
+         cluster_id: cluster_id
+       }}
+    )
 
     handlers
   end
 
-  defp do_handle_message(client_pid, handlers,{
-    basic_return(reply_code: reply_code,
-                 reply_text: reply_text,
-                 exchange: exchange,
-                 routing_key: routing_key),
-    amqp_msg(props: p_basic(content_type: content_type,
-                            content_encoding: content_encoding,
-                            headers: headers,
-                            delivery_mode: delivery_mode,
-                            priority: priority,
-                            correlation_id: correlation_id,
-                            reply_to: reply_to,
-                            expiration: expiration,
-                            message_id: message_id,
-                            timestamp: timestamp,
-                            type: type,
-                            user_id: user_id,
-                            app_id: app_id,
-                            cluster_id: cluster_id), payload: payload)
-    })
-  do
-    send(client_pid, {:basic_return, payload, %{
-      reply_code: reply_code,
-      reply_text: reply_text,
-      exchange: exchange,
-      routing_key: routing_key,
-      content_type: content_type,
-      content_encoding: content_encoding,
-      headers: headers,
-      persistent: delivery_mode == 2,
-      priority: priority,
-      correlation_id: correlation_id,
-      reply_to: reply_to,
-      expiration: expiration,
-      message_id: message_id,
-      timestamp: timestamp,
-      type: type,
-      user_id: user_id,
-      app_id: app_id,
-      cluster_id: cluster_id
-    }})
+  defp do_handle_message(client_pid, handlers, {
+         basic_return(
+           reply_code: reply_code,
+           reply_text: reply_text,
+           exchange: exchange,
+           routing_key: routing_key
+         ),
+         amqp_msg(
+           props:
+             p_basic(
+               content_type: content_type,
+               content_encoding: content_encoding,
+               headers: headers,
+               delivery_mode: delivery_mode,
+               priority: priority,
+               correlation_id: correlation_id,
+               reply_to: reply_to,
+               expiration: expiration,
+               message_id: message_id,
+               timestamp: timestamp,
+               type: type,
+               user_id: user_id,
+               app_id: app_id,
+               cluster_id: cluster_id
+             ),
+           payload: payload
+         )
+       }) do
+    send(
+      client_pid,
+      {:basic_return, payload,
+       %{
+         reply_code: reply_code,
+         reply_text: reply_text,
+         exchange: exchange,
+         routing_key: routing_key,
+         content_type: content_type,
+         content_encoding: content_encoding,
+         headers: headers,
+         persistent: delivery_mode == 2,
+         priority: priority,
+         correlation_id: correlation_id,
+         reply_to: reply_to,
+         expiration: expiration,
+         message_id: message_id,
+         timestamp: timestamp,
+         type: type,
+         user_id: user_id,
+         app_id: app_id,
+         cluster_id: cluster_id
+       }}
+    )
 
     handlers
   end
