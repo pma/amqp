@@ -1,13 +1,13 @@
 defmodule AMQP.Mixfile do
   use Mix.Project
 
-  @version "1.3.3"
+  @version "1.4.0-rc.0"
 
   def project do
     [
       app: :amqp,
       version: @version,
-      elixir: "~> 1.3",
+      elixir: "~> 1.7",
       description: description(),
       package: package(),
       source_url: "https://github.com/pma/amqp",
@@ -35,7 +35,7 @@ defmodule AMQP.Mixfile do
 
   defp deps do
     [
-      {:amqp_client, "~> 3.8.1"},
+      {:amqp_client, "~> 3.8.0"},
 
       # Docs dependencies.
       {:earmark, "~> 1.0", only: :docs},
