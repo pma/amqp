@@ -19,7 +19,7 @@ Add AMQP as a dependency in your `mix.exs` file.
 ```elixir
 def deps do
   [
-    {:amqp, "~> 1.3"}
+    {:amqp, "~> 1.4.0"}
   ]
 end
 ```
@@ -293,9 +293,9 @@ If the number equals `prefetch_count`, those messages were left without
 acknowledgements and that's why consumer have stopped receiving more
 messages.
 
-#### What are Elixir, OTP and RabbitMQ versions supported?
+#### The version compatibiliy
 
-Please see [this wiki article](https://github.com/pma/amqp/wiki/Versions-and-Compatibilities) for the details.
+Check out [this article](https://github.com/pma/amqp/wiki/Versions-and-Compatibilities) to find out the compatibility with Elixir, OTP and RabbitMQ.
 
 #### Heartbeats
 
