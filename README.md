@@ -279,8 +279,7 @@ With that running in the background, you should be able to run the tests via `mi
 If this is your first time using RabbitMQ, we recommend you to start designing your application like this way:
 
 - Open and manage a single connection for an application
-
-* Open/close a channel per process (don't share a channel between multiple processes)
+- Open/close a channel per process (don't share a channel between multiple processes)
 
 Once you see things in action you can now consider optimising the performance by increasing number of connections etc.
 
