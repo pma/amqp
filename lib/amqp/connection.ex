@@ -189,7 +189,7 @@ defmodule AMQP.Connection do
   end
 
   # If the port is configured as a string, cast it to an integer
-  defp normalize_port(port) when is_bitstring(port), do: String.to_integer(port)
+  defp normalize_port(port) when is_binary(port), do: String.to_integer(port)
   defp normalize_port(port), do: port
 
   @doc """
