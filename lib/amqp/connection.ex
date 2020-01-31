@@ -41,7 +41,7 @@ defmodule AMQP.Connection do
     * `:password` - The password of user (defaults to `"guest"`);
     * `:virtual_host` - The name of a virtual host in the broker (defaults to `"/"`);
     * `:host` - The hostname of the broker (defaults to `"localhost"`);
-    * `:port` - The port the broker is listening on (defaults to `5672`);
+    * `:port` - The port the broker is listening on as either a string or an integer (defaults to `5672`);
     * `:channel_max` - The channel_max handshake parameter (defaults to `0`);
     * `:frame_max` - The frame_max handshake parameter (defaults to `0`);
     * `:heartbeat` - The hearbeat interval in seconds (defaults to `10`);
@@ -148,8 +148,8 @@ defmodule AMQP.Connection do
       username: keys_get(options, params, :username),
       password: keys_get(options, params, :password),
       virtual_host: keys_get(options, params, :virtual_host),
-      host: keys_get(options, params, :host) |> to_charlist,
-      port: keys_get(options, params, :port),
+      host: keys_get(options, params, :host) |> to_charlist(),
+      port: keys_get(options, params, :port) |> normalize_port(),
       channel_max: keys_get(options, params, :channel_max),
       frame_max: keys_get(options, params, :frame_max),
       heartbeat: keys_get(options, params, :heartbeat),
@@ -171,8 +171,8 @@ defmodule AMQP.Connection do
       username: Keyword.get(options, :username, "guest"),
       password: Keyword.get(options, :password, "guest"),
       virtual_host: Keyword.get(options, :virtual_host, "/"),
-      host: Keyword.get(options, :host, 'localhost') |> to_charlist,
-      port: Keyword.get(options, :port, :undefined),
+      host: Keyword.get(options, :host, 'localhost') |> to_charlist(),
+      port: Keyword.get(options, :port, :undefined) |> normalize_port(),
       channel_max: Keyword.get(options, :channel_max, 0),
       frame_max: Keyword.get(options, :frame_max, 0),
       heartbeat: Keyword.get(options, :heartbeat, 10),
@@ -187,6 +187,10 @@ defmodule AMQP.Connection do
         ])
     )
   end
+
+  # If the port is configured as a string, cast it to an integer
+  defp normalize_port(port) when is_bitstring(port), do: String.to_integer(port)
+  defp normalize_port(port), do: port
 
   @doc """
   Closes an open Connection.

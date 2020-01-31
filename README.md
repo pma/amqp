@@ -245,32 +245,44 @@ The valid AMQP field types are:
 
 Valid argument names in `Queue.declare` include:
 
-* "x-expires"
-* "x-message-ttl"
-* "x-dead-letter-routing-key"
-* "x-dead-letter-exchange"
-* "x-max-length"
-* "x-max-length-bytes"
+- "x-expires"
+- "x-message-ttl"
+- "x-dead-letter-routing-key"
+- "x-dead-letter-exchange"
+- "x-max-length"
+- "x-max-length-bytes"
 
 Valid argument names in `Basic.consume` include:
 
-* "x-priority"
-* "x-cancel-on-ha-failover"
+- "x-priority"
+- "x-cancel-on-ha-failover"
 
 Valid argument names in `Exchange.declare` include:
 
-* "alternate-exchange"
+- "alternate-exchange"
 
 ## Troubleshooting / FAQ
+
+#### Testing AMQP locally
+
+In order to test the AMQP library locally, you need an instance of RabbitMQ running. The easiest way to do
+that is by using Docker and running the following command in the background:
+
+```
+docker run -p 5672:5672 -p 15672:15672 rabbitmq:3.8-management
+```
+
+With that running in the background, you should be able to run the tests via `mix test`.
 
 #### Connections and Channels
 
 If this is your first time using RabbitMQ, we recommend you to start designing your application like this way:
 
 - Open and manage a single connection for an application
-- Open/close a channel per process (don't share a channel between multiple processes)
 
-Once you saw things in action you can now consider optimising the performance by increasing number of connections etc.
+* Open/close a channel per process (don't share a channel between multiple processes)
+
+Once you see things in action you can now consider optimising the performance by increasing number of connections etc.
 
 Note it's completely safe to share a single connection between multiple processes.
 However it is not recommended to share a channel between multiple processes.
