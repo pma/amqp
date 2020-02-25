@@ -148,12 +148,12 @@ defmodule AMQP.Connection do
       username: keys_get(options, params, :username),
       password: keys_get(options, params, :password),
       virtual_host: keys_get(options, params, :virtual_host),
-      host: keys_get(options, params, :host) |> to_charlist,
-      port: keys_get(options, params, :port),
-      channel_max: keys_get(options, params, :channel_max),
-      frame_max: keys_get(options, params, :frame_max),
-      heartbeat: keys_get(options, params, :heartbeat),
-      connection_timeout: keys_get(options, params, :connection_timeout),
+      host: keys_get(options, params, :host) |> to_charlist(),
+      port: keys_get(options, params, :port) |> normalize_int_opt(),
+      channel_max: keys_get(options, params, :channel_max) |> normalize_int_opt(),
+      frame_max: keys_get(options, params, :frame_max) |> normalize_int_opt(),
+      heartbeat: keys_get(options, params, :heartbeat) |> normalize_int_opt(),
+      connection_timeout: keys_get(options, params, :connection_timeout) |> normalize_int_opt(),
       ssl_options: keys_get(options, params, :ssl_options),
       client_properties: keys_get(options, params, :client_properties),
       socket_options: keys_get(options, params, :socket_options),
@@ -171,12 +171,12 @@ defmodule AMQP.Connection do
       username: Keyword.get(options, :username, "guest"),
       password: Keyword.get(options, :password, "guest"),
       virtual_host: Keyword.get(options, :virtual_host, "/"),
-      host: Keyword.get(options, :host, 'localhost') |> to_charlist,
-      port: Keyword.get(options, :port, :undefined),
-      channel_max: Keyword.get(options, :channel_max, 0),
-      frame_max: Keyword.get(options, :frame_max, 0),
-      heartbeat: Keyword.get(options, :heartbeat, 10),
-      connection_timeout: Keyword.get(options, :connection_timeout, 50000),
+      host: Keyword.get(options, :host, 'localhost') |> to_charlist(),
+      port: Keyword.get(options, :port, :undefined) |> normalize_int_opt(),
+      channel_max: Keyword.get(options, :channel_max, 0) |> normalize_int_opt(),
+      frame_max: Keyword.get(options, :frame_max, 0) |> normalize_int_opt(),
+      heartbeat: Keyword.get(options, :heartbeat, 10) |> normalize_int_opt(),
+      connection_timeout: Keyword.get(options, :connection_timeout, 50000) |> normalize_int_opt(),
       ssl_options: Keyword.get(options, :ssl_options, :none),
       client_properties: Keyword.get(options, :client_properties, []),
       socket_options: Keyword.get(options, :socket_options, []),
@@ -187,6 +187,10 @@ defmodule AMQP.Connection do
         ])
     )
   end
+
+  # If an integer value is configured as a string, cast it to an integer where applicable
+  defp normalize_int_opt(value) when is_binary(value), do: String.to_integer(value)
+  defp normalize_int_opt(value), do: value
 
   @doc """
   Closes an open Connection.

@@ -9,7 +9,12 @@ defmodule ConnectionTest do
   end
 
   test "open connection with host as binary" do
-    assert {:ok, conn} = Connection.open(host: "localhost")
+    assert {:ok, conn} = Connection.open(host: "localhost", port: 5672)
+    assert :ok = Connection.close(conn)
+  end
+
+  test "open connection with port as binary" do
+    assert {:ok, conn} = Connection.open(host: "localhost", port: "5672")
     assert :ok = Connection.close(conn)
   end
 
@@ -31,6 +36,26 @@ defmodule ConnectionTest do
   test "open connection with uri, name, and options" do
     assert {:ok, conn} =
              Connection.open("amqp://nonexistent:5672", "my-connection", host: 'localhost')
+
+    assert :ok = Connection.close(conn)
+  end
+
+  test "open connection with uri, name, port as an integer, and options " do
+    assert {:ok, conn} =
+             Connection.open("amqp://nonexistent", "my-connection",
+               host: 'localhost',
+               port: 5672
+             )
+
+    assert :ok = Connection.close(conn)
+  end
+
+  test "open connection with uri, name, port as a string, and options " do
+    assert {:ok, conn} =
+             Connection.open("amqp://nonexistent", "my-connection",
+               host: 'localhost',
+               port: "5672"
+             )
 
     assert :ok = Connection.close(conn)
   end
