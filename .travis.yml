@@ -3,9 +3,11 @@ sudo: false # to use faster container based build environment
 dist: trusty
 matrix:
   include:
+    - elixir: 1.10.1
+      otp_release: 22.2
+      env: CHECK_FORMATTED=true
     - elixir: 1.9.2
       otp_release: 22.0.4
-      env: CHECK_FORMATTED=true
     - elixir: 1.8.1
       otp_release: 21.3.2
     - elixir: 1.7.4
