@@ -200,7 +200,7 @@ defmodule AMQP.Queue do
 
   This convenience function will spawn a process and register it using AMQP.Basic.consume.
   """
-  @spec subscribe(Channel.t(), Basic.queue(), (String.t(), map -> any)) ::
+  @spec subscribe(Channel.t(), Basic.queue(), (String.t(), map -> any), keyword) ::
           {:ok, String.t()} | Basic.error()
   def subscribe(%Channel{} = channel, queue, fun, options \\ []) when is_function(fun, 2) do
     consumer_pid = spawn(fn -> do_start_consumer(channel, fun) end)
