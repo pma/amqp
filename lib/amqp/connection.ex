@@ -11,13 +11,27 @@ defmodule AMQP.Connection do
   @type t :: %Connection{pid: pid}
 
   @doc """
-  Opens a new connection without a name.
+  Opens a new connection. `connection_name` can be passed in as an option when given a keyword list.
 
   Behaves exactly like `open(options_or_uri, :undefined)`. See `open/2`.
   """
   @spec open(keyword | String.t()) :: {:ok, t()} | {:error, atom()} | {:error, any()}
-  def open(options_or_uri \\ []) when is_binary(options_or_uri) or is_list(options_or_uri) do
-    open(options_or_uri, :undefined)
+  def open(options \\ [])
+
+  def open(uri) when is_binary(uri) do
+    open(uri, :undefined)
+  end
+
+  def open(options) when is_list(options) do
+    options
+    |> Keyword.get_and_update(:connection_name, fn _ -> :pop end)
+    |> case do
+      {nil, options} ->
+        open(options, :undefined)
+
+      {connection_name, options} ->
+        open(options, connection_name)
+    end
   end
 
   @doc """
