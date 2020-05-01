@@ -38,6 +38,9 @@ defmodule AMQP.Connection do
     * `:socket_options` - Extra socket options. These are appended to the default options. \
                           See http://www.erlang.org/doc/man/inet.html#setopts-2 and http://www.erlang.org/doc/man/gen_tcp.html#connect-4 \
                           for descriptions of the available options.
+    * `:auth_mechanisms` - A list of authentication of SASL authentication mechanisms to use.
+                          See https://www.rabbitmq.com/access-control.html#mechanisms and https://github.com/rabbitmq/rabbitmq-auth-mechanism-ssl
+                          for descriptions of the available options.
 
   ## Enabling SSL
 
