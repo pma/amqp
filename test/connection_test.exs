@@ -56,6 +56,7 @@ defmodule ConnectionTest do
                host: 'localhost',
                port: "5672"
              )
+
     assert get_connection_name(conn) == "my-connection"
     assert :ok = Connection.close(conn)
   end
@@ -80,7 +81,7 @@ defmodule ConnectionTest do
   defp get_connection_name(conn) do
     params = :amqp_connection.info(conn.pid, [:amqp_params])[:amqp_params]
     amqp_params_network(client_properties: props) = params
-    {_, _, name} = Enum.find(props, fn ({key, _type, _value}) -> key == "connection_name" end)
+    {_, _, name} = Enum.find(props, fn {key, _type, _value} -> key == "connection_name" end)
     name
   end
 end
