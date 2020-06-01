@@ -106,7 +106,7 @@ defmodule AMQP.Connection do
       iex> AMQP.Connection.open("amqp://guest:guest@localhost", "my-connection")
       {:ok, %AMQP.Connection{}}
 
-      iex> AMQP.Connection.open("amqp://guest:guest@localhost", options, "my-connection")
+      iex> AMQP.Connection.open("amqp://guest:guest@localhost", "my-connection", options)
       {:ok, %AMQP.Connection{}}
 
   However connection_name parameter is now deprecated and might not be supported in the future versions.
