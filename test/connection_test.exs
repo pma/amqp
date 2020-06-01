@@ -33,16 +33,9 @@ defmodule ConnectionTest do
     assert :ok = Connection.close(conn)
   end
 
-  test "open connection with uri, name, and options" do
+  test "open connection with uri, port as an integer, and options " do
     assert {:ok, conn} =
-             Connection.open("amqp://nonexistent:5672", "my-connection", host: 'localhost')
-
-    assert :ok = Connection.close(conn)
-  end
-
-  test "open connection with uri, name, port as an integer, and options " do
-    assert {:ok, conn} =
-             Connection.open("amqp://nonexistent", "my-connection",
+             Connection.open("amqp://nonexistent",
                host: 'localhost',
                port: 5672
              )
@@ -50,20 +43,26 @@ defmodule ConnectionTest do
     assert :ok = Connection.close(conn)
   end
 
-  test "open connection with uri, name, port as a string, and options" do
+  test "open connection with uri, port as a string, and options" do
     assert {:ok, conn} =
-             Connection.open("amqp://nonexistent", "my-connection",
+             Connection.open("amqp://nonexistent",
                host: 'localhost',
                port: "5672"
              )
 
-    assert get_connection_name(conn) == "my-connection"
     assert :ok = Connection.close(conn)
   end
 
   test "open connection with name in options" do
     assert {:ok, conn} = Connection.open("amqp://localhost", connection_name: "my-connection")
     assert get_connection_name(conn) == "my-connection"
+    assert :ok = Connection.close(conn)
+  end
+
+  test "open connection with uri, name, and options (deprected but still spported)" do
+    assert {:ok, conn} =
+             Connection.open("amqp://nonexistent:5672", "my-connection", host: 'localhost')
+
     assert :ok = Connection.close(conn)
   end
 

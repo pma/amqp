@@ -120,7 +120,7 @@ defmodule AMQP.Connection do
   def open(uri, options)
 
   def open(uri, name) when is_binary(uri) and (is_binary(name) or name == :undefined) do
-    open(uri, name, _options = [])
+    do_open(uri, name, _options = [])
   end
 
   def open(options, name) when is_list(options) and (is_binary(name) or name == :undefined) do
@@ -135,15 +135,27 @@ defmodule AMQP.Connection do
   def open(uri, options) when is_binary(uri) and is_list(options) do
     {name, options} = take_connection_name(options)
 
-    open(uri, name, options)
+    do_open(uri, name, options)
   end
 
   @doc false
+  @deprecated "Use :connection_name in open/2 instead"
   @spec open(String.t(), String.t() | :undefined, keyword) ::
           {:ok, t()} | {:error, atom()} | {:error, any()}
   def open(uri, name, options) when is_binary(uri) and is_list(options) do
+    do_open(uri, name, options)
+  end
+
+  defp do_open(uri, name, options) do
     case uri |> String.to_charlist() |> :amqp_uri.parse() do
       {:ok, amqp_params} -> amqp_params |> merge_options_to_amqp_params(options) |> do_open(name)
+      error -> error
+    end
+  end
+
+  defp do_open(amqp_params, name) do
+    case :amqp_connection.start(amqp_params, name) do
+      {:ok, pid} -> {:ok, %Connection{pid: pid}}
       error -> error
     end
   end
@@ -217,13 +229,6 @@ defmodule AMQP.Connection do
     case :amqp_connection.close(conn.pid) do
       :ok -> :ok
       error -> {:error, error}
-    end
-  end
-
-  defp do_open(amqp_params, name) do
-    case :amqp_connection.start(amqp_params, name) do
-      {:ok, pid} -> {:ok, %Connection{pid: pid}}
-      error -> error
     end
   end
 
