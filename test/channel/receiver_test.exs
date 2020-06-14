@@ -52,7 +52,7 @@ defmodule AMQP.Channel.ReceiverTest do
     :ok = Channel.close(chan)
   end
 
-  test "closes the receiver when all handers are cancelled", meta do
+  test "closes the receiver when all handlers are cancelled", meta do
     {:ok, chan} = Channel.open(meta.conn)
 
     {:ok, consumer_tag} = Basic.consume(chan, meta.queue)
