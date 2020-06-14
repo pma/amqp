@@ -25,8 +25,9 @@ defmodule AMQP.Channel.ReceiverManager do
   defstruct [:pid, :channel, :client]
 
   @doc false
-  @spec start_link(map) :: GenServer.on_start()
-  def start_link(opts \\ [name: __MODULE__]) do
+  @spec start_link(Keyword.t()) :: GenServer.on_start()
+  def start_link(opts) do
+    opts = Keyword.merge([name: __MODULE__], opts)
     GenServer.start_link(__MODULE__, %{}, opts)
   end
 

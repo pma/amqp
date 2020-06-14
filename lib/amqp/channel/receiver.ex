@@ -57,11 +57,7 @@ defmodule AMQP.Channel.Receiver do
       handlers
     end
   end
-
-  defp remove_handler(handlers, handler, _) do
-    Map.delete(handlers, handler)
-  end
-
+  
   # -- Confirm.register_handler
 
   defp do_handle_message(

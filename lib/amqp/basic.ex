@@ -346,9 +346,17 @@ defmodule AMQP.Basic do
 
     consumer_pid = consumer_pid || self()
 
-    receiver = ReceiverManager.register_handler(chan.pid, consumer_pid, :consume)
+    pid =
+      case chan.consumer_type do
+        :selective ->
+          %{pid: pid} = ReceiverManager.register_handler(chan.pid, consumer_pid, :consume)
+          pid
 
-    case :amqp_channel.subscribe(chan.pid, basic_consume, receiver.pid) do
+        :direct ->
+          consumer_pid
+      end
+
+    case :amqp_channel.subscribe(chan.pid, basic_consume, pid) do
       basic_consume_ok(consumer_tag: consumer_tag) -> {:ok, consumer_tag}
       error -> {:error, error}
     end
