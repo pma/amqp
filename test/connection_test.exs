@@ -54,7 +54,7 @@ defmodule ConnectionTest do
   end
 
   test "open connection with name in options" do
-    assert {:ok, conn} = Connection.open("amqp://localhost", connection_name: "my-connection")
+    assert {:ok, conn} = Connection.open("amqp://localhost", name: "my-connection")
     assert get_connection_name(conn) == "my-connection"
     assert :ok = Connection.close(conn)
   end

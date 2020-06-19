@@ -57,13 +57,13 @@ defmodule AMQP.Connection do
     * `:auth_mechanisms` - A list of authentication of SASL authentication mechanisms to use. \
                           See https://www.rabbitmq.com/access-control.html#mechanisms and https://github.com/rabbitmq/rabbitmq-auth-mechanism-ssl \
                           for descriptions of the available options;
-    * `:connection_name` - A human-readable string that will be displayed in the management UI. \
+    * `:name` - A human-readable string that will be displayed in the management UI. \
                           Connection names do not have to be unique and cannot be used as connection identifiers \
                           (defaults to `:undefined`).
 
   ## Examples
 
-      iex> options = [host: "localhost", port: 5672, virtual_host: "/", username: "guest", password: "guest", connection_name: "my-conn"]
+      iex> options = [host: "localhost", port: 5672, virtual_host: "/", username: "guest", password: "guest", name: "my-conn"]
       iex> AMQP.Connection.open(options)
       {:ok, %AMQP.Connection{}}
 
@@ -109,10 +109,10 @@ defmodule AMQP.Connection do
       iex> AMQP.Connection.open("amqp://guest:guest@localhost", "my-connection", options)
       {:ok, %AMQP.Connection{}}
 
-  However connection_name parameter is now deprecated and might not be supported in the future versions.
-  You are recommented to pass it with `:connection_name` option instead:
+  However the connection name parameter is now deprecated and might not be supported in the future versions.
+  You are recommented to pass it with `:name` option instead:
 
-      iex> AMQP.Connection.open("amqp://guest:guest@localhost", connection_name: "my-connection")
+      iex> AMQP.Connection.open("amqp://guest:guest@localhost", name: "my-connection")
       {:ok, %AMQP.Connection{}}
   """
   @spec open(String.t() | keyword, keyword | String.t() | :undefined) ::
@@ -139,7 +139,7 @@ defmodule AMQP.Connection do
   end
 
   @doc false
-  @deprecated "Use :connection_name in open/2 instead"
+  @deprecated "Use :name in open/2 instead"
   @spec open(String.t(), String.t() | :undefined, keyword) ::
           {:ok, t()} | {:error, atom()} | {:error, any()}
   def open(uri, name, options) when is_binary(uri) and is_list(options) do
@@ -162,8 +162,8 @@ defmodule AMQP.Connection do
 
   # take name from options
   defp take_connection_name(options) do
-    name = options[:connection_name] || :undefined
-    options = Keyword.delete(options, :connection_name)
+    name = options[:name] || :undefined
+    options = Keyword.delete(options, :name)
     {name, options}
   end
 
