@@ -33,16 +33,9 @@ defmodule ConnectionTest do
     assert :ok = Connection.close(conn)
   end
 
-  test "open connection with uri, name, and options" do
+  test "open connection with uri, port as an integer, and options " do
     assert {:ok, conn} =
-             Connection.open("amqp://nonexistent:5672", "my-connection", host: 'localhost')
-
-    assert :ok = Connection.close(conn)
-  end
-
-  test "open connection with uri, name, port as an integer, and options " do
-    assert {:ok, conn} =
-             Connection.open("amqp://nonexistent", "my-connection",
+             Connection.open("amqp://nonexistent",
                host: 'localhost',
                port: 5672
              )
@@ -50,12 +43,25 @@ defmodule ConnectionTest do
     assert :ok = Connection.close(conn)
   end
 
-  test "open connection with uri, name, port as a string, and options " do
+  test "open connection with uri, port as a string, and options" do
     assert {:ok, conn} =
-             Connection.open("amqp://nonexistent", "my-connection",
+             Connection.open("amqp://nonexistent",
                host: 'localhost',
                port: "5672"
              )
+
+    assert :ok = Connection.close(conn)
+  end
+
+  test "open connection with name in options" do
+    assert {:ok, conn} = Connection.open("amqp://localhost", name: "my-connection")
+    assert get_connection_name(conn) == "my-connection"
+    assert :ok = Connection.close(conn)
+  end
+
+  test "open connection with uri, name, and options (deprected but still spported)" do
+    assert {:ok, conn} =
+             Connection.open("amqp://nonexistent:5672", "my-connection", host: 'localhost')
 
     assert :ok = Connection.close(conn)
   end
@@ -69,5 +75,12 @@ defmodule ConnectionTest do
     assert params[:username] == "me"
     assert params[:password] == "bar"
     assert params[:host] == 'amqp.test.com'
+  end
+
+  defp get_connection_name(conn) do
+    params = :amqp_connection.info(conn.pid, [:amqp_params])[:amqp_params]
+    amqp_params_network(client_properties: props) = params
+    {_, _, name} = Enum.find(props, fn {key, _type, _value} -> key == "connection_name" end)
+    name
   end
 end
