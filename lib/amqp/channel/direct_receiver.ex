@@ -1,8 +1,9 @@
 defmodule AMQP.Channel.DirectReceiver do
-  @moduledoc """
-  Direct consumer callback module similar to amqp_direct_consumer.erl.
-  For more information see: https://github.com/rabbitmq/rabbitmq-erlang-client/blob/master/src/amqp_direct_consumer.erl.
-  """
+  @moduledoc false
+
+  #  Direct consumer callback module that implements `:amqp_gen_consumer` behavior.
+  #  Based on `amqp_direct_consumer.erl`.
+  #  For more information see: https://github.com/rabbitmq/rabbitmq-erlang-client/blob/master/src/amqp_direct_consumer.erl .
 
   import AMQP.Core
   @behaviour :amqp_gen_consumer
@@ -12,7 +13,7 @@ defmodule AMQP.Channel.DirectReceiver do
   #########################################################
 
   @doc false
-  def init([consumer]) do
+  def init(consumer) do
     _ref = Process.monitor(consumer)
     {:ok, consumer}
   end
