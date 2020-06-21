@@ -57,7 +57,7 @@ defmodule AMQP.Channel.Receiver do
       handlers
     end
   end
-  
+
   # -- Confirm.register_handler
 
   defp do_handle_message(
