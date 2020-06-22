@@ -40,7 +40,7 @@ defmodule AMQP.Mixfile do
       # Docs dependencies.
       {:earmark, "~> 1.0", only: :docs},
       {:ex_doc, "~> 0.15", only: :docs},
-      {:inch_ex, "~> 2.0", only: :docs},
+      {:inch_ex, "~> 0.5", only: :docs},
 
       # Dev dependencies.
       {:dialyxir, "~> 0.5", only: :dev, runtime: false}
