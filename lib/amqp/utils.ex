@@ -7,21 +7,41 @@ defmodule AMQP.Utils do
   end
 
   def to_type_tuple(:undefined), do: :undefined
-  def to_type_tuple({name, type, value}), do: {to_string(name), type, value}
 
-  def to_type_tuple({name, value}) when is_boolean(value) do
-    to_type_tuple({name, :bool, value})
+  def to_type_tuple({name, type, value}) do
+    # Important to cast an array's internal values
+    {^type, value} = cast_field_value({type, value})
+    {to_string(name), type, value}
   end
 
-  def to_type_tuple({name, value}) when is_bitstring(value) or is_atom(value) do
-    to_type_tuple({name, :longstr, to_string(value)})
+  def to_type_tuple({name, value}) do
+    {type, value} = cast_field_value(value)
+    to_type_tuple({to_string(name), type, value})
   end
 
-  def to_type_tuple({name, value}) when is_integer(value) do
-    to_type_tuple({name, :long, value})
+  defp cast_field_value({:array, value}) do
+    {:array, Enum.map(value, &cast_field_value/1)}
   end
 
-  def to_type_tuple({name, value}) when is_float(value) do
-    to_type_tuple({name, :float, value})
+  defp cast_field_value(tuple = {_type, _value}), do: tuple
+
+  defp cast_field_value(value) when is_boolean(value) do
+    {:bool, value}
+  end
+
+  defp cast_field_value(value) when is_bitstring(value) or is_atom(value) do
+    {:longstr, to_string(value)}
+  end
+
+  defp cast_field_value(value) when is_integer(value) do
+    {:long, value}
+  end
+
+  defp cast_field_value(value) when is_float(value) do
+    {:float, value}
+  end
+
+  defp cast_field_value(value) when is_list(value) do
+    {:array, Enum.map(value, &cast_field_value/1)}
   end
 end
