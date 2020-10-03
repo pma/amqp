@@ -1,9 +1,19 @@
 defmodule AMQP.DirectConsumer do
   @moduledoc """
-    Direct consumer callback module that implements `:amqp_gen_consumer` behavior. This allows the process calling
-    `AMQP.Channel.open/2` to receive messages directly from the channel process, skipping intermediate processes.
+    `AMQP.DirectConsumer` is an example custom consumer. It's argument is a pid of a process which the channel is
+    meant to forward the messages to.
 
-    For more information see: https://github.com/rabbitmq/rabbitmq-erlang-client/blob/master/src/amqp_direct_consumer.erl .
+    When using the `DirectConsumer` the channel will forward the messages directly to the specified pid, as well as monitor
+    that pid, so that when it exits the channel will exit as well (closing the channel).
+
+    ## Usage
+
+        iex> AMQP.Channel.open(conn, {AMQP.DirectConsumer, self()})
+
+    This will forward all the messages from the channel to the calling process.
+
+    This is an Elixir reimplementation of `:amqp_direct_consumer`. ( https://github.com/rabbitmq/rabbitmq-erlang-client/blob/master/src/amqp_direct_consumer.erl)
+    For more information see: https://www.rabbitmq.com/erlang-client-user-guide.html#consumers-imlementation
   """
   import AMQP.Core
   @behaviour :amqp_gen_consumer

@@ -344,15 +344,16 @@ defmodule AMQP.Basic do
         arguments: Keyword.get(options, :arguments, [])
       )
 
-    consumer_pid = consumer_pid || self()
-
     pid =
-      case chan.consumer_spec do
+      case chan.custom_consumer do
         nil ->
-          %{pid: pid} = ReceiverManager.register_handler(chan.pid, consumer_pid, :consume)
+          %{pid: pid} =
+            ReceiverManager.register_handler(chan.pid, consumer_pid || self(), :consume)
+
           pid
 
         _ ->
+          # when channel has a custom consumer, leave it to handle the given pid with `#handle_consume` callback.
           consumer_pid
       end
 

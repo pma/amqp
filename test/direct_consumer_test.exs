@@ -2,17 +2,30 @@ defmodule DirectConsumerTest do
   use ExUnit.Case
 
   alias AMQP.{Basic, Connection, Channel, Queue}
-  alias Channel.ReceiverManager
 
   setup do
     {:ok, conn} = Connection.open()
-    {:ok, chan} = Channel.open(conn, {AMQP.DirectConsumer, self()})
+    test = self()
+    receiver_pid = spawn(fn -> simple_receiver(test) end)
+    {:ok, chan} = Channel.open(conn, {AMQP.DirectConsumer, receiver_pid})
 
     on_exit(fn ->
       :ok = Connection.close(conn)
+      send(receiver_pid, :stop)
     end)
 
     {:ok, conn: conn, chan: chan}
+  end
+
+  def simple_receiver(pid) do
+    receive do
+      :stop ->
+        :ok
+
+      m ->
+        send(pid, m)
+        simple_receiver(pid)
+    end
   end
 
   test "basic publish to default exchange", meta do
@@ -41,6 +54,11 @@ defmodule DirectConsumerTest do
   describe "basic consume" do
     setup meta do
       {:ok, %{queue: queue}} = Queue.declare(meta[:chan])
+
+      on_exit(fn ->
+        Queue.delete(meta[:chan], queue)
+      end)
+
       {:ok, Map.put(meta, :queue, queue)}
     end
 

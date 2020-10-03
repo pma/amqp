@@ -5,20 +5,21 @@ defmodule AMQP.Channel do
 
   alias AMQP.{Connection, Channel}
 
-  defstruct [:conn, :pid, :consumer_spec]
-  @type t :: %Channel{conn: Connection.t(), pid: pid, consumer_spec: consumer_spec()}
-  @type consumer_spec :: {module(), args :: any()}
+  defstruct [:conn, :pid, :custom_consumer]
+  @type t :: %Channel{conn: Connection.t(), pid: pid, custom_consumer: custom_consumer()}
+  @type custom_consumer :: {module(), args :: any()}
 
   @doc """
   Opens a new Channel in a previously opened Connection.
 
-  Allows optionally to pass a `t:consumer_spec/0` to start a custom consumer implementation. The
+  Allows optionally to pass a `t:custom_consumer/0` to start a custom consumer implementation. The
   consumer must implement the `:amqp_gen_consumer` behavior from `:amqp_client`. See
-  `:amqp_connection.open_channel/2` for more details.
+  `:amqp_connection.open_channel/2` for more details and `AMQP.DirectConsumer` for an example of a
+  custom consumer.
   """
-  @spec open(Connection.t(), consumer_spec | nil) :: {:ok, Channel.t()} | {:error, any}
-  def open(%Connection{} = conn, consumer_spec \\ nil) do
-    do_open_channel(conn, consumer_spec)
+  @spec open(Connection.t(), custom_consumer | nil) :: {:ok, Channel.t()} | {:error, any}
+  def open(%Connection{} = conn, custom_consumer \\ nil) do
+    do_open_channel(conn, custom_consumer)
   end
 
   @doc """
@@ -39,10 +40,13 @@ defmodule AMQP.Channel do
     end
   end
 
-  defp do_open_channel(conn, consumer_spec) do
-    case :amqp_connection.open_channel(conn.pid, consumer_spec) do
-      {:ok, chan_pid} -> {:ok, %Channel{conn: conn, pid: chan_pid, consumer_spec: consumer_spec}}
-      error -> error
+  defp do_open_channel(conn, custom_consumer) do
+    case :amqp_connection.open_channel(conn.pid, custom_consumer) do
+      {:ok, chan_pid} ->
+        {:ok, %Channel{conn: conn, pid: chan_pid, custom_consumer: custom_consumer}}
+
+      error ->
+        error
     end
   end
 end
