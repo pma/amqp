@@ -6,7 +6,7 @@ defmodule AMQP.Channel do
   alias AMQP.{Connection, Channel}
 
   defstruct [:conn, :pid, :custom_consumer]
-  @type t :: %Channel{conn: Connection.t(), pid: pid, custom_consumer: custom_consumer()}
+  @type t :: %Channel{conn: Connection.t(), pid: pid, custom_consumer: custom_consumer() | nil}
   @type custom_consumer :: {module(), args :: any()}
 
   @doc """
