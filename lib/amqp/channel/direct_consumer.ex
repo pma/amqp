@@ -1,10 +1,10 @@
 defmodule AMQP.DirectConsumer do
   @moduledoc """
-  Direct consumer callback module that implements `:amqp_gen_consumer` behavior. This allows the process calling
-  `AMQP.Channel.open/2` to receive messages directly from the channel process, skipping intermediate processes.
+    Direct consumer callback module that implements `:amqp_gen_consumer` behavior. This allows the process calling
+    `AMQP.Channel.open/2` to receive messages directly from the channel process, skipping intermediate processes.
 
-  For more information see: https://github.com/rabbitmq/rabbitmq-erlang-client/blob/master/src/amqp_direct_consumer.erl .
-"""
+    For more information see: https://github.com/rabbitmq/rabbitmq-erlang-client/blob/master/src/amqp_direct_consumer.erl .
+  """
   import AMQP.Core
   @behaviour :amqp_gen_consumer
 
