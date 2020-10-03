@@ -1,4 +1,4 @@
-defmodule BasicTest do
+defmodule DirectConsumerTest do
   use ExUnit.Case
 
   alias AMQP.{Basic, Connection, Channel, Queue}
@@ -6,7 +6,7 @@ defmodule BasicTest do
 
   setup do
     {:ok, conn} = Connection.open()
-    {:ok, chan} = Channel.open(conn)
+    {:ok, chan} = Channel.open(conn, {AMQP.DirectConsumer, self()})
 
     on_exit(fn ->
       :ok = Connection.close(conn)
@@ -41,14 +41,6 @@ defmodule BasicTest do
   describe "basic consume" do
     setup meta do
       {:ok, %{queue: queue}} = Queue.declare(meta[:chan])
-
-      on_exit(fn ->
-        if Process.alive?(meta[:chan].pid) do
-          Queue.delete(meta[:chan], queue)
-          Channel.close(meta[:chan])
-        end
-      end)
-
       {:ok, Map.put(meta, :queue, queue)}
     end
 
@@ -96,23 +88,6 @@ defmodule BasicTest do
       {:ok, consumer_tag} = Basic.consume(meta[:chan], meta[:queue])
 
       assert {:ok, ^consumer_tag} = Basic.cancel(meta[:chan], consumer_tag)
-    end
-
-    test "cancel exits the process when channel is closed", meta do
-      {:ok, consumer_tag} = Basic.consume(meta[:chan], meta[:queue])
-
-      Channel.close(meta[:chan])
-
-      Process.flag(:trap_exit, true)
-      assert {:normal, _} = catch_exit(Basic.cancel(meta[:chan], consumer_tag))
-    end
-
-    test "removes a receiver when queue does not exist", meta do
-      catch_exit(Basic.consume(meta[:chan], "non-existent-queue"))
-
-      :timer.sleep(100)
-      receiver = ReceiverManager.get_receiver(meta[:chan].pid, self())
-      refute receiver
     end
   end
 end

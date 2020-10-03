@@ -347,12 +347,12 @@ defmodule AMQP.Basic do
     consumer_pid = consumer_pid || self()
 
     pid =
-      case chan.consumer_type do
-        :selective ->
+      case chan.consumer_spec do
+        nil ->
           %{pid: pid} = ReceiverManager.register_handler(chan.pid, consumer_pid, :consume)
           pid
 
-        :direct ->
+        _ ->
           consumer_pid
       end
 

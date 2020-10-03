@@ -5,28 +5,20 @@ defmodule AMQP.Channel do
 
   alias AMQP.{Connection, Channel}
 
-  defstruct [:conn, :pid, :consumer_type]
-  @type t :: %Channel{conn: Connection.t(), pid: pid, consumer_type: consumer_type}
-  @type consumer_type :: :direct | :selective
-  @type opts :: [consumer_type: consumer_type, consumer_module: module, consumer_init_args: any]
+  defstruct [:conn, :pid, :consumer_spec]
+  @type t :: %Channel{conn: Connection.t(), pid: pid, consumer_spec: consumer_spec()}
+  @type consumer_spec :: {module(), args :: any()}
 
   @doc """
   Opens a new Channel in a previously opened Connection.
 
-  ## Options
-    * `:consumer_type` - specifies the type of consumer used as callback module.
-      available options: `:selective` or `:direct`. Defaults to `:selective`;
-    * `:consumer_module` - specifies consumer callback module. Used only with `:consumer_type: :direct` \
-      ignored otherwise. Defaults to `AMQP.Channel.DirectReceiver`;
-    * `:consumer_init_args` - arguments that will be passed to `init/1` function of
-      consumer callback module. Used only with `:consumer_type: :direct` ignored otherwise. \
-      If used with default `:consumer_module` it expects `t:Process.dest/0` of process \
-      receiving AMQP messages. Defaults to caller `pid`.
+  Allows optionally to pass a `t:consumer_spec/0` to start a custom consumer implementation. The
+  consumer must implement the `:amqp_gen_consumer` behavior from `:amqp_client`. See
+  `:amqp_connection.open_channel/2` for more details.
   """
-  @spec open(Connection.t(), opts) :: {:ok, Channel.t()} | {:error, any}
-  def open(%Connection{} = conn, opts \\ []) do
-    consumer_type = Keyword.get(opts, :consumer_type, :selective)
-    do_open_channel(conn, consumer_type, opts)
+  @spec open(Connection.t(), consumer_spec | nil) :: {:ok, Channel.t()} | {:error, any}
+  def open(%Connection{} = conn, consumer_spec \\ nil) do
+    do_open_channel(conn, consumer_spec)
   end
 
   @doc """
@@ -40,19 +32,16 @@ defmodule AMQP.Channel do
     end
   end
 
-  defp do_open_channel(conn, type = :selective, _opts) do
+  defp do_open_channel(conn, nil) do
     case :amqp_connection.open_channel(conn.pid) do
-      {:ok, chan_pid} -> {:ok, %Channel{consumer_type: type, conn: conn, pid: chan_pid}}
+      {:ok, chan_pid} -> {:ok, %Channel{conn: conn, pid: chan_pid}}
       error -> error
     end
   end
 
-  defp do_open_channel(conn, type = :direct, opts) do
-    consumer_module = Keyword.get(opts, :consumer_module, AMQP.Channel.DirectReceiver)
-    consumer_init_args = Keyword.get(opts, :consumer_init_args, self())
-
-    case :amqp_connection.open_channel(conn.pid, {consumer_module, consumer_init_args}) do
-      {:ok, chan_pid} -> {:ok, %Channel{consumer_type: type, conn: conn, pid: chan_pid}}
+  defp do_open_channel(conn, consumer_spec) do
+    case :amqp_connection.open_channel(conn.pid, consumer_spec) do
+      {:ok, chan_pid} -> {:ok, %Channel{conn: conn, pid: chan_pid, consumer_spec: consumer_spec}}
       error -> error
     end
   end

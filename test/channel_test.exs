@@ -16,7 +16,7 @@ defmodule ChannelTest do
   end
 
   test "open channel for direct consumer", meta do
-    assert {:ok, chan} = Channel.open(meta[:conn], consumer_type: :direct)
+    assert {:ok, chan} = Channel.open(meta[:conn], {AMQP.DirectConsumer, self()})
     assert :ok = Channel.close(chan)
   end
 end

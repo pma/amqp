@@ -1,10 +1,10 @@
-defmodule AMQP.Channel.DirectReceiver do
-  @moduledoc false
+defmodule AMQP.DirectConsumer do
+  @moduledoc """
+  Direct consumer callback module that implements `:amqp_gen_consumer` behavior. This allows the process calling
+  `AMQP.Channel.open/2` to receive messages directly from the channel process, skipping intermediate processes.
 
-  #  Direct consumer callback module that implements `:amqp_gen_consumer` behavior.
-  #  Based on `amqp_direct_consumer.erl`.
-  #  For more information see: https://github.com/rabbitmq/rabbitmq-erlang-client/blob/master/src/amqp_direct_consumer.erl .
-
+  For more information see: https://github.com/rabbitmq/rabbitmq-erlang-client/blob/master/src/amqp_direct_consumer.erl .
+"""
   import AMQP.Core
   @behaviour :amqp_gen_consumer
 
@@ -12,43 +12,43 @@ defmodule AMQP.Channel.DirectReceiver do
   ### amqp_gen_consumer callbacks
   #########################################################
 
-  @doc false
+  @impl true
   def init(consumer) do
     _ref = Process.monitor(consumer)
     {:ok, consumer}
   end
 
-  @doc false
+  @impl true
   def handle_consume(basic_consume(), _pid, consumer) do
     # silently discard
     {:ok, consumer}
   end
 
-  @doc false
+  @impl true
   def handle_consume_ok(basic_consume_ok(consumer_tag: consumer_tag), _args, consumer) do
     _ = send(consumer, {:basic_consume_ok, %{consumer_tag: consumer_tag}})
     {:ok, consumer}
   end
 
-  @doc false
+  @impl true
   def handle_cancel(basic_cancel(consumer_tag: consumer_tag, nowait: no_wait), consumer) do
     _ = send(consumer, {:basic_cancel, %{consumer_tag: consumer_tag, no_wait: no_wait}})
     {:ok, consumer}
   end
 
-  @doc false
+  @impl true
   def handle_cancel_ok(basic_cancel_ok(consumer_tag: consumer_tag), _args, consumer) do
     _ = send(consumer, {:basic_cancel_ok, %{consumer_tag: consumer_tag}})
     {:ok, consumer}
   end
 
-  @doc false
+  @impl true
   def handle_server_cancel(basic_cancel(consumer_tag: consumer_tag, nowait: no_wait), consumer) do
     _ = send(consumer, {:basic_cancel, %{consumer_tag: consumer_tag, no_wait: no_wait}})
     {:ok, consumer}
   end
 
-  @doc false
+  @impl true
   def handle_deliver(
         basic_deliver(
           consumer_tag: consumer_tag,
@@ -108,14 +108,14 @@ defmodule AMQP.Channel.DirectReceiver do
     {:ok, consumer}
   end
 
-  @doc false
+  @impl true
   def handle_deliver(basic_deliver(), _args, _ctx, _consumer) do
     # there's no support for direct connection
     # this callback implementation should be added with library support
     {:error, :undefined}
   end
 
-  @doc false
+  @impl true
   def handle_info({:DOWN, _mref, :process, consumer, :normal}, consumer) do
     {:ok, consumer}
   end
@@ -129,11 +129,11 @@ defmodule AMQP.Channel.DirectReceiver do
     {:ok, consumer}
   end
 
-  @doc false
+  @impl true
   def handle_call(_req, _from, consumer) do
     {:reply, {:error, :undefined}, consumer}
   end
 
-  @doc false
+  @impl true
   def terminate(_reason, consumer), do: consumer
 end
