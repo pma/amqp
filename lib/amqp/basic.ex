@@ -344,6 +344,21 @@ defmodule AMQP.Basic do
         arguments: Keyword.get(options, :arguments, [])
       )
 
+    # The word "consumer" might be a bit confusing here.
+    #
+    # When channel is opened, it creates a default consumer.
+    # https://github.com/rabbitmq/rabbitmq-erlang-client/blob/master/src/amqp_selective_consumer.erl
+    #
+    # It acts like a broker and distributes the messages to the process registered with :amqp_channel.subscribe/3.
+    # AMQP also provides another broker (Receiver/ReceiverManager) that transfors a message from Erlang record
+    # to Elixir friendly type and forwards the message to the process passed to this method.
+    #
+    # [RabbitMQ] -> [Channel = SelectiveConsumer] -> [AMQP.Channel.Receiver] -> [consumer_pid]
+    #
+    # If custom_consumer is set when the channel is open, the message handling is up to the consumer implementation.
+    #
+    # [RabbitMQ] -> [channel.custom_consumer] -> ???
+    #
     pid =
       case chan.custom_consumer do
         nil ->
