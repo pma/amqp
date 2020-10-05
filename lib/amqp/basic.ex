@@ -344,11 +344,20 @@ defmodule AMQP.Basic do
         arguments: Keyword.get(options, :arguments, [])
       )
 
-    consumer_pid = consumer_pid || self()
+    pid =
+      case chan.custom_consumer do
+        nil ->
+          %{pid: pid} =
+            ReceiverManager.register_handler(chan.pid, consumer_pid || self(), :consume)
 
-    receiver = ReceiverManager.register_handler(chan.pid, consumer_pid, :consume)
+          pid
 
-    case :amqp_channel.subscribe(chan.pid, basic_consume, receiver.pid) do
+        _ ->
+          # when channel has a custom consumer, leave it to handle the given pid with `#handle_consume` callback.
+          consumer_pid
+      end
+
+    case :amqp_channel.subscribe(chan.pid, basic_consume, pid) do
       basic_consume_ok(consumer_tag: consumer_tag) -> {:ok, consumer_tag}
       error -> {:error, error}
     end
