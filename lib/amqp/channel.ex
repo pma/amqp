@@ -3,7 +3,7 @@ defmodule AMQP.Channel do
   Functions to operate on Channels.
   """
 
-  alias AMQP.{Connection, Channel}
+  alias AMQP.{Connection, Channel, SelectiveConsumer}
 
   defstruct [:conn, :pid, :custom_consumer]
   @type t :: %Channel{conn: Connection.t(), pid: pid, custom_consumer: custom_consumer() | nil}
@@ -18,7 +18,7 @@ defmodule AMQP.Channel do
   custom consumer.
   """
   @spec open(Connection.t(), custom_consumer | nil) :: {:ok, Channel.t()} | {:error, any}
-  def open(%Connection{} = conn, custom_consumer \\ nil) do
+  def open(%Connection{} = conn, custom_consumer \\ {SelectiveConsumer, self()}) do
     do_open_channel(conn, custom_consumer)
   end
 

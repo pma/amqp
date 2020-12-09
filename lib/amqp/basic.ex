@@ -4,7 +4,7 @@ defmodule AMQP.Basic do
   """
 
   import AMQP.Core
-  alias AMQP.{Channel, Utils}
+  alias AMQP.{Channel, Utils, SelectiveConsumer}
   alias AMQP.Channel.ReceiverManager
 
   @type error :: {:error, reason :: :blocked | :closing}
@@ -366,6 +366,9 @@ defmodule AMQP.Basic do
             ReceiverManager.register_handler(chan.pid, consumer_pid || self(), :consume)
 
           pid
+
+        {SelectiveConsumer, _} ->
+          consumer_pid || self()
 
         _ ->
           # when channel has a custom consumer, leave it to handle the given pid with `#handle_consume` callback.
