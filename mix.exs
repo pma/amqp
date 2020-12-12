@@ -1,7 +1,7 @@
 defmodule AMQP.Mixfile do
   use Mix.Project
 
-  @version "1.6.0"
+  @version "2.0.0-pre.0"
 
   def project do
     [
