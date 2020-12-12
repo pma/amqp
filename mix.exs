@@ -22,7 +22,9 @@ defmodule AMQP.Mixfile do
         main: "readme",
         source_ref: "v#{@version}",
         source_url: "https://github.com/pma/amqp"
-      ]
+      ],
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [coveralls: :test, "coveralls.detail": :test, "coveralls.post": :test, "coveralls.html": :test]
     ]
   end
 
@@ -43,7 +45,8 @@ defmodule AMQP.Mixfile do
       {:inch_ex, "~> 0.5", only: :docs},
 
       # Dev dependencies.
-      {:dialyxir, "~> 0.5", only: :dev, runtime: false}
+      {:dialyxir, "~> 0.5", only: :dev, runtime: false},
+      {:excoveralls, "~> 0.10", only: :test}
     ]
   end
 
