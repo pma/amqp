@@ -3,7 +3,7 @@ defmodule AMQP.SelectiveConsumer do
   TODO
   """
   import AMQP.Core
-  alias AMQP.SelectiveConsumer
+  alias AMQP.{Channel, SelectiveConsumer}
   @behaviour :amqp_gen_consumer
 
   defstruct consumers: %{}, unassigned: :undefined, monitors: %{}, default_consumer: :none
@@ -24,9 +24,9 @@ defmodule AMQP.SelectiveConsumer do
   hence there is no consumer pid registered with the consumer tag. In this case, the relevant
   deliveries will be sent to the default consumer.
   """
-  @spec register_default_consumer(pid, pid) :: :ok
-  def register_default_consumer(channel_pid, consumer_pid) do
-    :amqp_channel.call_consumer(channel_pid, {:register_default_consumer, consumer_pid})
+  @spec register_default_consumer(Channel.t(), pid) :: :ok
+  def register_default_consumer(%Channel{pid: pid}, consumer_pid) do
+    :amqp_channel.call_consumer(pid, {:register_default_consumer, consumer_pid})
   end
 
   @impl true

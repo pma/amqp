@@ -306,7 +306,7 @@ defmodule AMQP.Basic do
     * `{:basic_consume_ok, %{consumer_tag: consumer_tag}}` - Sent when the consumer \
   process is registered with Basic.consume. The caller receives the same information \
   as the return of Basic.consume;
-    * `{:basic_cancel, %{consumer_tag: consumer_tag, no_wait: no_wait}}` - Sent by the \
+    * `{:basic_cancel, %{consumer_tag: consumer_tag, nowait: nowait}}` - Sent by the \
   broker when the consumer is unexpectedly cancelled (such as after a queue deletion)
     * `{:basic_cancel_ok, %{consumer_tag: consumer_tag}}` - Sent to the consumer process after a call to Basic.cancel
 
@@ -325,7 +325,7 @@ defmodule AMQP.Basic do
     * `:exclusive` - If set, requests exclusive consumer access, meaning that only
       this consumer can consume from the given `queue`. Note that the client cannot
       have exclusive access to a queue that already has consumers.
-    * `:no_wait` - If set, the consume operation is asynchronous. Defaults to
+    * `:nowait` - If set, the consume operation is asynchronous. Defaults to
       `false`.
     * `:arguments` - A list of arguments to pass when consuming (of type `t:AMQP.arguments/0`).
       See the README for more information. Defaults to `[]`.
@@ -333,6 +333,8 @@ defmodule AMQP.Basic do
   """
   @spec consume(Channel.t(), String.t(), pid | nil, keyword) :: {:ok, String.t()} | error
   def consume(%Channel{} = chan, queue, consumer_pid \\ nil, options \\ []) do
+    nowait = Keyword.get(options, :no_wait, false) || Keyword.get(options, :nowait, false)
+    consumer_tag = Keyword.get(options, :consumer_tag, "")
     basic_consume =
       basic_consume(
         queue: queue,
@@ -340,7 +342,7 @@ defmodule AMQP.Basic do
         no_local: Keyword.get(options, :no_local, false),
         no_ack: Keyword.get(options, :no_ack, false),
         exclusive: Keyword.get(options, :exclusive, false),
-        nowait: Keyword.get(options, :no_wait, false),
+        nowait: nowait,
         arguments: Keyword.get(options, :arguments, [])
       )
 
@@ -375,9 +377,10 @@ defmodule AMQP.Basic do
           consumer_pid
       end
 
-    case :amqp_channel.subscribe(chan.pid, basic_consume, pid) do
-      basic_consume_ok(consumer_tag: consumer_tag) -> {:ok, consumer_tag}
-      error -> {:error, error}
+    case {nowait, :amqp_channel.subscribe(chan.pid, basic_consume, pid)} do
+      {false, basic_consume_ok(consumer_tag: consumer_tag)} -> {:ok, consumer_tag}
+      {true, :ok} -> {:ok, consumer_tag}
+      {_, error} -> {:error, error}
     end
   end
 
@@ -393,18 +396,17 @@ defmodule AMQP.Basic do
 
   ## Options
 
-    * `:no_wait` - If set, the cancel operation is asynchronous. Defaults to
-      `false`.
-
+    * `:nowait` - If set, the cancel operation is asynchronous. Defaults to `false`.
   """
   @spec cancel(Channel.t(), String.t(), keyword) :: {:ok, String.t()} | error
   def cancel(%Channel{pid: pid}, consumer_tag, options \\ []) do
-    basic_cancel =
-      basic_cancel(consumer_tag: consumer_tag, nowait: Keyword.get(options, :no_wait, false))
+    nowait = Keyword.get(options, :no_wait, false) || Keyword.get(options, :nowait, false)
+    basic_cancel = basic_cancel(consumer_tag: consumer_tag, nowait: nowait)
 
-    case :amqp_channel.call(pid, basic_cancel) do
-      basic_cancel_ok(consumer_tag: consumer_tag) -> {:ok, consumer_tag}
-      error -> {:error, error}
+    case {nowait, :amqp_channel.call(pid, basic_cancel)} do
+      {false, basic_cancel_ok(consumer_tag: consumer_tag)} -> {:ok, consumer_tag}
+      {true, :ok} -> {:ok, consumer_tag}
+      {_, error} -> {:error, error}
     end
   end
 
