@@ -106,7 +106,7 @@ defmodule AMQP.SelectiveConsumer do
       {:ok, consumer} ->
         c = Map.delete(status.consumers, tag)
         m = remove_from_monitors(status.monitors, consumer)
-        {:ok, %{status | consumers: c, monitors: m}}
+        %{status | consumers: c, monitors: m}
 
       _error ->
         # untracked consumer
@@ -173,8 +173,8 @@ defmodule AMQP.SelectiveConsumer do
   end
 
   @impl true
-  def terminate(_reason, status) do
-    status
+  def terminate(_reason, _status) do
+    :ok
   end
 
   defp deliver(method, status) do
