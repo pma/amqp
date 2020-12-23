@@ -159,7 +159,6 @@ defmodule AMQP.SelectiveConsumer do
   end
 
   def handle_info(basic_credit_drained() = method, status) do
-    # TODO: support composing the message
     deliver(method, status)
     {:ok, status}
   end
@@ -228,6 +227,11 @@ defmodule AMQP.SelectiveConsumer do
     {:basic_cancel, body}
   end
 
+  defp compose_message(basic_credit_drained() = method, _message) do
+    body = method |> basic_credit_drained() |> Enum.into(%{})
+    {:basic_credit_drained, body}
+  end
+
   defp compose_message(
          basic_deliver(
            consumer_tag: consumer_tag,
@@ -280,9 +284,6 @@ defmodule AMQP.SelectiveConsumer do
        cluster_id: cluster_id
      }}
   end
-
-  # TODO:
-  # basic_credit_drained, basic_ack, basic_nack etc...
 
   defp resolve_consumer(tag, %{consumers: consumers, default_consumer: default}) do
     case Map.fetch(consumers, tag) do

@@ -1,6 +1,7 @@
 defmodule AMQP.SelectiveConsumerTest do
   use ExUnit.Case
 
+  import AMQP.Core
   alias AMQP.{Basic, Connection, Channel, Queue, SelectiveConsumer}
 
   defmodule InspectConsumer do
@@ -84,6 +85,21 @@ defmodule AMQP.SelectiveConsumerTest do
   end
 
   describe "basic_credit_drained" do
+    test "forwards the message to the end consumer", meta do
+      {:ok, consumer_tag} = Basic.consume(meta[:chan], meta[:queue])
 
+      # don't know how we can emit the message from the server so use send/2
+      # to emulate the message
+      msg = basic_credit_drained(consumer_tag: consumer_tag)
+      consumer_pid =
+        meta[:chan].pid
+        |> :sys.get_state()
+        |> elem(3)
+
+      send(consumer_pid, msg)
+      assert_receive {:basic_credit_drained, %{consumer_tag: ^consumer_tag}}
+
+      {:ok, ^consumer_tag} = Basic.cancel(meta[:chan], consumer_tag)
+    end
   end
 end
