@@ -139,9 +139,14 @@ defmodule AMQP.SelectiveConsumer do
   end
 
   @impl true
-  def handle_deliver(method, message, delivery_ctx, status) do
-    deliver(method, message, delivery_ctx, status)
-    {:ok, status}
+  def handle_deliver(_method, _message, _delivery_ctx, _status) do
+    # The handler is called with delivery_ctx for direct connection.
+    # Since the library is not supporting direct connection, returns an error.
+    #
+    # deliver(method, message, delivery_ctx, status)
+    # {:ok, status}
+
+    {:error, :undefined}
   end
 
   @impl true
@@ -182,14 +187,22 @@ defmodule AMQP.SelectiveConsumer do
   end
 
   defp deliver(method, message, status) do
-    deliver(method, message, :undefined, status)
-  end
-
-  defp deliver(method, message, delivery_ctx, status) do
     tag = tag(method)
-    composed = compose_message(method, message, delivery_ctx)
+    composed = compose_message(method, message)
     deliver_to_consumer_or_die(tag, composed, status)
   end
+
+  # delivery_ctx support is yet to come.
+  #
+  # defp deliver(method, message, delivery_ctx, status) do
+  #   tag = tag(method)
+  #   composed =
+  #     method
+  #     |> compose_message(message)
+  #     |> Tuple.append(delivery_ctx)
+  #
+  #   deliver_to_consumer_or_die(tag, composed, status)
+  # end
 
   defp deliver_to_consumer_or_die(tag, message, status) do
     case resolve_consumer(tag, status) do
@@ -200,17 +213,17 @@ defmodule AMQP.SelectiveConsumer do
   end
 
   # AMQP original: convert Erlang record to map
-  defp compose_message(basic_consume_ok() = method, _message, _ctx) do
+  defp compose_message(basic_consume_ok() = method, _message) do
     body = method |> basic_consume_ok() |> Enum.into(%{})
     {:basic_consume_ok, body}
   end
 
-  defp compose_message(basic_cancel_ok() = method, _message, _ctx) do
+  defp compose_message(basic_cancel_ok() = method, _message) do
     body = method |> basic_cancel_ok() |> Enum.into(%{})
     {:basic_cancel_ok, body}
   end
 
-  defp compose_message(basic_cancel() = method, _message, _ctx) do
+  defp compose_message(basic_cancel() = method, _message) do
     body = method |> basic_cancel() |> Enum.into(%{})
     {:basic_cancel, body}
   end
@@ -242,8 +255,7 @@ defmodule AMQP.SelectiveConsumer do
                cluster_id: cluster_id
              ),
            payload: payload
-         ),
-         _ctx
+         )
        ) do
     {:basic_deliver, payload,
      %{

@@ -83,10 +83,6 @@ defmodule AMQP.SelectiveConsumerTest do
     end
   end
 
-  describe "with direct ctx" do
-
-  end
-
   describe "basic_credit_drained" do
 
   end
