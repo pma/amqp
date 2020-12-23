@@ -8,7 +8,12 @@ defmodule AMQP.SelectiveConsumer do
   alias AMQP.{Channel, SelectiveConsumer}
   @behaviour :amqp_gen_consumer
 
-  defstruct consumers: %{}, unassigned: :undefined, monitors: %{}, default_consumer: :none, return_handler: :none, confirm_handler: :none
+  defstruct consumers: %{},
+            unassigned: :undefined,
+            monitors: %{},
+            default_consumer: :none,
+            return_handler: :none,
+            confirm_handler: :none
 
   @type t :: %SelectiveConsumer{
           consumers: %{String.t() => pid},
@@ -166,7 +171,8 @@ defmodule AMQP.SelectiveConsumer do
     {:ok, status}
   end
 
-  def handle_info({basic_return() = method, message}, %{return_handler: pid} = status) when is_pid(pid) do
+  def handle_info({basic_return() = method, message}, %{return_handler: pid} = status)
+      when is_pid(pid) do
     composed = compose_message(method, message)
     send(pid, composed)
 

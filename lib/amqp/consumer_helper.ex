@@ -27,34 +27,34 @@ defmodule AMQP.ConsumerHelper do
   end
 
   def compose_message(
-         basic_deliver(
-           consumer_tag: consumer_tag,
-           delivery_tag: delivery_tag,
-           redelivered: redelivered,
-           exchange: exchange,
-           routing_key: routing_key
-         ),
-         amqp_msg(
-           props:
-             p_basic(
-               content_type: content_type,
-               content_encoding: content_encoding,
-               headers: headers,
-               delivery_mode: delivery_mode,
-               priority: priority,
-               correlation_id: correlation_id,
-               reply_to: reply_to,
-               expiration: expiration,
-               message_id: message_id,
-               timestamp: timestamp,
-               type: type,
-               user_id: user_id,
-               app_id: app_id,
-               cluster_id: cluster_id
-             ),
-           payload: payload
-         )
-       ) do
+        basic_deliver(
+          consumer_tag: consumer_tag,
+          delivery_tag: delivery_tag,
+          redelivered: redelivered,
+          exchange: exchange,
+          routing_key: routing_key
+        ),
+        amqp_msg(
+          props:
+            p_basic(
+              content_type: content_type,
+              content_encoding: content_encoding,
+              headers: headers,
+              delivery_mode: delivery_mode,
+              priority: priority,
+              correlation_id: correlation_id,
+              reply_to: reply_to,
+              expiration: expiration,
+              message_id: message_id,
+              timestamp: timestamp,
+              type: type,
+              user_id: user_id,
+              app_id: app_id,
+              cluster_id: cluster_id
+            ),
+          payload: payload
+        )
+      ) do
     {:basic_deliver, payload,
      %{
        consumer_tag: consumer_tag,
@@ -80,33 +80,33 @@ defmodule AMQP.ConsumerHelper do
   end
 
   def compose_message(
-          basic_return(
-           reply_code: reply_code,
-           reply_text: reply_text,
-           exchange: exchange,
-           routing_key: routing_key
-         ),
-         amqp_msg(
-           props:
-             p_basic(
-               content_type: content_type,
-               content_encoding: content_encoding,
-               headers: headers,
-               delivery_mode: delivery_mode,
-               priority: priority,
-               correlation_id: correlation_id,
-               reply_to: reply_to,
-               expiration: expiration,
-               message_id: message_id,
-               timestamp: timestamp,
-               type: type,
-               user_id: user_id,
-               app_id: app_id,
-               cluster_id: cluster_id
-             ),
-           payload: payload
-         )
-        ) do
+        basic_return(
+          reply_code: reply_code,
+          reply_text: reply_text,
+          exchange: exchange,
+          routing_key: routing_key
+        ),
+        amqp_msg(
+          props:
+            p_basic(
+              content_type: content_type,
+              content_encoding: content_encoding,
+              headers: headers,
+              delivery_mode: delivery_mode,
+              priority: priority,
+              correlation_id: correlation_id,
+              reply_to: reply_to,
+              expiration: expiration,
+              message_id: message_id,
+              timestamp: timestamp,
+              type: type,
+              user_id: user_id,
+              app_id: app_id,
+              cluster_id: cluster_id
+            ),
+          payload: payload
+        )
+      ) do
     {:basic_return, payload,
      %{
        reply_code: reply_code,

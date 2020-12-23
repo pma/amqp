@@ -118,7 +118,6 @@ defmodule AMQP.DirectConsumer do
     {:reply, :ok, consumer}
   end
 
-
   def handle_call(_req, _from, consumer) do
     {:reply, {:error, :undefined}, consumer}
   end

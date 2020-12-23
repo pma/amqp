@@ -30,6 +30,7 @@ defmodule AMQP.SelectiveConsumerTest do
         send(default_consumer, :stop)
         Channel.close(chan)
       end
+
       :ok = Connection.close(conn)
     end)
 
@@ -91,6 +92,7 @@ defmodule AMQP.SelectiveConsumerTest do
       # don't know how we can emit the message from the server so use send/2
       # to emulate the message
       msg = basic_credit_drained(consumer_tag: consumer_tag)
+
       consumer_pid =
         meta[:chan].pid
         |> :sys.get_state()

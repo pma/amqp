@@ -334,6 +334,7 @@ defmodule AMQP.Basic do
   def consume(%Channel{} = chan, queue, consumer_pid \\ nil, options \\ []) do
     nowait = Keyword.get(options, :no_wait, false) || Keyword.get(options, :nowait, false)
     consumer_tag = Keyword.get(options, :consumer_tag, "")
+
     basic_consume =
       basic_consume(
         queue: queue,
