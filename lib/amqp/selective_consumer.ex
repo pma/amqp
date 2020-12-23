@@ -6,13 +6,14 @@ defmodule AMQP.SelectiveConsumer do
   alias AMQP.{Channel, SelectiveConsumer}
   @behaviour :amqp_gen_consumer
 
-  defstruct consumers: %{}, unassigned: :undefined, monitors: %{}, default_consumer: :none
+  defstruct consumers: %{}, unassigned: :undefined, monitors: %{}, default_consumer: :none, return_handler: :none, confirm_handler: :none
 
   @type t :: %SelectiveConsumer{
           consumers: %{String.t() => pid},
           unassigned: pid | :undefined,
           monitors: %{pid => {integer, reference}},
-          default_consumer: pid | :none
+          default_consumer: pid | :none,
+          return_handler: pid | :none
         }
 
   @doc """
@@ -163,6 +164,27 @@ defmodule AMQP.SelectiveConsumer do
     {:ok, status}
   end
 
+  def handle_info({basic_return() = method, message}, %{return_handler: pid} = status) when is_pid(pid) do
+    composed = compose_message(method, message)
+    send(pid, composed)
+
+    {:ok, status}
+  end
+
+  def handle_info(basic_ack() = method, %{confirm_handler: pid} = status) when is_pid(pid) do
+    composed = compose_message(method, :undefined)
+    send(pid, composed)
+
+    {:ok, status}
+  end
+
+  def handle_info(basic_nack() = method, %{confirm_handler: pid} = status) when is_pid(pid) do
+    composed = compose_message(method, :undefined)
+    send(pid, composed)
+
+    {:ok, status}
+  end
+
   @impl true
   def handle_call({:register_default_consumer, pid}, _from, status) do
     m =
@@ -174,6 +196,18 @@ defmodule AMQP.SelectiveConsumer do
       |> add_to_monitors(pid)
 
     {:reply, :ok, %{status | monitors: m, default_consumer: pid}}
+  end
+
+  def handle_call({:register_return_handler, chan, handler_pid}, _from, status) do
+    :amqp_channel.register_return_handler(chan.pid, self())
+
+    {:reply, :ok, %{status | return_handler: handler_pid}}
+  end
+
+  def handle_call({:register_confirm_handler, chan, handler_pid}, _from, status) do
+    :amqp_channel.register_confirm_handler(chan.pid, self())
+
+    {:reply, :ok, %{status | confirm_handler: handler_pid}}
   end
 
   @impl true
@@ -283,6 +317,65 @@ defmodule AMQP.SelectiveConsumer do
        app_id: app_id,
        cluster_id: cluster_id
      }}
+  end
+
+  defp compose_message(
+          basic_return(
+           reply_code: reply_code,
+           reply_text: reply_text,
+           exchange: exchange,
+           routing_key: routing_key
+         ),
+         amqp_msg(
+           props:
+             p_basic(
+               content_type: content_type,
+               content_encoding: content_encoding,
+               headers: headers,
+               delivery_mode: delivery_mode,
+               priority: priority,
+               correlation_id: correlation_id,
+               reply_to: reply_to,
+               expiration: expiration,
+               message_id: message_id,
+               timestamp: timestamp,
+               type: type,
+               user_id: user_id,
+               app_id: app_id,
+               cluster_id: cluster_id
+             ),
+           payload: payload
+         )
+        ) do
+    {:basic_return, payload,
+     %{
+       reply_code: reply_code,
+       reply_text: reply_text,
+       exchange: exchange,
+       routing_key: routing_key,
+       content_type: content_type,
+       content_encoding: content_encoding,
+       headers: headers,
+       persistent: delivery_mode == 2,
+       priority: priority,
+       correlation_id: correlation_id,
+       reply_to: reply_to,
+       expiration: expiration,
+       message_id: message_id,
+       timestamp: timestamp,
+       type: type,
+       user_id: user_id,
+       app_id: app_id,
+       cluster_id: cluster_id
+     }}
+  end
+
+  defp compose_message(basic_ack(delivery_tag: delivery_tag, multiple: multiple), _message) do
+    {:basic_ack, delivery_tag, multiple}
+  end
+
+  defp compose_message(basic_nack(delivery_tag: delivery_tag, multiple: multiple), _message) do
+    {:basic_nack, delivery_tag, multiple}
   end
 
   defp resolve_consumer(tag, %{consumers: consumers, default_consumer: default}) do

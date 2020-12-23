@@ -5,7 +5,6 @@ defmodule AMQP.Basic do
 
   import AMQP.Core
   alias AMQP.{Channel, Utils, SelectiveConsumer}
-  alias AMQP.Channel.ReceiverManager
 
   @type error :: {:error, reason :: :blocked | :closing}
 
@@ -352,10 +351,10 @@ defmodule AMQP.Basic do
     # https://github.com/rabbitmq/rabbitmq-erlang-client/blob/master/src/amqp_selective_consumer.erl
     #
     # It acts like a broker and distributes the messages to the process registered with :amqp_channel.subscribe/3.
-    # AMQP also provides another broker (Receiver/ReceiverManager) that transfors a message from Erlang record
+    # AMQP also provides another broker (DirectConsumer/SelectiveConsumer) that transfors a message from Erlang record
     # to Elixir friendly type and forwards the message to the process passed to this method.
     #
-    # [RabbitMQ] -> [Channel = SelectiveConsumer] -> [AMQP.Channel.Receiver] -> [consumer_pid]
+    # [RabbitMQ] -> [Channel] -> [SelectiveConsumer] -> [consumer_pid]
     #
     # If custom_consumer is set when the channel is open, the message handling is up to the consumer implementation.
     #
@@ -363,12 +362,6 @@ defmodule AMQP.Basic do
     #
     pid =
       case chan.custom_consumer do
-        nil ->
-          %{pid: pid} =
-            ReceiverManager.register_handler(chan.pid, consumer_pid || self(), :consume)
-
-          pid
-
         {SelectiveConsumer, _} ->
           consumer_pid || self()
 
@@ -416,9 +409,8 @@ defmodule AMQP.Basic do
   The registered process will receive `{:basic_return, payload, meta}` tuples.
   """
   @spec return(Channel.t(), pid) :: :ok
-  def return(%Channel{pid: pid}, return_handler_pid) do
-    receiver = ReceiverManager.register_handler(pid, return_handler_pid, :return)
-    :amqp_channel.register_return_handler(pid, receiver.pid)
+  def return(%Channel{} = chan, return_handler_pid) do
+    :amqp_channel.call_consumer(chan.pid, {:register_return_handler, chan, return_handler_pid})
   end
 
   @doc """
@@ -427,8 +419,6 @@ defmodule AMQP.Basic do
   """
   @spec cancel_return(Channel.t()) :: :ok
   def cancel_return(%Channel{pid: pid}) do
-    # Currently we don't remove the receiver.
-    # The receiver will be deleted automatically when channel is closed.
     :amqp_channel.unregister_return_handler(pid)
   end
 end
