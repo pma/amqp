@@ -202,6 +202,12 @@ defmodule AMQP.Core do
   )
 
   Record.defrecord(
+    :basic_credit_drained,
+    :"basic.credit_drained",
+    Record.extract(:"basic.credit_drained", from_lib: "rabbit_common/include/rabbit_framing.hrl")
+  )
+
+  Record.defrecord(
     :confirm_select,
     :"confirm.select",
     Record.extract(:"confirm.select", from_lib: "rabbit_common/include/rabbit_framing.hrl")

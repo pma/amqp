@@ -14,7 +14,7 @@ defmodule DirectConsumerTest do
       send(receiver_pid, :stop)
     end)
 
-    {:ok, conn: conn, chan: chan}
+    {:ok, conn: conn, chan: chan, receiver_pid: receiver_pid}
   end
 
   def simple_receiver(pid) do
@@ -33,7 +33,7 @@ defmodule DirectConsumerTest do
   end
 
   test "basic return", meta do
-    :ok = Basic.return(meta[:chan], self())
+    :ok = Basic.return(meta[:chan], meta[:receiver_pid])
 
     exchange = ""
     routing_key = "non-existent-queue"

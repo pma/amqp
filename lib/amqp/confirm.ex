@@ -5,7 +5,6 @@ defmodule AMQP.Confirm do
 
   import AMQP.Core
   alias AMQP.{Basic, Channel}
-  alias AMQP.Channel.ReceiverManager
 
   @doc """
   Activates publishing confirmations on the channel.
@@ -71,9 +70,8 @@ defmodule AMQP.Confirm do
   see https://www.rabbitmq.com/confirms.html
   """
   @spec register_handler(Channel.t(), pid) :: :ok
-  def register_handler(%Channel{pid: chan_pid}, handler_pid) do
-    receiver = ReceiverManager.register_handler(chan_pid, handler_pid, :confirm)
-    :amqp_channel.register_confirm_handler(chan_pid, receiver.pid)
+  def register_handler(%Channel{} = chan, handler_pid) do
+    :amqp_channel.call_consumer(chan.pid, {:register_confirm_handler, chan, handler_pid})
   end
 
   @doc """
