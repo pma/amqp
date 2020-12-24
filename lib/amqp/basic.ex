@@ -372,8 +372,8 @@ defmodule AMQP.Basic do
       end
 
     case {nowait, :amqp_channel.subscribe(chan.pid, basic_consume, pid)} do
-      {false, basic_consume_ok(consumer_tag: consumer_tag)} -> {:ok, consumer_tag}
       {true, :ok} -> {:ok, consumer_tag}
+      {_, basic_consume_ok(consumer_tag: consumer_tag)} -> {:ok, consumer_tag}
       {_, error} -> {:error, error}
     end
   end
@@ -398,8 +398,8 @@ defmodule AMQP.Basic do
     basic_cancel = basic_cancel(consumer_tag: consumer_tag, nowait: nowait)
 
     case {nowait, :amqp_channel.call(pid, basic_cancel)} do
-      {false, basic_cancel_ok(consumer_tag: consumer_tag)} -> {:ok, consumer_tag}
       {true, :ok} -> {:ok, consumer_tag}
+      {_, basic_cancel_ok(consumer_tag: consumer_tag)} -> {:ok, consumer_tag}
       {_, error} -> {:error, error}
     end
   end

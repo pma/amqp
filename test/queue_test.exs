@@ -20,6 +20,11 @@ defmodule QueueTest do
     assert {:ok, %{message_count: 0}} = Queue.delete(meta[:chan], queue)
   end
 
+  test "delare queue with nowait option", meta do
+    assert :ok = Queue.declare(meta[:chan], "hello", nowait: true)
+    assert :ok = Queue.delete(meta[:chan], "hello", nowait: true)
+  end
+
   test "declare queue with explicitly assigned name", meta do
     name = rand_name()
 
@@ -38,6 +43,20 @@ defmodule QueueTest do
              Queue.declare(meta[:chan], queue)
 
     assert :ok = Queue.bind(meta[:chan], queue, exchange)
+    assert :ok = Queue.unbind(meta[:chan], queue, exchange)
+    assert :ok = Exchange.delete(meta[:chan], exchange)
+    assert {:ok, %{message_count: 0}} = Queue.delete(meta[:chan], queue)
+  end
+
+  test "bind with nowait option", meta do
+    queue = rand_name()
+    exchange = rand_name()
+    assert :ok = Exchange.fanout(meta[:chan], exchange)
+
+    assert {:ok, %{queue: ^queue, message_count: 0, consumer_count: 0}} =
+             Queue.declare(meta[:chan], queue)
+
+    assert :ok = Queue.bind(meta[:chan], queue, exchange, nowait: true)
     assert :ok = Queue.unbind(meta[:chan], queue, exchange)
     assert :ok = Exchange.delete(meta[:chan], exchange)
     assert {:ok, %{message_count: 0}} = Queue.delete(meta[:chan], queue)
