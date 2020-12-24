@@ -1,6 +1,12 @@
 defmodule AMQP.SelectiveConsumer do
   @moduledoc """
-  TODO
+  This is an Elixir reimplementation of `:amqp_selective_consumer` - [source](https://github.com/rabbitmq/rabbitmq-server/blob/master/deps/amqp_client/src/amqp_selective_consumer.erl)
+
+  The module is used by default when you open a channel via `AMQP.Channel.open/2` and allows you
+  to end consumer processes via `Basic.consume/4` and receive messages from a queue.
+
+  Usually you don't have to pay attention to this module as the interaction would be made through
+  `AMQP.Channel.open/2`, `Basic.consume/4`, `Basic.return/2`, `Confirm.register_handler/2` etc.
   """
 
   import AMQP.Core
