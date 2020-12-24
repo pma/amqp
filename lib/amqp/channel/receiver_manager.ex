@@ -28,6 +28,7 @@ defmodule AMQP.Channel.ReceiverManager do
   @spec start_link(map) :: GenServer.on_start()
   def start_link(ops \\ [])
   def start_link([]), do: start_link(name: __MODULE__)
+
   def start_link(opts) do
     GenServer.start_link(__MODULE__, %{}, opts)
   end

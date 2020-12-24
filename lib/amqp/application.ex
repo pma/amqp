@@ -12,5 +12,4 @@ defmodule AMQP.Application do
     opts = [strategy: :one_for_one, name: AMQP.Application]
     Supervisor.start_link(children, opts)
   end
-
 end
