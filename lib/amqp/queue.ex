@@ -222,9 +222,8 @@ defmodule AMQP.Queue do
           Basic.ack(channel, delivery_tag)
         rescue
           exception ->
-            stacktrace = System.stacktrace()
             Basic.reject(channel, delivery_tag, requeue: false)
-            reraise exception, stacktrace
+            reraise exception, __STACKTRACE__
         end
 
         do_consume(channel, fun, consumer_tag)
