@@ -1,0 +1,77 @@
+name: Elixir CI
+
+on: [push]
+
+jobs:
+  format:
+    name: Format and compile with warnings as errors
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Install OTP and Elixir
+        uses: actions/setup-elixir@v1
+        with:
+          otp-version: 23.2
+          elixir-version: 1.11.2
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v2
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Run "mix format"
+        run: mix format --check-formatted
+
+      - name: Compile with --warnings-as-errors
+        run: mix compile --warnings-as-errors
+
+  test:
+    name: Test (Elixir ${{matrix.elixir}} | Erlang/OTP ${{matrix.otp}})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - otp: 23.2
+            elixir: 1.11.2
+          - otp: 22.3
+            elixir: 1.10.3
+          - otp: 22.1
+            elixir: 1.9.4
+          - otp: 21.3
+            elixir: 1.8.2
+          - otp: 21.3
+            elixir: 1.7.4
+    env:
+      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      MIX_ENV: test
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Install OTP and Elixir
+        uses: actions/setup-elixir@v1
+        with:
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v2
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Start docker
+        run: docker-compose up --detach
+
+      - name: Run tests
+        run: mix test --trace

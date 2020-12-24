@@ -1,6 +1,6 @@
 # AMQP
 
-[![Build Status](https://travis-ci.org/pma/amqp.png?branch=master)](https://travis-ci.org/pma/amqp)
+[![Build Status](https://github.com/pma/amqp/workflows/Elixir%20CI/badge.svg?branch=master)](https://github.com/pma/amqp/actions?query=workflow%3A%22Elixir+CI%22+branch%3Amaster)
 [![Hex Version](http://img.shields.io/hexpm/v/amqp.svg)](https://hex.pm/packages/amqp)
 [![Inline docs](http://inch-ci.org/github/pma/amqp.svg?branch=master)](http://inch-ci.org/github/pma/amqp)
 
