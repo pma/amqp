@@ -73,9 +73,9 @@ defmodule AMQP.Basic do
         priority: Keyword.get(options, :priority, :undefined),
         correlation_id: Keyword.get(options, :correlation_id, :undefined),
         reply_to: Keyword.get(options, :reply_to, :undefined),
-        expiration: Keyword.get(options, :expiration, :undefined),
+        expiration: Keyword.get(options, :expiration, :undefined) |> number_to_s(),
         message_id: Keyword.get(options, :message_id, :undefined),
-        timestamp: Keyword.get(options, :timestamp, :undefined),
+        timestamp: Keyword.get(options, :timestamp, :undefined) |> to_epoch(),
         type: Keyword.get(options, :type, :undefined),
         user_id: Keyword.get(options, :user_id, :undefined),
         app_id: Keyword.get(options, :app_id, :undefined),
@@ -422,4 +422,10 @@ defmodule AMQP.Basic do
   def cancel_return(%Channel{pid: pid}) do
     :amqp_channel.unregister_return_handler(pid)
   end
+
+  defp number_to_s(value) when is_number(value), do: to_string(value)
+  defp number_to_s(value), do: value
+
+  defp to_epoch(%DateTime{} = value), do: DateTime.to_unix(value)
+  defp to_epoch(value), do: value
 end
