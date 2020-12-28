@@ -8,6 +8,10 @@ Simple Elixir wrapper for the Erlang RabbitMQ client.
 
 The API is based on Langohr, a Clojure client for RabbitMQ.
 
+## Migration from 1.X to 2.X
+
+TO BE WRITTEN
+
 ## Migration from 0.X to 1.X
 
 If you use amqp 0.X and plan to migrate to 1.0 please read our [migration guide](https://github.com/pma/amqp/wiki/Upgrade-from-0.X-to-1.0).
@@ -167,7 +171,21 @@ Error converting Hello, World! to integer
 Error converting Hello, World! to integer
 ```
 
-## Stable RabbitMQ Connection
+### Configuration
+
+#### Erlang library's progress report
+
+This library uses an official Erlang RabbitMQ client library internally and we found its logging is too verbose.
+These are called progress reports by the Erlang library and you would see a lot of entries with info log level if you
+use 1.x version.
+AMQP disables that by default from version 2.0.
+If you want to see more detailed logs, you can enable it by adding the following line on your config.
+
+```elixir
+config :amqp, enable_progress_report: true
+```
+
+### Stable RabbitMQ Connection
 
 While the above example works, it does nothing to handle RabbitMQ connection
 outages. In case of an outage your Genserver will remain stale and won't
@@ -235,7 +253,7 @@ When the connection drops or the server is down, the GenServer will stop.
 If you have put the GenServer module to your application tree, the Supervisor will automatically restart it.
 Then it will try to reconnect indefinitely until it succeeds.
 
-## Types of arguments and headers
+### Types of arguments and headers
 
 The parameter `arguments` in `Queue.declare`, `Exchange.declare`, `Basic.consume` and the parameter `headers` in `Basic.publish` are a list of tuples in the form `{name, type, value}`, where `name` is a binary containing the argument/header name, `type` is an atom describing the AMQP field type and `value` a term compatible with the AMQP field type.
 
@@ -312,17 +330,6 @@ Try the following configuration.
 config :logger, handle_otp_reports: false
 ```
 
-Or try filtering out the messages at your application start:
-
-```elixir
-:logger.add_primary_filter(
-  :ignore_rabbitmq_progress_reports,
-  {&:logger_filters.domain/2, {:stop, :equal, [:progress]}}
-)
-```
-
-See [this comment](https://github.com/pma/amqp/issues/110#issuecomment-442761299) for the
-details.
 
 #### Lager conflicts with Elixir logger
 

@@ -35,7 +35,7 @@ defmodule AMQP.Mixfile do
 
   def application do
     [
-      applications: [:lager, :amqp_client],
+      applications: [:lager, :amqp_client, :logger],
       mod: {AMQP.Application, []}
     ]
   end
