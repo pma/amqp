@@ -7,9 +7,15 @@ defmodule AMQP.Application do
   @impl true
   def start(_type, _args) do
     load_config()
-    children = load_connections() |> IO.inspect()
+    children = load_connections() ++ load_channels()
 
-    opts = [strategy: :one_for_one, name: AMQP.Application]
+    opts = [
+      strategy: :one_for_one,
+      name: AMQP.Application,
+      max_restarts: length(children) * 2,
+      max_seconds: 1
+    ]
+
     Supervisor.start_link(children, opts)
   end
 
@@ -28,6 +34,18 @@ defmodule AMQP.Application do
       arg = opts ++ [proc_name: name]
       id = AMQP.Application.Connection.get_server_name(name)
       Supervisor.child_spec({AMQP.Application.Connection, arg}, id: id)
+    end)
+  end
+
+  defp load_channels do
+    chan = Application.get_env(:amqp, :channel)
+    chans = Application.get_env(:amqp, :channels, [])
+    chans = if chan, do: chans ++ [default: chan], else: chans
+
+    Enum.map(chans, fn {name, opts} ->
+      arg = opts ++ [proc_name: name]
+      id = AMQP.Application.Channel.get_server_name(name)
+      Supervisor.child_spec({AMQP.Application.Channel, arg}, id: id)
     end)
   end
 

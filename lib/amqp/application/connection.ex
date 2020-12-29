@@ -1,7 +1,5 @@
 defmodule AMQP.Application.Connection do
-  @moduledoc """
-
-  """
+  @moduledoc false
 
   use GenServer
   require Logger
@@ -25,6 +23,7 @@ defmodule AMQP.Application.Connection do
   Passes URL instead of options and use a default proc name when you need only a single connection.
 
       iex> opts = [url: "amqp://guest:guest@localhost"]
+      iex> :ok = AMQP.Application.Connection.start_link(opts)
       iex> {:ok, conn} = AMQP.Application.Connection.get_connection()
       iex> {:ok, conn} = AMQP.Application.Connection.get_connection(:default)
   """
@@ -56,12 +55,24 @@ defmodule AMQP.Application.Connection do
   """
   @spec get_server_name(binary | atom) :: binary
   def get_server_name(name) do
-    :"amqp_connection_#{name}"
+    :"#{__MODULE__}::#{name}"
   end
 
   @doc false
   def get_state(name \\ :default) do
     GenServer.call(get_server_name(name), :get_state)
+  end
+
+  @doc """
+  Returns pid for the server referred by the name.
+
+  It is a wrapper of `GenServer.whereis/1`.
+  """
+  @spec whereis(binary() | atom()) :: pid() | {atom(), node()} | nil
+  def whereis(name) do
+    name
+    |> get_server_name()
+    |> GenServer.whereis()
   end
 
   @doc """
@@ -107,9 +118,9 @@ defmodule AMQP.Application.Connection do
     end
   end
 
-  def handle_info({:DOWN, _, :process, _pid, reason}, _) do
+  def handle_info({:DOWN, _, :process, _pid, reason}, state) do
     # Stop GenServer. Will be restarted by Supervisor.
-    {:stop, {:connection_lost, reason}, nil}
+    {:stop, {:connection_gone, reason}, nil}
   end
 
   defp do_open(options) do
