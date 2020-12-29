@@ -32,11 +32,22 @@ defmodule AMQP.Application do
       :amqp_ignore_rabbitmq_progress_reports,
       {&:logger_filters.domain/2, {:stop, :equal, [:progress]}}
     )
-
-    :ok
   rescue
     e ->
       Logger.warn("Failed to disable progress report by Erlang library: detail: #{inspect(e)}")
       {:error, e}
+  end
+
+  @doc """
+  Enables the progress report logging from Erlang library.
+  """
+  @spec enable_progress_report :: :ok | {:error, any}
+  def enable_progress_report do
+    case :logger.remove_primary_filter(:amqp_ignore_rabbitmq_progress_reports) do
+      :ok -> :ok
+      # filter already removed
+      {:error, {:not_found, _}} -> :ok
+      error -> error
+    end
   end
 end
