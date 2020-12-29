@@ -6,9 +6,8 @@ defmodule AMQP.Application do
 
   @impl true
   def start(_type, _args) do
-    children = []
-
     load_config()
+    children = load_connections() |> IO.inspect()
 
     opts = [strategy: :one_for_one, name: AMQP.Application]
     Supervisor.start_link(children, opts)
@@ -18,6 +17,18 @@ defmodule AMQP.Application do
     unless Application.get_env(:amqp, :enable_progress_report, false) do
       disable_progress_report()
     end
+  end
+
+  defp load_connections do
+    conn = Application.get_env(:amqp, :connection)
+    conns = Application.get_env(:amqp, :connections, [])
+    conns = if conn, do: conns ++ [default: conn], else: conns
+
+    Enum.map(conns, fn {name, opts} ->
+      arg = opts ++ [proc_name: name]
+      id = AMQP.Application.Connection.get_server_name(name)
+      Supervisor.child_spec({AMQP.Application.Connection, arg}, id: id)
+    end)
   end
 
   @doc """
