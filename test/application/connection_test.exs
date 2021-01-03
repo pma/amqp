@@ -2,7 +2,7 @@ defmodule AMQP.Application.ConnectionTest do
   use ExUnit.Case
   alias AMQP.Application.Connection, as: AppConn
 
-  test "opens and accesses to connections" do
+  test "opens and accesses connections" do
     opts = [proc_name: :my_conn, retry_interval: 10_000, url: "amqp://guest:guest@localhost"]
     {:ok, pid} = AppConn.start_link(opts)
 

@@ -44,7 +44,8 @@ defmodule AMQP.Application.Connection do
       retry_interval: retry_interval,
       open_arg: open_arg,
       name: proc_name,
-      connection: nil
+      connection: nil,
+      monitor_ref: nil
     }
 
     {server_name, init_arg}
@@ -107,8 +108,8 @@ defmodule AMQP.Application.Connection do
     case do_open(state[:open_arg]) do
       {:ok, conn} ->
         # Get notifications when the connection goes down
-        Process.monitor(conn.pid)
-        {:noreply, %{state | connection: conn}}
+        ref = Process.monitor(conn.pid)
+        {:noreply, %{state | connection: conn, monitor_ref: ref}}
 
       {:error, _} ->
         Logger.error("Failed to open AMQP connection (#{state[:name]}). Retrying later...")
@@ -119,29 +120,32 @@ defmodule AMQP.Application.Connection do
     end
   end
 
-  def handle_info({:DOWN, _, :process, pid, _reason}, %{connection: %{pid: pid}} = state) when is_pid(pid) do
+  def handle_info({:DOWN, _, :process, pid, _reason}, %{connection: %{pid: pid}} = state)
+      when is_pid(pid) do
     Logger.info("AMQP connection is gone (#{state[:name]}). Reconnecting...")
     send(self(), :connect)
-    {:noreply, %{state | connection: nil}}
+    {:noreply, %{state | connection: nil, monitor_ref: nil}}
   end
 
   def handle_info({:EXIT, _from, reason}, state) do
-    close(state[:connection])
-    {:stop, reason, %{state | connection: nil}}
+    close(state)
+    {:stop, reason, %{state | connection: nil, monitor_ref: nil}}
   end
 
   @impl true
   def terminate(_reason, state) do
-    close(state[:connection])
-    %{state | connection: nil}
+    close(state)
+    %{state | connection: nil, monitor_ref: nil}
   end
 
-  defp close(nil), do: :ok
-  defp close(connection) do
-    if Process.alive?(connection.pid) do
-      Connection.close(connection)
+  defp close(%{connection: %Connection{} = conn, monior_ref: ref}) do
+    if Process.alive?(conn.pid) do
+      Process.demonitor(ref)
+      Connection.close(conn)
     end
   end
+
+  defp close(_), do: :ok
 
   defp do_open(options) do
     if url = options[:url] do
