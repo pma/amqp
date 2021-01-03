@@ -12,6 +12,10 @@ The API is based on Langohr, a Clojure client for RabbitMQ.
 
 If you use amqp 0.X and plan to migrate to 1.0 please read our [migration guide](https://github.com/pma/amqp/wiki/Upgrade-from-0.X-to-1.0).
 
+## Edge version
+
+Check out [2.0 branch](https://github.com/pma/amqp/tree/pre/v2.0) for the latest works.
+
 ## Usage
 
 Add AMQP as a dependency in your `mix.exs` file.
