@@ -123,7 +123,7 @@ defmodule AMQP.Application.Channel do
     end
   end
 
-  def handle_info({:DOWN, _, :process, _pid, reason}, state) do
+  def handle_info({:DOWN, _, :process, _pid, reason}, _state) do
     # Stop GenServer. Will be restarted by Supervisor.
     {:stop, {:channel_gone, reason}, nil}
   end

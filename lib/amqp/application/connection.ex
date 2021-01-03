@@ -17,7 +17,7 @@ defmodule AMQP.Application.Connection do
   Combines name and retry interval with the connection options.
 
       iex> opts = [proc_name: :my_conn, retry_interval: 10_000, host: "localhost"]
-      iex> :ok = AMQP.Application.Connection.start_link(opts)
+      iex> {:ok, pid} = AMQP.Application.Connection.start_link(opts)
       iex> {:ok, conn} = AMQP.Application.Connection.get_connection(:my_conn)
 
   Passes URL instead of options and use a default proc name when you need only a single connection.
@@ -89,6 +89,7 @@ defmodule AMQP.Application.Connection do
   @impl true
   def init(state) do
     send(self(), :connect)
+    Process.flag(:trap_exit, true)
     {:ok, state}
   end
 
@@ -110,7 +111,7 @@ defmodule AMQP.Application.Connection do
         {:noreply, %{state | connection: conn}}
 
       {:error, _} ->
-        Logger.error("Failed to connect to AMQP server (#{state[:name]}). Retrying later...")
+        Logger.error("Failed to open AMQP connection (#{state[:name]}). Retrying later...")
 
         # Retry later
         Process.send_after(self(), :connect, state[:retry_interval])
@@ -118,9 +119,28 @@ defmodule AMQP.Application.Connection do
     end
   end
 
-  def handle_info({:DOWN, _, :process, _pid, reason}, state) do
-    # Stop GenServer. Will be restarted by Supervisor.
-    {:stop, {:connection_gone, reason}, nil}
+  def handle_info({:DOWN, _, :process, pid, _reason}, %{connection: %{pid: pid}} = state) when is_pid(pid) do
+    Logger.info("AMQP connection is gone (#{state[:name]}). Reconnecting...")
+    send(self(), :connect)
+    {:noreply, %{state | connection: nil}}
+  end
+
+  def handle_info({:EXIT, _from, reason}, state) do
+    close(state[:connection])
+    {:stop, reason, %{state | connection: nil}}
+  end
+
+  @impl true
+  def terminate(_reason, state) do
+    close(state[:connection])
+    %{state | connection: nil}
+  end
+
+  defp close(nil), do: :ok
+  defp close(connection) do
+    if Process.alive?(connection.pid) do
+      Connection.close(connection)
+    end
   end
 
   defp do_open(options) do
