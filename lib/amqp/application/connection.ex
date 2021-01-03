@@ -1,5 +1,7 @@
 defmodule AMQP.Application.Connection do
   @moduledoc false
+  # This module will stay as a private module at least during 2.0.x.
+  # There might be non backward compatible changes on this module on 2.1.x.
 
   use GenServer
   require Logger
@@ -100,7 +102,11 @@ defmodule AMQP.Application.Connection do
   end
 
   def handle_call(:get_connection, _, state) do
-    {:reply, state[:connection], state}
+    if state[:connection] && Process.alive?(state[:connection].pid) do
+      {:reply, state[:connection], state}
+    else
+      {:reply, nil, state}
+    end
   end
 
   @impl true

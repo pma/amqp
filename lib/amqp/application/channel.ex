@@ -1,9 +1,11 @@
 defmodule AMQP.Application.Channel do
   @moduledoc false
+  # This module will stay as a private module at least during 2.0.x.
+  # There might be non backward compatible changes on this module on 2.1.x.
 
   use GenServer
   require Logger
-  alias AMQP.{Channel, Connection}
+  alias AMQP.Channel
 
   @default_interval 5_000
 
@@ -16,13 +18,13 @@ defmodule AMQP.Application.Channel do
 
       iex> opts = [proc_name: :my_chan, retry_interval: 10_000, connection: :my_conn]
       iex> :ok = AMQP.Application.Channel.start_link(opts)
-      iex> {:ok, chan} = AMQP.Application.Connection.get_connection(:my_chan)
+      iex> {:ok, chan} = AMQP.Application.Channel.get_channel(:my_chan)
 
   If you omit the proc_name, it uses :default.
 
       iex> :ok = AMQP.Application.Channel.start_link([])
-      iex> {:ok, chan} = AMQP.Application.Connection.get_channel()
-      iex> {:ok, chan} = AMQP.Application.Connection.get_channel(:default)
+      iex> {:ok, chan} = AMQP.Application.Channel.get_channel()
+      iex> {:ok, chan} = AMQP.Application.Channel.get_channel(:default)
   """
   @spec start_link(keyword) :: GenServer.on_start()
   def start_link(opts) do
@@ -76,7 +78,7 @@ defmodule AMQP.Application.Channel do
   @doc """
   Returns a channel referred by the name.
   """
-  @spec get_channel(binary | atom) :: {:ok, Connection.t()} | {:error, any}
+  @spec get_channel(binary | atom) :: {:ok, Channel.t()} | {:error, any}
   def get_channel(name \\ :default) do
     case GenServer.call(get_server_name(name), :get_channel) do
       nil -> {:error, :channel_not_ready}
@@ -97,7 +99,11 @@ defmodule AMQP.Application.Channel do
   end
 
   def handle_call(:get_channel, _, state) do
-    {:reply, state[:channel], state}
+    if state[:channel] && Process.alive?(state[:channel].pid) do
+      {:reply, state[:channel], state}
+    else
+      {:reply, nil, state}
+    end
   end
 
   @impl true
