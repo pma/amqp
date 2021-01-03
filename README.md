@@ -10,7 +10,13 @@ The API is based on Langohr, a Clojure client for RabbitMQ.
 
 ## Migration from 1.X to 2.X
 
-TO BE WRITTEN
+TO BE WRITTEN.
+
+However it will work without any changes for most 1.X users.
+The changes are mostly internal or additional.
+There is one minor backward incompatible change for `nowait` option but it won't affect most users.
+
+See [the pull request](https://github.com/pma/amqp/pull/177) for the details and progress.
 
 ## Migration from 0.X to 1.X
 
@@ -23,7 +29,7 @@ Add AMQP as a dependency in your `mix.exs` file.
 ```elixir
 def deps do
   [
-    {:amqp, "~> 1.6.0"}
+    {:amqp, "~> 2.0.0-rc.1"}
   ]
 end
 ```
