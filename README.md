@@ -208,7 +208,7 @@ iex> {:ok, chan} = AMQP.Application.get_channel(:mychan)
 iex> :ok = AMQP.Basic.publish(chan, "", "", "Hello")
 ```
 
-When a channel is dwon and reconnected, you have make sure your consumer subscribes to a channel again.
+When a channel is down and reconnected, you have to make sure your consumer subscribes to a channel again.
 
 See the documentation for `AMQP.Application.get_connection/1` and `AMQP.Application.get_channel/1` for more details.
 
@@ -244,8 +244,8 @@ Valid argument names in `Exchange.declare` include:
 
 It usually happens when your code doesn't send acknowledgement(ack, nack or reject) after receiving a message.
 
-If you use GenServer for your consumer, try storing number of messages the server is currently processing to the GenServer state.
-If the number equals `prefetch_count`, those messages were left without acknowledgements and that's why consumer have stopped receiving more messages.
+If you use GenServer for your consumer, try storing the number of messages the server is currently processing to the GenServer state.
+If the number equals `prefetch_count`, those messages were left without acknowledgements and that's why the consumer has stopped receiving more messages.
 
 Also review the following points:
 
@@ -253,8 +253,8 @@ Also review the following points:
 - when :exit signal was thrown how it would be handled
 - when a message processing took long time what could happen
 
-Also make sure that the consumer to monitor the channel.
-When the channel is gone, you have to reopen and subscribe to a new channel again.
+Also make sure that the consumer monitors the channel pid.
+When the channel is gone, you have to reopen it and subscribe to a new channel again.
 
 #### The version compatibiliy
 
