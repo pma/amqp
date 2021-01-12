@@ -16,6 +16,7 @@ defmodule AMQP.DirectConsumer do
   For more information see: https://www.rabbitmq.com/erlang-client-user-guide.html#consumers-imlementation
   """
   import AMQP.Core
+  import AMQP.ConsumerHelper
   @behaviour :amqp_gen_consumer
 
   #########################################################
@@ -35,85 +36,32 @@ defmodule AMQP.DirectConsumer do
   end
 
   @impl true
-  def handle_consume_ok(basic_consume_ok(consumer_tag: consumer_tag), _args, consumer) do
-    _ = send(consumer, {:basic_consume_ok, %{consumer_tag: consumer_tag}})
+  def handle_consume_ok(method, _args, consumer) do
+    send(consumer, compose_message(method))
     {:ok, consumer}
   end
 
   @impl true
-  def handle_cancel(basic_cancel(consumer_tag: consumer_tag, nowait: no_wait), consumer) do
-    _ = send(consumer, {:basic_cancel, %{consumer_tag: consumer_tag, no_wait: no_wait}})
+  def handle_cancel(method, consumer) do
+    send(consumer, compose_message(method))
     {:ok, consumer}
   end
 
   @impl true
-  def handle_cancel_ok(basic_cancel_ok(consumer_tag: consumer_tag), _args, consumer) do
-    _ = send(consumer, {:basic_cancel_ok, %{consumer_tag: consumer_tag}})
+  def handle_cancel_ok(method, _args, consumer) do
+    send(consumer, compose_message(method))
     {:ok, consumer}
   end
 
   @impl true
-  def handle_server_cancel(basic_cancel(consumer_tag: consumer_tag, nowait: no_wait), consumer) do
-    _ = send(consumer, {:basic_cancel, %{consumer_tag: consumer_tag, no_wait: no_wait}})
+  def handle_server_cancel(method, consumer) do
+    send(consumer, compose_message(method))
     {:ok, consumer}
   end
 
   @impl true
-  def handle_deliver(
-        basic_deliver(
-          consumer_tag: consumer_tag,
-          delivery_tag: delivery_tag,
-          redelivered: redelivered,
-          exchange: exchange,
-          routing_key: routing_key
-        ),
-        amqp_msg(
-          props:
-            p_basic(
-              content_type: content_type,
-              content_encoding: content_encoding,
-              headers: headers,
-              delivery_mode: delivery_mode,
-              priority: priority,
-              correlation_id: correlation_id,
-              reply_to: reply_to,
-              expiration: expiration,
-              message_id: message_id,
-              timestamp: timestamp,
-              type: type,
-              user_id: user_id,
-              app_id: app_id,
-              cluster_id: cluster_id
-            ),
-          payload: payload
-        ),
-        consumer
-      ) do
-    send(
-      consumer,
-      {:basic_deliver, payload,
-       %{
-         consumer_tag: consumer_tag,
-         delivery_tag: delivery_tag,
-         redelivered: redelivered,
-         exchange: exchange,
-         routing_key: routing_key,
-         content_type: content_type,
-         content_encoding: content_encoding,
-         headers: headers,
-         persistent: delivery_mode == 2,
-         priority: priority,
-         correlation_id: correlation_id,
-         reply_to: reply_to,
-         expiration: expiration,
-         message_id: message_id,
-         timestamp: timestamp,
-         type: type,
-         user_id: user_id,
-         app_id: app_id,
-         cluster_id: cluster_id
-       }}
-    )
+  def handle_deliver(method, message, consumer) do
+    send(consumer, compose_message(method, message))
 
     {:ok, consumer}
   end
@@ -135,11 +83,41 @@ defmodule AMQP.DirectConsumer do
   end
 
   def handle_info(down = {:DOWN, _, _, _, _}, consumer) do
-    _ = send(consumer, down)
+    send(consumer, down)
+    {:ok, consumer}
+  end
+
+  def handle_info({basic_return() = method, message}, consumer) do
+    send(consumer, compose_message(method, message))
+
+    {:ok, consumer}
+  end
+
+  def handle_info(basic_ack() = method, consumer) do
+    send(consumer, compose_message(method))
+
+    {:ok, consumer}
+  end
+
+  def handle_info(basic_nack() = method, consumer) do
+    send(consumer, compose_message(method))
+
     {:ok, consumer}
   end
 
   @impl true
+  def handle_call({:register_return_handler, chan, consumer}, _from, consumer) do
+    :amqp_channel.register_return_handler(chan.pid, self())
+
+    {:reply, :ok, consumer}
+  end
+
+  def handle_call({:register_confirm_handler, chan, consumer}, _from, consumer) do
+    :amqp_channel.register_confirm_handler(chan.pid, self())
+
+    {:reply, :ok, consumer}
+  end
+
   def handle_call(_req, _from, consumer) do
     {:reply, {:error, :undefined}, consumer}
   end

@@ -23,14 +23,16 @@ defmodule AMQP.Queue do
       Defaults to `false`.
     * `:passive` - If set, raises an error unless the queue already exists.
       Defaults to `false`.
-    * `:no_wait` - If set, the declare operation is asynchronous. Defaults to
+    * `:nowait` - If set, the declare operation is asynchronous. Defaults to
       `false`.
     * `:arguments` - A list of arguments to pass when declaring (of type `t:AMQP.arguments/0`).
       See the README for more information. Defaults to `[]`.
 
   """
-  @spec declare(Channel.t(), Basic.queue(), keyword) :: {:ok, map} | Basic.error()
+  @spec declare(Channel.t(), Basic.queue(), keyword) :: {:ok, map} | :ok | Basic.error()
   def declare(%Channel{pid: pid}, queue \\ "", options \\ []) do
+    nowait = get_nowait(options)
+
     queue_declare =
       queue_declare(
         queue: queue,
@@ -38,19 +40,23 @@ defmodule AMQP.Queue do
         durable: Keyword.get(options, :durable, false),
         exclusive: Keyword.get(options, :exclusive, false),
         auto_delete: Keyword.get(options, :auto_delete, false),
-        nowait: Keyword.get(options, :no_wait, false),
+        nowait: nowait,
         arguments: Keyword.get(options, :arguments, []) |> Utils.to_type_tuple()
       )
 
-    case :amqp_channel.call(pid, queue_declare) do
-      queue_declare_ok(
-        queue: queue,
-        message_count: message_count,
-        consumer_count: consumer_count
-      ) ->
+    case {nowait, :amqp_channel.call(pid, queue_declare)} do
+      {true, :ok} ->
+        :ok
+
+      {_,
+       queue_declare_ok(
+         queue: queue,
+         message_count: message_count,
+         consumer_count: consumer_count
+       )} ->
         {:ok, %{queue: queue, message_count: message_count, consumer_count: consumer_count}}
 
-      error ->
+      {_, error} ->
         {:error, error}
     end
   end
@@ -62,25 +68,28 @@ defmodule AMQP.Queue do
 
     * `:routing_key` - The routing key used to bind the queue to the exchange.
       Defaults to `""`.
-    * `:no_wait` - If `true`, the binding is not synchronous. Defaults to `false`.
+    * `:nowait` - If `true`, the binding is not synchronous. Defaults to `false`.
     * `:arguments` - A list of arguments to pass when binding (of type `t:AMQP.arguments/0`).
       See the README for more information. Defaults to `[]`.
 
   """
   @spec bind(Channel.t(), Basic.queue(), Basic.exchange(), keyword) :: :ok | Basic.error()
   def bind(%Channel{pid: pid}, queue, exchange, options \\ []) do
+    nowait = get_nowait(options)
+
     queue_bind =
       queue_bind(
         queue: queue,
         exchange: exchange,
         routing_key: Keyword.get(options, :routing_key, ""),
-        nowait: Keyword.get(options, :no_wait, false),
+        nowait: nowait,
         arguments: Keyword.get(options, :arguments, []) |> Utils.to_type_tuple()
       )
 
-    case :amqp_channel.call(pid, queue_bind) do
-      queue_bind_ok() -> :ok
-      error -> {:error, error}
+    case {nowait, :amqp_channel.call(pid, queue_bind)} do
+      {true, :ok} -> :ok
+      {_, queue_bind_ok()} -> :ok
+      {_, error} -> {:error, error}
     end
   end
 
@@ -119,22 +128,25 @@ defmodule AMQP.Queue do
       consumers. If the queue has consumers, it's not deleted and an error is
       returned.
     * `:if_empty` - If set, the server will only delete the queue if it has no messages.
-    * `:no_wait` - If set, the delete operation is asynchronous.
+    * `:nowait` - If set, the delete operation is asynchronous.
 
   """
-  @spec delete(Channel.t(), Basic.queue(), keyword) :: {:ok, map} | Basic.error()
+  @spec delete(Channel.t(), Basic.queue(), keyword) :: {:ok, map} | :ok | Basic.error()
   def delete(%Channel{pid: pid}, queue, options \\ []) do
+    nowait = get_nowait(options)
+
     queue_delete =
       queue_delete(
         queue: queue,
         if_unused: Keyword.get(options, :if_unused, false),
         if_empty: Keyword.get(options, :if_empty, false),
-        nowait: Keyword.get(options, :no_wait, false)
+        nowait: nowait
       )
 
-    case :amqp_channel.call(pid, queue_delete) do
-      queue_delete_ok(message_count: message_count) -> {:ok, %{message_count: message_count}}
-      error -> {:error, error}
+    case {nowait, :amqp_channel.call(pid, queue_delete)} do
+      {true, :ok} -> :ok
+      {_, queue_delete_ok(message_count: message_count)} -> {:ok, %{message_count: message_count}}
+      {_, error} -> {:error, error}
     end
   end
 
@@ -228,7 +240,7 @@ defmodule AMQP.Queue do
 
         do_consume(channel, fun, consumer_tag)
 
-      {:basic_cancel, %{consumer_tag: ^consumer_tag, no_wait: _}} ->
+      {:basic_cancel, %{consumer_tag: ^consumer_tag}} ->
         exit(:basic_cancel)
 
       {:basic_cancel_ok, %{consumer_tag: ^consumer_tag}} ->
@@ -244,5 +256,10 @@ defmodule AMQP.Queue do
   @spec unsubscribe(Channel.t(), Basic.consumer_tag()) :: {:ok, String.t()} | Basic.error()
   def unsubscribe(%Channel{} = channel, consumer_tag) do
     Basic.cancel(channel, consumer_tag)
+  end
+
+  # support backward compatibility with old key name
+  defp get_nowait(opts) do
+    Keyword.get(opts, :nowait, false) || Keyword.get(opts, :no_wait, false)
   end
 end

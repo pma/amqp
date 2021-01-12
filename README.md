@@ -8,9 +8,12 @@ Simple Elixir wrapper for the Erlang RabbitMQ client.
 
 The API is based on Langohr, a Clojure client for RabbitMQ.
 
-## Migration from 0.X to 1.X
+## Upgrading guides
 
-If you use amqp 0.X and plan to migrate to 1.0 please read our [migration guide](https://github.com/pma/amqp/wiki/Upgrade-from-0.X-to-1.0).
+If you use old version and plan to migrate to 1.0 please read our upgrade guides:
+
+* [0.x to 1.0](https://github.com/pma/amqp/wiki/Upgrade-from-0.X-to-1.0)
+* [1.x to 2.0](https://github.com/pma/amqp/wiki/2.0-Release-Notes#breaking-changes-and-upgrade-guide)
 
 ## Edge version
 
@@ -23,7 +26,7 @@ Add AMQP as a dependency in your `mix.exs` file.
 ```elixir
 def deps do
   [
-    {:amqp, "~> 1.6.0"}
+    {:amqp, "~> 2.0.0-rc.1"}
   ]
 end
 ```
@@ -171,75 +174,49 @@ Error converting Hello, World! to integer
 Error converting Hello, World! to integer
 ```
 
-## Stable RabbitMQ Connection
+### Configuration
 
-While the above example works, it does nothing to handle RabbitMQ connection
-outages. In case of an outage your Genserver will remain stale and won't
-receive any messages from the broker as the connection is never restarted.
+#### Erlang library's progress report
 
-Luckily, implementing a reconnection logic is quite straight forward. Since the
-connection record holds the pid of the connection itself, we can monitor it
-and get a notification when it goes down.
-
-Example implementation:
+This library uses an official Erlang RabbitMQ client library internally and we found its logging is too verbose.
+These are called progress reports by the Erlang library and you would see a lot of entries with info log level if you
+use 1.x version.
+AMQP disables that by default from version 2.0.
+If you want to see more detailed logs, you can enable it by adding the following line on your config.
 
 ```elixir
-defmodule MyApp.AMQP do
-  use GenServer
-  require Logger
-  alias AMQP.Connection
-
-  @host "amqp://localhost"
-  @reconnect_interval 10_000
-
-  def start_link(opts \\ [name: __MODULE__]) do
-    GenServer.start_link(__MODULE__, nil, opts)
-  end
-
-  def init(_) do
-    send(self(), :connect)
-    {:ok, nil}
-  end
-
-  def get_connection do
-    case GenServer.call(__MODULE__, :get) do
-      nil -> {:error, :not_connected}
-      conn -> {:ok, conn}
-    end
-  end
-
-  def handle_call(:get, _, conn) do
-    {:reply, conn, conn}
-  end
-
-  def handle_info(:connect, conn) do
-    case Connection.open(@host) do
-      {:ok, conn} ->
-        # Get notifications when the connection goes down
-        Process.monitor(conn.pid)
-        {:noreply, conn}
-
-      {:error, _} ->
-        Logger.error("Failed to connect #{@host}. Reconnecting later...")
-        # Retry later
-        Process.send_after(self(), :connect, @reconnect_interval)
-        {:noreply, nil}
-    end
-  end
-
-  def handle_info({:DOWN, _, :process, _pid, reason}, _) do
-    # Stop GenServer. Will be restarted by Supervisor.
-    {:stop, {:connection_lost, reason}, nil}
-  end
-end
+config :amqp, enable_progress_report: true
 ```
 
-Now, when the server starts, it will try to reconnect indefinitely until it succeeds.
-When the connection drops or the server is down, the GenServer will stop.
-If you have put the GenServer module to your application tree, the Supervisor will automatically restart it.
-Then it will try to reconnect indefinitely until it succeeds.
+#### Connections and channels
 
-## Types of arguments and headers
+You can define a connection and channel in your config and AMQP will automatically...
+
+* Open the connection and channel at the start of the application
+* Automatically try to reconnect if they are disconnected
+
+```elixir
+config :amqp,
+  connections: [
+    myconn: [url: "amqp://guest:guest@myhost:12345"],
+  ],
+  channels: [
+    mychan: [connection: :myconn]
+  ]
+```
+
+You can access the connection/channel via `AMQP.Application`.
+
+```elixir
+iex> {:ok, chan} = AMQP.Application.get_channel(:mychan)
+iex> :ok = AMQP.Basic.publish(chan, "", "", "Hello")
+```
+
+When a channel is down and reconnected, you have to make sure your consumer subscribes to a channel again.
+
+See the documentation for `AMQP.Application.get_connection/1` and `AMQP.Application.get_channel/1` for more details.
+
+### Types of arguments and headers
 
 The parameter `arguments` in `Queue.declare`, `Exchange.declare`, `Basic.consume` and the parameter `headers` in `Basic.publish` are a list of tuples in the form `{name, type, value}`, where `name` is a binary containing the argument/header name, `type` is an atom describing the AMQP field type and `value` a term compatible with the AMQP field type.
 
@@ -267,35 +244,21 @@ Valid argument names in `Exchange.declare` include:
 
 ## Troubleshooting / FAQ
 
-#### Connections and Channels
-
-If this is your first time using RabbitMQ, we recommend you to start designing your application like this way:
-
-- Open and manage a single connection for an application
-- Open/close a channel per process (don't share a channel between multiple processes)
-
-Once you saw things in action you can now consider optimising the performance by increasing number of connections etc.
-
-Note it's completely safe to share a single connection between multiple processes.
-However it is not recommended to share a channel between multiple processes.
-It's technically possible but you want to understand the implications when you do.
-
-Make sure you close the channel after used to avoid any potential memory leaks and warnings from RabbitMQ client library.
-
 #### Consumer stops receiving messages
 
 It usually happens when your code doesn't send acknowledgement(ack, nack or reject) after receiving a message.
-You want to investigate if...
 
-- an exception was raised and how it would be handled
-- :exit signal was thrown and how it would be handled
-- a message processing took long time.
+If you use GenServer for your consumer, try storing the number of messages the server is currently processing to the GenServer state.
+If the number equals `prefetch_count`, those messages were left without acknowledgements and that's why the consumer has stopped receiving more messages.
 
-If you use GenServer in consumer, try storing number of messages the server is
-currently processing to the GenServer state.
-If the number equals `prefetch_count`, those messages were left without
-acknowledgements and that's why consumer have stopped receiving more
-messages.
+Also review the following points:
+
+- when an exception was raised how it would be handled
+- when :exit signal was thrown how it would be handled
+- when a message processing took long time what could happen
+
+Also make sure that the consumer monitors the channel pid.
+When the channel is gone, you have to reopen it and subscribe to a new channel again.
 
 #### The version compatibiliy
 
@@ -315,18 +278,6 @@ Try the following configuration.
 ```elixir
 config :logger, handle_otp_reports: false
 ```
-
-Or try filtering out the messages at your application start:
-
-```elixir
-:logger.add_primary_filter(
-  :ignore_rabbitmq_progress_reports,
-  {&:logger_filters.domain/2, {:stop, :equal, [:progress]}}
-)
-```
-
-See [this comment](https://github.com/pma/amqp/issues/110#issuecomment-442761299) for the
-details.
 
 #### Lager conflicts with Elixir logger
 

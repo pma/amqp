@@ -1,7 +1,7 @@
 defmodule AMQP.Mixfile do
   use Mix.Project
 
-  @version "1.6.0"
+  @version "2.0.0-rc.1"
 
   def project do
     [
@@ -22,13 +22,20 @@ defmodule AMQP.Mixfile do
         main: "readme",
         source_ref: "v#{@version}",
         source_url: "https://github.com/pma/amqp"
+      ],
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
       ]
     ]
   end
 
   def application do
     [
-      applications: [:lager, :amqp_client],
+      applications: [:lager, :amqp_client, :logger],
       mod: {AMQP.Application, []}
     ]
   end
@@ -43,7 +50,8 @@ defmodule AMQP.Mixfile do
       {:inch_ex, "~> 0.5", only: :docs},
 
       # Dev dependencies.
-      {:dialyxir, "~> 0.5", only: :dev, runtime: false}
+      {:dialyxir, "~> 0.5", only: :dev, runtime: false},
+      {:excoveralls, "~> 0.10", only: :test}
     ]
   end
 

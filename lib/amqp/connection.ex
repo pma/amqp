@@ -26,9 +26,9 @@ defmodule AMQP.Connection do
 
   """
   @spec open(keyword | String.t()) :: {:ok, t()} | {:error, atom()} | {:error, any()}
-  def open(uri_or_options \\ []) when is_binary(uri_or_options) or is_list(uri_or_options) do
-    open(uri_or_options, :undefined)
-  end
+  def open(uri_or_options \\ [])
+  def open(uri) when is_binary(uri), do: open(uri, [])
+  def open(options) when is_list(options), do: open("", options)
 
   @doc """
   Opens an new Connection to an AMQP broker.
@@ -92,40 +92,10 @@ defmodule AMQP.Connection do
             fail_if_no_peer_cert: true
           ]
         )
-
-  ## Backward compatibility for connection name
-
-  RabbitMQ supports user-specified connection names since version 3.6.2.
-
-  Previously AMQP took a connection name as a separate parameter on `open/2` and `open/3` and it is still supported in this version.
-
-      iex> options = [host: "localhost", port: 5672, virtual_host: "/", username: "guest", password: "guest"]
-      iex> AMQP.Connection.open(options, :undefined)
-      {:ok, %AMQP.Connection{}}
-
-      iex> AMQP.Connection.open("amqp://guest:guest@localhost", "my-connection")
-      {:ok, %AMQP.Connection{}}
-
-      iex> AMQP.Connection.open("amqp://guest:guest@localhost", "my-connection", options)
-      {:ok, %AMQP.Connection{}}
-
-  However the connection name parameter is now deprecated and might not be supported in the future versions.
-  You are recommented to pass it with `:name` option instead:
-
-      iex> AMQP.Connection.open("amqp://guest:guest@localhost", name: "my-connection")
-      {:ok, %AMQP.Connection{}}
   """
-  @spec open(String.t() | keyword, keyword | String.t() | :undefined) ::
-          {:ok, t()} | {:error, atom()} | {:error, any()}
-  def open(uri, options)
-
-  def open(uri, name) when is_binary(uri) and (is_binary(name) or name == :undefined) do
-    do_open(uri, name, _options = [])
-  end
-
-  def open(options, name) when is_list(options) and (is_binary(name) or name == :undefined) do
-    {name_from_opts, options} = take_connection_name(options)
-    name = if name == :undefined, do: name_from_opts, else: name
+  @spec open(String.t(), keyword) :: {:ok, t()} | {:error, atom()} | {:error, any()}
+  def open(uri, options) when is_nil(uri) or uri == "" do
+    {name, options} = take_connection_name(options)
 
     options
     |> merge_options_to_default()
@@ -135,14 +105,6 @@ defmodule AMQP.Connection do
   def open(uri, options) when is_binary(uri) and is_list(options) do
     {name, options} = take_connection_name(options)
 
-    do_open(uri, name, options)
-  end
-
-  @doc false
-  @deprecated "Use :name in open/2 instead"
-  @spec open(String.t(), String.t() | :undefined, keyword) ::
-          {:ok, t()} | {:error, atom()} | {:error, any()}
-  def open(uri, name, options) when is_binary(uri) and is_list(options) do
     do_open(uri, name, options)
   end
 

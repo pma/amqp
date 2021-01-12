@@ -4,8 +4,7 @@ defmodule AMQP.Basic do
   """
 
   import AMQP.Core
-  alias AMQP.{Channel, Utils}
-  alias AMQP.Channel.ReceiverManager
+  alias AMQP.{Channel, Utils, SelectiveConsumer}
 
   @type error :: {:error, reason :: :blocked | :closing}
 
@@ -74,9 +73,9 @@ defmodule AMQP.Basic do
         priority: Keyword.get(options, :priority, :undefined),
         correlation_id: Keyword.get(options, :correlation_id, :undefined),
         reply_to: Keyword.get(options, :reply_to, :undefined),
-        expiration: Keyword.get(options, :expiration, :undefined),
+        expiration: Keyword.get(options, :expiration, :undefined) |> number_to_s(),
         message_id: Keyword.get(options, :message_id, :undefined),
-        timestamp: Keyword.get(options, :timestamp, :undefined),
+        timestamp: Keyword.get(options, :timestamp, :undefined) |> to_epoch(),
         type: Keyword.get(options, :type, :undefined),
         user_id: Keyword.get(options, :user_id, :undefined),
         app_id: Keyword.get(options, :app_id, :undefined),
@@ -306,7 +305,7 @@ defmodule AMQP.Basic do
     * `{:basic_consume_ok, %{consumer_tag: consumer_tag}}` - Sent when the consumer \
   process is registered with Basic.consume. The caller receives the same information \
   as the return of Basic.consume;
-    * `{:basic_cancel, %{consumer_tag: consumer_tag, no_wait: no_wait}}` - Sent by the \
+    * `{:basic_cancel, %{consumer_tag: consumer_tag, nowait: nowait}}` - Sent by the \
   broker when the consumer is unexpectedly cancelled (such as after a queue deletion)
     * `{:basic_cancel_ok, %{consumer_tag: consumer_tag}}` - Sent to the consumer process after a call to Basic.cancel
 
@@ -325,7 +324,7 @@ defmodule AMQP.Basic do
     * `:exclusive` - If set, requests exclusive consumer access, meaning that only
       this consumer can consume from the given `queue`. Note that the client cannot
       have exclusive access to a queue that already has consumers.
-    * `:no_wait` - If set, the consume operation is asynchronous. Defaults to
+    * `:nowait` - If set, the consume operation is asynchronous. Defaults to
       `false`.
     * `:arguments` - A list of arguments to pass when consuming (of type `t:AMQP.arguments/0`).
       See the README for more information. Defaults to `[]`.
@@ -333,6 +332,9 @@ defmodule AMQP.Basic do
   """
   @spec consume(Channel.t(), String.t(), pid | nil, keyword) :: {:ok, String.t()} | error
   def consume(%Channel{} = chan, queue, consumer_pid \\ nil, options \\ []) do
+    nowait = Keyword.get(options, :no_wait, false) || Keyword.get(options, :nowait, false)
+    consumer_tag = Keyword.get(options, :consumer_tag, "")
+
     basic_consume =
       basic_consume(
         queue: queue,
@@ -340,7 +342,7 @@ defmodule AMQP.Basic do
         no_local: Keyword.get(options, :no_local, false),
         no_ack: Keyword.get(options, :no_ack, false),
         exclusive: Keyword.get(options, :exclusive, false),
-        nowait: Keyword.get(options, :no_wait, false),
+        nowait: nowait,
         arguments: Keyword.get(options, :arguments, [])
       )
 
@@ -350,10 +352,10 @@ defmodule AMQP.Basic do
     # https://github.com/rabbitmq/rabbitmq-erlang-client/blob/master/src/amqp_selective_consumer.erl
     #
     # It acts like a broker and distributes the messages to the process registered with :amqp_channel.subscribe/3.
-    # AMQP also provides another broker (Receiver/ReceiverManager) that transfors a message from Erlang record
+    # AMQP also provides another broker (DirectConsumer/SelectiveConsumer) that transfors a message from Erlang record
     # to Elixir friendly type and forwards the message to the process passed to this method.
     #
-    # [RabbitMQ] -> [Channel = SelectiveConsumer] -> [AMQP.Channel.Receiver] -> [consumer_pid]
+    # [RabbitMQ] -> [Channel] -> [SelectiveConsumer] -> [consumer_pid]
     #
     # If custom_consumer is set when the channel is open, the message handling is up to the consumer implementation.
     #
@@ -361,20 +363,18 @@ defmodule AMQP.Basic do
     #
     pid =
       case chan.custom_consumer do
-        nil ->
-          %{pid: pid} =
-            ReceiverManager.register_handler(chan.pid, consumer_pid || self(), :consume)
-
-          pid
+        {SelectiveConsumer, _} ->
+          consumer_pid || self()
 
         _ ->
           # when channel has a custom consumer, leave it to handle the given pid with `#handle_consume` callback.
           consumer_pid
       end
 
-    case :amqp_channel.subscribe(chan.pid, basic_consume, pid) do
-      basic_consume_ok(consumer_tag: consumer_tag) -> {:ok, consumer_tag}
-      error -> {:error, error}
+    case {nowait, :amqp_channel.subscribe(chan.pid, basic_consume, pid)} do
+      {true, :ok} -> {:ok, consumer_tag}
+      {_, basic_consume_ok(consumer_tag: consumer_tag)} -> {:ok, consumer_tag}
+      {_, error} -> {:error, error}
     end
   end
 
@@ -390,18 +390,17 @@ defmodule AMQP.Basic do
 
   ## Options
 
-    * `:no_wait` - If set, the cancel operation is asynchronous. Defaults to
-      `false`.
-
+    * `:nowait` - If set, the cancel operation is asynchronous. Defaults to `false`.
   """
   @spec cancel(Channel.t(), String.t(), keyword) :: {:ok, String.t()} | error
   def cancel(%Channel{pid: pid}, consumer_tag, options \\ []) do
-    basic_cancel =
-      basic_cancel(consumer_tag: consumer_tag, nowait: Keyword.get(options, :no_wait, false))
+    nowait = Keyword.get(options, :no_wait, false) || Keyword.get(options, :nowait, false)
+    basic_cancel = basic_cancel(consumer_tag: consumer_tag, nowait: nowait)
 
-    case :amqp_channel.call(pid, basic_cancel) do
-      basic_cancel_ok(consumer_tag: consumer_tag) -> {:ok, consumer_tag}
-      error -> {:error, error}
+    case {nowait, :amqp_channel.call(pid, basic_cancel)} do
+      {true, :ok} -> {:ok, consumer_tag}
+      {_, basic_cancel_ok(consumer_tag: consumer_tag)} -> {:ok, consumer_tag}
+      {_, error} -> {:error, error}
     end
   end
 
@@ -411,9 +410,8 @@ defmodule AMQP.Basic do
   The registered process will receive `{:basic_return, payload, meta}` tuples.
   """
   @spec return(Channel.t(), pid) :: :ok
-  def return(%Channel{pid: pid}, return_handler_pid) do
-    receiver = ReceiverManager.register_handler(pid, return_handler_pid, :return)
-    :amqp_channel.register_return_handler(pid, receiver.pid)
+  def return(%Channel{} = chan, return_handler_pid) do
+    :amqp_channel.call_consumer(chan.pid, {:register_return_handler, chan, return_handler_pid})
   end
 
   @doc """
@@ -422,8 +420,12 @@ defmodule AMQP.Basic do
   """
   @spec cancel_return(Channel.t()) :: :ok
   def cancel_return(%Channel{pid: pid}) do
-    # Currently we don't remove the receiver.
-    # The receiver will be deleted automatically when channel is closed.
     :amqp_channel.unregister_return_handler(pid)
   end
+
+  defp number_to_s(value) when is_number(value), do: to_string(value)
+  defp number_to_s(value), do: value
+
+  defp to_epoch(%DateTime{} = value), do: DateTime.to_unix(value)
+  defp to_epoch(value), do: value
 end
