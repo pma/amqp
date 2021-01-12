@@ -15,10 +15,6 @@ If you use old version and plan to migrate to 1.0 please read our upgrade guides
 * [0.x to 1.0](https://github.com/pma/amqp/wiki/Upgrade-from-0.X-to-1.0)
 * [1.x to 2.0](https://github.com/pma/amqp/wiki/2.0-Release-Notes#breaking-changes-and-upgrade-guide)
 
-## Edge version
-
-Check out [2.0 branch](https://github.com/pma/amqp/tree/pre/v2.0) for the latest works.
-
 ## Usage
 
 Add AMQP as a dependency in your `mix.exs` file.
