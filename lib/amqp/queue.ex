@@ -29,7 +29,10 @@ defmodule AMQP.Queue do
       See the README for more information. Defaults to `[]`.
 
   """
-  @spec declare(Channel.t(), Basic.queue(), keyword) :: {:ok, map} | :ok | Basic.error()
+  @spec declare(Channel.t(), Basic.queue(), keyword) ::
+          {:ok, %{queue: Basic.queue(), message_count: integer, consumer_count: integer}}
+          | :ok
+          | Basic.error()
   def declare(%Channel{pid: pid}, queue \\ "", options \\ []) do
     nowait = get_nowait(options)
 
