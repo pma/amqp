@@ -59,6 +59,13 @@ defmodule ConnectionTest do
     assert :ok = Connection.close(conn)
   end
 
+  test "open connection with uri, name, and options (deprected but still spported)" do
+    assert {:ok, conn} =
+             Connection.open("amqp://nonexistent:5672", "my-connection", host: 'localhost')
+
+    assert :ok = Connection.close(conn)
+  end
+
   test "override uri with options" do
     uri = "amqp://foo:bar@amqp.test.com:12345"
     {:ok, amqp_params} = uri |> String.to_charlist() |> :amqp_uri.parse()
