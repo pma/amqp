@@ -10,7 +10,7 @@ The API is based on Langohr, a Clojure client for RabbitMQ.
 
 ## Upgrading guides
 
-If you use old version and plan to migrate to 1.0 please read our upgrade guides:
+To upgrade from the old version, please read our upgrade guides:
 
 * [0.x to 1.0](https://github.com/pma/amqp/wiki/Upgrade-from-0.X-to-1.0)
 * [1.x to 2.0](https://github.com/pma/amqp/wiki/2.0-Release-Notes#breaking-changes-and-upgrade-guide)
