@@ -60,10 +60,20 @@ defmodule AMQP.DirectConsumer do
   end
 
   @impl true
+  def handle_deliver(_method, _msg, nil) do
+    {:error, :no_consumer, nil}
+  end
+
+  @impl true
   def handle_deliver(method, message, consumer) do
     send(consumer, compose_message(method, message))
 
     {:ok, consumer}
+  end
+
+  @impl true
+  def handle_deliver(_, _args, _ctx, nil) do
+    {:error, :no_consumer, nil}
   end
 
   @impl true
@@ -74,8 +84,9 @@ defmodule AMQP.DirectConsumer do
   end
 
   @impl true
-  def handle_info({:DOWN, _mref, :process, consumer, :normal}, consumer) do
-    {:ok, consumer}
+  def handle_info({:DOWN, _mref, :process, _consumer, reason}, _consumer)
+      when reason in [:normal, :shutdown] do
+    {:ok, nil}
   end
 
   def handle_info({:DOWN, _mref, :process, consumer, info}, consumer) do
