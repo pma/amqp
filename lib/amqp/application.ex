@@ -211,7 +211,7 @@ defmodule AMQP.Application do
 
         def handle_info(:subscribe, state) do
           subscribe()
-          {noreply, state}
+          {:noreply, state}
         end
 
         def handle_info({:DOWN, _, :process, pid, reason}, state) do
