@@ -294,6 +294,36 @@ config :lager,
   handlers: [level: :critical]
 ```
 
+In order to filter out noisy progress reports like
+
+``` elixir
+10:22:47.492 [info]      :supervisor: {#PID<0.5806.0>, :amqp_channel_sup}
+    :started: [
+  pid: #PID<0.5808.0>,
+  name: :channel,
+  mfargs: {:amqp_channel, :start_link,
+   [
+     :network,
+     #PID<0.5493.0>,
+     2,
+     #PID<0.5807.0>,
+     {"client 127.0.0.1:51834 -> 127.0.0.1:5672", 2}
+   ]},
+  restart_type: :intrinsic,
+  shutdown: 30000,
+  child_type: :worker
+]
+```
+
+The following can be added inside of your application callback
+
+``` elixir
+:logger.add_primary_filter(
+  :ignore_rabbitmq_progress_reports,
+  {&:logger_filters.domain/2, {:stop, :equal, [:progress]}}
+)
+```
+
 Check out
 [Lager](https://github.com/erlang-lager/lager#configuration) and [RabbitMQ
 documentation](https://www.rabbitmq.com/logging.html#advanced-configuration) for
