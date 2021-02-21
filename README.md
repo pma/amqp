@@ -1,8 +1,12 @@
 # AMQP
 
 [![Build Status](https://github.com/pma/amqp/workflows/Elixir%20CI/badge.svg?branch=main)](https://github.com/pma/amqp/actions?query=workflow%3A%22Elixir+CI%22+branch%3Amain)
-[![Hex Version](http://img.shields.io/hexpm/v/amqp.svg)](https://hex.pm/packages/amqp)
-[![Inline docs](http://inch-ci.org/github/pma/amqp.svg?branch=main)](http://inch-ci.org/github/pma/amqp)
+[![Inline docs](https://inch-ci.org/github/pma/amqp.svg?branch=main)](https://inch-ci.org/github/pma/amqp)
+[![Module Version](https://img.shields.io/hexpm/v/amqp.svg)](https://hex.pm/packages/amqp)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/amqp/)
+[![Total Download](https://img.shields.io/hexpm/dt/amqp.svg)](https://hex.pm/packages/amqp)
+[![License](https://img.shields.io/hexpm/l/amqp.svg)](https://github.com/pma/amqp/blob/main/LICENSE)
+[![Last Updated](https://img.shields.io/github/last-commit/pma/amqp.svg)](https://github.com/pma/amqp/commits/main)
 
 Simple Elixir wrapper for the Erlang RabbitMQ client.
 
@@ -29,9 +33,12 @@ end
 
 Elixir will start `amqp` automatically with this if you use Elixir 1.6+.
 
-If that's not the case (use `Application.started_applications/0` to check), try adding `:amqp` to `applications` or `extra_applications` in your `mix.exs`. Or call `Application.ensure_started(:amqp)` at the start.
+If that's not the case (use `Application.started_applications/0` to check), try
+adding `:amqp` to `applications` or `extra_applications` in your `mix.exs`. Or
+call `Application.ensure_started(:amqp)` at the start.
 
-After you are done, run `mix deps.get` in your shell to fetch and compile AMQP. Start an interactive Elixir shell with `iex -S mix`.
+After you are done, run `mix deps.get` in your shell to fetch and compile AMQP.
+Start an interactive Elixir shell with `iex -S mix`.
 
 ```elixir
 iex> {:ok, conn} = AMQP.Connection.open()
@@ -174,11 +181,14 @@ Error converting Hello, World! to integer
 
 #### Erlang library's progress report
 
-This library uses an official Erlang RabbitMQ client library internally and we found its logging is too verbose.
-These are called progress reports by the Erlang library and you would see a lot of entries with info log level if you
-use 1.x version.
-AMQP disables that by default from version 2.0.
-If you want to see more detailed logs, you can enable it by adding the following line on your config.
+This library uses an official Erlang RabbitMQ client library internally and we
+found its logging is too verbose.
+
+These are called progress reports by the Erlang library and you would see a lot
+of entries with info log level if you use 1.x version.
+
+AMQP disables that by default from version 2.0. If you want to see more
+detailed logs, you can enable it by adding the following line on your config.
 
 ```elixir
 config :amqp, enable_progress_report: true
@@ -186,7 +196,8 @@ config :amqp, enable_progress_report: true
 
 #### Connections and channels
 
-You can define a connection and channel in your config and AMQP will automatically...
+You can define a connection and channel in your config and AMQP will
+automatically...
 
 * Open the connection and channel at the start of the application
 * Automatically try to reconnect if they are disconnected
@@ -208,13 +219,19 @@ iex> {:ok, chan} = AMQP.Application.get_channel(:mychan)
 iex> :ok = AMQP.Basic.publish(chan, "", "", "Hello")
 ```
 
-When a channel is down and reconnected, you have to make sure your consumer subscribes to a channel again.
+When a channel is down and reconnected, you have to make sure your consumer
+subscribes to a channel again.
 
-See the documentation for `AMQP.Application.get_connection/1` and `AMQP.Application.get_channel/1` for more details.
+See the documentation for `AMQP.Application.get_connection/1` and
+`AMQP.Application.get_channel/1` for more details.
 
 ### Types of arguments and headers
 
-The parameter `arguments` in `Queue.declare`, `Exchange.declare`, `Basic.consume` and the parameter `headers` in `Basic.publish` are a list of tuples in the form `{name, type, value}`, where `name` is a binary containing the argument/header name, `type` is an atom describing the AMQP field type and `value` a term compatible with the AMQP field type.
+The parameter `arguments` in `Queue.declare`, `Exchange.declare`,
+`Basic.consume` and the parameter `headers` in `Basic.publish` are a list of
+tuples in the form `{name, type, value}`, where `name` is a binary containing
+the argument/header name, `type` is an atom describing the AMQP field type and
+`value` a term compatible with the AMQP field type.
 
 The valid AMQP field types are:
 
@@ -242,10 +259,15 @@ Valid argument names in `Exchange.declare` include:
 
 #### Consumer stops receiving messages
 
-It usually happens when your code doesn't send acknowledgement(ack, nack or reject) after receiving a message.
+It usually happens when your code doesn't send acknowledgement(ack, nack or
+reject) after receiving a message.
 
-If you use GenServer for your consumer, try storing the number of messages the server is currently processing to the GenServer state.
-If the number equals `prefetch_count`, those messages were left without acknowledgements and that's why the consumer has stopped receiving more messages.
+If you use GenServer for your consumer, try storing the number of messages the
+server is currently processing to the GenServer state.
+
+If the number equals `prefetch_count`, those messages were left without
+acknowledgements and that's why the consumer has stopped receiving more
+messages.
 
 Also review the following points:
 
@@ -253,16 +275,17 @@ Also review the following points:
 - when :exit signal was thrown how it would be handled
 - when a message processing took long time what could happen
 
-Also make sure that the consumer monitors the channel pid.
-When the channel is gone, you have to reopen it and subscribe to a new channel again.
+Also make sure that the consumer monitors the channel pid. When the channel is
+gone, you have to reopen it and subscribe to a new channel again.
 
-#### The version compatibiliy
+#### The version compatibility
 
 Check out [this article](https://github.com/pma/amqp/wiki/Versions-and-Compatibilities) to find out the compatibility with Elixir, OTP and RabbitMQ.
 
 #### Heartbeats
 
 In case the connection is dropped automatically, consider enabling heartbeats.
+
 You can set `heartbeat` option when you open a connection.
 
 For more details, read [this article](http://www.rabbitmq.com/heartbeats.html#tcp-proxies)
@@ -305,4 +328,15 @@ Update amqp to [1.1.0](https://github.com/pma/amqp/releases/tag/v1.1.0) or a gre
 
 #### Does the library support AMQP 1.0?
 
-Currently the library doesn't support AMQP 1.0 and there is no plan to do so at the moment. Our main aim here (at least for now) is to provide a thin wrapper around [amqp_client](https://hex.pm/packages/amqp_client) for Elixir programmers.
+Currently the library doesn't support AMQP 1.0 and there is no plan to do so at
+the moment. Our main aim here (at least for now) is to provide a thin wrapper
+around [amqp_client](https://hex.pm/packages/amqp_client) for Elixir
+programmers.
+
+
+## Copyright and License
+
+Copyright (c) 2014 Paulo Almeida
+
+This library is MIT licensed. See the
+[LICENSE](https://github.com/pma/amqp/blob/main/LICENSE) for details.

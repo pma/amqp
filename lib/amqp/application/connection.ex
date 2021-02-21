@@ -28,6 +28,7 @@ defmodule AMQP.Application.Connection do
       iex> :ok = AMQP.Application.Connection.start_link(opts)
       iex> {:ok, conn} = AMQP.Application.Connection.get_connection()
       iex> {:ok, conn} = AMQP.Application.Connection.get_connection(:default)
+
   """
   @spec start_link(keyword) :: GenServer.on_start()
   def start_link(opts) do
@@ -54,7 +55,7 @@ defmodule AMQP.Application.Connection do
   end
 
   @doc """
-  Returns a GenServer reference for the connection name
+  Returns a GenServer reference for the connection name.
   """
   @spec get_server_name(binary | atom) :: binary
   def get_server_name(name) do

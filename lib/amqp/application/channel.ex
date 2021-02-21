@@ -52,7 +52,7 @@ defmodule AMQP.Application.Channel do
   end
 
   @doc """
-  Returns a GenServer reference for the channel name
+  Returns a GenServer reference for the channel name.
   """
   @spec get_server_name(binary | atom) :: binary
   def get_server_name(name) do

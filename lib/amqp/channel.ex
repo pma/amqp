@@ -12,10 +12,10 @@ defmodule AMQP.Channel do
   @doc """
   Opens a new Channel in a previously opened Connection.
 
-  Allows optionally to pass a `t:custom_consumer/0` to start a custom consumer implementation. The
-  consumer must implement the `:amqp_gen_consumer` behavior from `:amqp_client`. See
-  `:amqp_connection.open_channel/2` for more details and `AMQP.DirectConsumer` for an example of a
-  custom consumer.
+  Allows optionally to pass a `t:custom_consumer/0` to start a custom consumer
+  implementation. The consumer must implement the `:amqp_gen_consumer` behavior
+  from `:amqp_client`. See `:amqp_connection.open_channel/2` for more details
+  and `AMQP.DirectConsumer` for an example of a custom consumer.
   """
   @spec open(Connection.t(), custom_consumer | nil) :: {:ok, Channel.t()} | {:error, any}
   def open(%Connection{} = conn, custom_consumer \\ {SelectiveConsumer, self()}) do

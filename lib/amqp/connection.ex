@@ -33,33 +33,54 @@ defmodule AMQP.Connection do
   @doc """
   Opens an new Connection to an AMQP broker.
 
-  The connections created by this module are supervised under  amqp_client's supervision tree.
-  Please note that connections do not get restarted automatically by the supervision tree in
-  case of a failure. If you need robust connections and channels, use monitors on the returned
-  connection PID.
+  The connections created by this module are supervised under  amqp_client's
+  supervision tree.  Please note that connections do not get restarted
+  automatically by the supervision tree in case of a failure. If you need
+  robust connections and channels, use monitors on the returned connection PID.
 
   ## Options
 
-    * `:username` - The name of a user registered with the broker (defaults to `"guest"`);
-    * `:password` - The password of user (defaults to `"guest"`);
-    * `:virtual_host` - The name of a virtual host in the broker (defaults to `"/"`);
-    * `:host` - The hostname of the broker (defaults to `"localhost"`);
-    * `:port` - The port the broker is listening on (defaults to `5672`);
-    * `:channel_max` - The channel_max handshake parameter (defaults to `0`);
-    * `:frame_max` - The frame_max handshake parameter (defaults to `0`);
-    * `:heartbeat` - The hearbeat interval in seconds (defaults to `10`);
-    * `:connection_timeout` - The connection timeout in milliseconds (defaults to `50000`);
-    * `:ssl_options` - Enable SSL by setting the location to cert files (defaults to `:none`);
-    * `:client_properties` - A list of extra client properties to be sent to the server (defaults to `[])`;
-    * `:socket_options` - Extra socket options. These are appended to the default options. \
-                          See http://www.erlang.org/doc/man/inet.html#setopts-2 and http://www.erlang.org/doc/man/gen_tcp.html#connect-4 \
-                          for descriptions of the available options;
-    * `:auth_mechanisms` - A list of authentication of SASL authentication mechanisms to use. \
-                          See https://www.rabbitmq.com/access-control.html#mechanisms and https://github.com/rabbitmq/rabbitmq-auth-mechanism-ssl \
-                          for descriptions of the available options;
-    * `:name` - A human-readable string that will be displayed in the management UI. \
-                          Connection names do not have to be unique and cannot be used as connection identifiers \
-                          (defaults to `:undefined`).
+    * `:username` - The name of a user registered with the broker (default
+      `"guest"`)
+
+    * `:password` - The password of user (default to `"guest"`)
+
+    * `:virtual_host` - The name of a virtual host in the broker (defaults
+      `"/"`)
+
+    * `:host` - The hostname of the broker (default `"localhost"`)
+
+    * `:port` - The port the broker is listening on (default `5672`)
+
+    * `:channel_max` - The channel_max handshake parameter (default `0`)
+
+    * `:frame_max` - The frame_max handshake parameter (defaults `0`)
+
+    * `:heartbeat` - The hearbeat interval in seconds (defaults `10`)
+
+    * `:connection_timeout` - The connection timeout in milliseconds (efaults
+      `50000`)
+
+    * `:ssl_options` - Enable SSL by setting the location to cert files
+      (default `:none`)
+
+    * `:client_properties` - A list of extra client properties to be sent to
+      the server (default `[]`)
+
+    * `:socket_options` - Extra socket options. These are appended to the
+      default options. See http://www.erlang.org/doc/man/inet.html#setopts-2 and
+      http://www.erlang.org/doc/man/gen_tcp.html#connect-4 for descriptions of
+      the available options
+
+    * `:auth_mechanisms` - A list of authentication of SASL authentication
+      mechanisms to use. See
+      https://www.rabbitmq.com/access-control.html#mechanisms and
+      https://github.com/rabbitmq/rabbitmq-auth-mechanism-ssl for descriptions of
+      the available options
+
+    * `:name` - A human-readable string that will be displayed in the
+      management UI. Connection names do not have to be unique and cannot be
+      used as connection identifiers (default `:undefined`)
 
   ## Examples
 
@@ -74,30 +95,34 @@ defmodule AMQP.Connection do
 
   To enable SSL, supply the following in the `ssl_options` field:
 
-  * `:cacertfile` - Specifies the certificates of the root Certificate Authorities that we wish to implicitly trust;
-  * `:certfile` - The client's own certificate in PEM format;
-  * `:keyfile` - The client's private key in PEM format.
+    * `:cacertfile` - Specifies the certificates of the root Certificate
+      Authorities that we wish to implicitly trust
+
+    * `:certfile` - The client's own certificate in PEM format
+
+    * `:keyfile` - The client's private key in PEM format
 
   Here is an example:
 
-        iex> AMQP.Connection.open(
-          port: 5671,
-          ssl_options: [
-            cacertfile: '/path/to/testca/cacert.pem',
-            certfile: '/path/to/client/cert.pem',
-            keyfile: '/path/to/client/key.pem',
-            # only necessary with intermediate CAs
-            # depth: 2,
-            verify: :verify_peer,
-            fail_if_no_peer_cert: true
-          ]
-        )
+      iex> AMQP.Connection.open(
+        port: 5671,
+        ssl_options: [
+          cacertfile: '/path/to/testca/cacert.pem',
+          certfile: '/path/to/client/cert.pem',
+          keyfile: '/path/to/client/key.pem',
+          # only necessary with intermediate CAs
+          # depth: 2,
+          verify: :verify_peer,
+          fail_if_no_peer_cert: true
+        ]
+      )
 
   ## Backward compatibility for connection name
 
   RabbitMQ supports user-specified connection names since version 3.6.2.
 
-  Previously AMQP took a connection name as a separate parameter on `open/2` and `open/3` and it is still supported in this version.
+  Previously AMQP took a connection name as a separate parameter on `open/2`
+  and `open/3` and it is still supported in this version.
 
       iex> options = [host: "localhost", port: 5672, virtual_host: "/", username: "guest", password: "guest"]
       iex> AMQP.Connection.open(options, :undefined)
@@ -109,11 +134,14 @@ defmodule AMQP.Connection do
       iex> AMQP.Connection.open("amqp://guest:guest@localhost", "my-connection", options)
       {:ok, %AMQP.Connection{}}
 
-  However the connection name parameter is now deprecated and might not be supported in the future versions.
-  You are recommented to pass it with `:name` option instead:
+  However the connection name parameter is now deprecated and might not be
+  supported in the future versions.
+
+  You are recommended to pass it with `:name` option instead:
 
       iex> AMQP.Connection.open("amqp://guest:guest@localhost", name: "my-connection")
       {:ok, %AMQP.Connection{}}
+
   """
   @spec open(String.t() | keyword, keyword | String.t() | :undefined) ::
           {:ok, t()} | {:error, atom()} | {:error, any()}
@@ -217,7 +245,8 @@ defmodule AMQP.Connection do
     )
   end
 
-  # If an integer value is configured as a string, cast it to an integer where applicable
+  # If an integer value is configured as a string, cast it to an integer where
+  # applicable
   defp normalize_int_opt(value) when is_binary(value), do: String.to_integer(value)
   defp normalize_int_opt(value), do: value
 
