@@ -1,5 +1,6 @@
 defmodule AMQP.Application.Channel do
   @moduledoc false
+
   # This module will stay as a private module at least during 2.0.x.
   # There might be non backward compatible changes on this module on 2.1.x.
 
@@ -116,6 +117,11 @@ defmodule AMQP.Application.Channel do
             {:noreply, %{state | channel: chan, monitor_ref: ref}}
 
           {:error, error} ->
+            Logger.error("Failed to open an AMQP channel(#{state[:name]}) - #{inspect(error)}")
+            Process.send_after(self(), :open, state[:retry_interval])
+            {:noreply, state}
+
+          error ->
             Logger.error("Failed to open an AMQP channel(#{state[:name]}) - #{inspect(error)}")
             Process.send_after(self(), :open, state[:retry_interval])
             {:noreply, state}
