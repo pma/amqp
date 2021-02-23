@@ -120,11 +120,6 @@ defmodule AMQP.Application.Channel do
             Logger.error("Failed to open an AMQP channel(#{state[:name]}) - #{inspect(error)}")
             Process.send_after(self(), :open, state[:retry_interval])
             {:noreply, state}
-
-          error ->
-            Logger.error("Failed to open an AMQP channel(#{state[:name]}) - #{inspect(error)}")
-            Process.send_after(self(), :open, state[:retry_interval])
-            {:noreply, state}
         end
 
       _error ->

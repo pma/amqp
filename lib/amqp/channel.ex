@@ -17,8 +17,7 @@ defmodule AMQP.Channel do
   `:amqp_connection.open_channel/2` for more details and `AMQP.DirectConsumer` for an example of a
   custom consumer.
   """
-  @spec open(Connection.t(), custom_consumer | nil) ::
-          {:ok, Channel.t()} | {:error, any} | any
+  @spec open(Connection.t(), custom_consumer | nil) :: {:ok, Channel.t()} | {:error, any}
   def open(%Connection{} = conn, custom_consumer \\ {SelectiveConsumer, self()}) do
     do_open_channel(conn, custom_consumer)
   end
@@ -37,7 +36,8 @@ defmodule AMQP.Channel do
   defp do_open_channel(conn, nil) do
     case :amqp_connection.open_channel(conn.pid) do
       {:ok, chan_pid} -> {:ok, %Channel{conn: conn, pid: chan_pid}}
-      error -> error
+      {:error, error} -> {:error, error}
+      :closing -> {:error, :closing}
     end
   end
 
@@ -46,8 +46,11 @@ defmodule AMQP.Channel do
       {:ok, chan_pid} ->
         {:ok, %Channel{conn: conn, pid: chan_pid, custom_consumer: custom_consumer}}
 
-      error ->
-        error
+      {:error, error} ->
+        {:error, error}
+
+      :closing ->
+        {:error, :closing}
     end
   end
 end
