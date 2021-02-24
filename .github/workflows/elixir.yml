@@ -14,6 +14,7 @@ jobs:
         with:
           otp-version: 23.2
           elixir-version: 1.11.2
+          experimental-otp: true
 
       - name: Install dependencies
         run: mix deps.get
