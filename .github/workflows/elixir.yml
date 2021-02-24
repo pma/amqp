@@ -53,6 +53,7 @@ jobs:
         with:
           otp-version: ${{matrix.otp}}
           elixir-version: ${{matrix.elixir}}
+          experimental-otp: true
 
       - name: Install dependencies
         run: mix deps.get
