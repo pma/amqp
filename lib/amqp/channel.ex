@@ -36,7 +36,7 @@ defmodule AMQP.Channel do
   defp do_open_channel(conn, nil) do
     case :amqp_connection.open_channel(conn.pid) do
       {:ok, chan_pid} -> {:ok, %Channel{conn: conn, pid: chan_pid}}
-      error -> error
+      error -> {:error, error}
     end
   end
 
@@ -46,7 +46,7 @@ defmodule AMQP.Channel do
         {:ok, %Channel{conn: conn, pid: chan_pid, custom_consumer: custom_consumer}}
 
       error ->
-        error
+        {:error, error}
     end
   end
 end

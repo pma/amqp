@@ -59,7 +59,7 @@ defmodule ConnectionTest do
     assert :ok = Connection.close(conn)
   end
 
-  test "open connection with uri, name, and options (deprected but still spported)" do
+  test "open connection with uri, name, and options (deprecated but still supported)" do
     assert {:ok, conn} =
              Connection.open("amqp://nonexistent:5672", "my-connection", host: 'localhost')
 

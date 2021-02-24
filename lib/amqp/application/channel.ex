@@ -1,5 +1,6 @@
 defmodule AMQP.Application.Channel do
   @moduledoc false
+
   # This module will stay as a private module at least during 2.0.x.
   # There might be non backward compatible changes on this module on 2.1.x.
 
