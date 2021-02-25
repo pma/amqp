@@ -27,6 +27,7 @@ defmodule AMQP.DirectConsumer do
   def init({pid, options}) do
     _ref = Process.monitor(pid)
     ignore_shutdown = Keyword.get(options, :ignore_shutdown, false)
+
     {:ok, %{consumer: pid, ignore_shutdown: ignore_shutdown}}
   end
 
@@ -41,24 +42,28 @@ defmodule AMQP.DirectConsumer do
   @impl true
   def handle_consume_ok(method, _args, state) do
     send(state.consumer, compose_message(method))
+
     {:ok, state}
   end
 
   @impl true
   def handle_cancel(method, state) do
     send(state.consumer, compose_message(method))
+
     {:ok, state}
   end
 
   @impl true
   def handle_cancel_ok(method, _args, state) do
     send(state.consumer, compose_message(method))
+
     {:ok, state}
   end
 
   @impl true
   def handle_server_cancel(method, state) do
     send(state.consumer, compose_message(method))
+
     {:ok, state}
   end
 
@@ -102,6 +107,7 @@ defmodule AMQP.DirectConsumer do
 
   def handle_info(down = {:DOWN, _, _, _, _}, state) do
     send(state.consumer, down)
+
     {:ok, state}
   end
 
