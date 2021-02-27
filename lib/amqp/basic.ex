@@ -89,7 +89,9 @@ defmodule AMQP.Basic do
   end
 
   @doc """
-  Sets the message prefetch count or prefetech size (in bytes).
+  Sets the message prefetch count or prefetch size (in bytes).
+  
+  This allows you to limit the number of unacknowledged messages.
 
   ## Options
 
