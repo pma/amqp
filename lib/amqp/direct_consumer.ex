@@ -3,18 +3,48 @@ defmodule AMQP.DirectConsumer do
   `AMQP.DirectConsumer` is an example custom consumer. It's argument is a pid of a process which the channel is
   meant to forward the messages to.
 
-  When using the `DirectConsumer` the channel will forward the messages directly to the specified pid, as well as monitor
-  that pid, so that when it exits the channel will exit as well (closing the channel).
-
   ## Usage
 
       iex> AMQP.Channel.open(conn, {AMQP.DirectConsumer, self()})
 
   This will forward all the messages from the channel to the calling process.
 
-  This is an Elixir reimplementation of `:amqp_direct_consumer`. ( https://github.com/rabbitmq/rabbitmq-erlang-client/blob/master/src/amqp_direct_consumer.erl)
+  This is an Elixir reimplementation of `:amqp_direct_consumer`. (https://github.com/rabbitmq/rabbitmq-erlang-client/blob/master/src/amqp_direct_consumer.erl)
   For more information see: https://www.rabbitmq.com/erlang-client-user-guide.html#consumers-imlementation
 
+  ## Caveats
+
+  ### You are recommended to use the default consumer
+
+  AMQP 2.0 comes with an improved version of the default consumer(`AMQP.SelectiveConsumer`).
+  There is no longer much point using DirectConsumer and we highly recommend you to use the default consumer.
+
+  ### Close the channel explicitly
+
+  By default, the DirectConsumer detects the user consumer down then...
+
+  * DirectConsumer process exits
+  * The channel supervisor will detect the shutdown but the restart will be failing as the user consumer is still down
+  * It ends up the channel process to be shut down
+
+  However this is an abnormal shutdown and can cause an unintended race condition.
+
+  To avoid it, make sure to close the channel explicitly and shut down your consumer with a `:normal` signal.
+
+  ### Ignore the user consumer shutdown
+
+  DirectConsumer follows the Erlang version and ignores only `:normal` signals for the user consumer exit.
+  You might want to also DirectConsumer to ignore `:shutdown` signals as it can also be called before the channel is closed.
+
+  You can set the additional reasons to ignore with the following options:
+
+      iex> opts = [on_consumer_down: [ignore: [:normal, :shutdown]]]
+      iex> AMQP.Channel.open(conn, {AMQP.DirectConsumer, {self(), opts}})
+
+  You can also ignore the user consumer down completely by disabling the cascade:
+
+      iex> opts = [on_consumer_down: [cascade: false]]
+      iex> AMQP.Channel.open(conn, {AMQP.DirectConsumer, {self(), opts}})
 
   """
   import AMQP.Core
@@ -102,12 +132,14 @@ defmodule AMQP.DirectConsumer do
         {:DOWN, _mref, :process, consumer, reason},
         %{consumer: consumer, options: options} = state
       ) do
-    casscade = get_in(options, [:on_consumer_down, :casscade]) != false
+    cascade = get_in(options, [:on_consumer_down, :cascade]) != false
     ignore_reasons = get_in(options, [:on_consumer_down, :ignore]) || []
 
-    if casscade == false || reason in ignore_reasons do
+    if cascade == false || reason in ignore_reasons do
+      # Ignores the user consumer DOWN and sets the pid.
       {:ok, Map.put(state, :consumer, nil)}
     else
+      # Exit with the same reason.
       {:error, {:consumer_died, reason}, state}
     end
   end
