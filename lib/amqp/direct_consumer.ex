@@ -34,7 +34,7 @@ defmodule AMQP.DirectConsumer do
   ### Ignore the user consumer shutdown
 
   DirectConsumer follows the Erlang version and ignores only `:normal` signals for the user consumer exit.
-  You might want to also DirectConsumer to ignore `:shutdown` signals as it can also be called before the channel is closed.
+  You might want to also ignore `:shutdown` signals as it can also be called before the channel is closed.
 
   You can set the additional reasons to ignore with the following options:
 
@@ -145,7 +145,9 @@ defmodule AMQP.DirectConsumer do
   end
 
   def handle_info(down = {:DOWN, _, _, _, _}, state) do
-    send(state.consumer, down)
+    if state.consumer do
+      send(state.consumer, down)
+    end
 
     {:ok, state}
   end
