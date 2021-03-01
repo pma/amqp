@@ -12,20 +12,22 @@ defmodule AMQP.DirectConsumer do
   This is an Elixir reimplementation of `:amqp_direct_consumer`. (https://github.com/rabbitmq/rabbitmq-erlang-client/blob/master/src/amqp_direct_consumer.erl)
   For more information see: https://www.rabbitmq.com/erlang-client-user-guide.html#consumers-imlementation
 
-  ## Caveats
+  ## Caveat
 
   ### You are recommended to use the default consumer
 
   AMQP 2.0 comes with an improved version of the default consumer(`AMQP.SelectiveConsumer`).
-  There is no longer much point using DirectConsumer and we highly recommend you to use the default consumer.
+  There is not an obvious reason using DirectConsumer after the version 2.0.
+  We highly recommend you to use the default consumer which lets you decouple the consumer concern from the channel.
+  If you still want to keep using `DirectConsumer`, keep reading the caveat below.
 
   ### Close the channel explicitly
 
   By default, the DirectConsumer detects the user consumer down then...
 
-  * DirectConsumer process exits
-  * The channel supervisor will detect the shutdown but the restart will be failing as the user consumer is still down
-  * It ends up the channel process to be shut down
+  * DirectConsumer returns :error in handle_info which results the process to exit
+  * The channel supervisor will detect the DirectConsumer shutdown but the restart will be failing as the user consumer is still down
+  * It ends up the channel process to shut down
 
   However this is an abnormal shutdown and can cause an unintended race condition.
 
