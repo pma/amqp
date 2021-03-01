@@ -14,6 +14,8 @@ defmodule AMQP.DirectConsumer do
 
   This is an Elixir reimplementation of `:amqp_direct_consumer`. ( https://github.com/rabbitmq/rabbitmq-erlang-client/blob/master/src/amqp_direct_consumer.erl)
   For more information see: https://www.rabbitmq.com/erlang-client-user-guide.html#consumers-imlementation
+
+
   """
   import AMQP.Core
   import AMQP.ConsumerHelper
@@ -26,9 +28,15 @@ defmodule AMQP.DirectConsumer do
   @impl true
   def init({pid, options}) do
     _ref = Process.monitor(pid)
-    ignore_shutdown = Keyword.get(options, :ignore_shutdown, false)
 
-    {:ok, %{consumer: pid, ignore_shutdown: ignore_shutdown}}
+    options = %{
+      on_consumer_down: %{
+        cascade: get_in(options, [:on_consumer_down, :cascade]) != false,
+        ignore: get_in(options, [:on_consumer_down, :ignore]) || [:normal]
+      }
+    }
+
+    {:ok, %{consumer: pid, options: options}}
   end
 
   def init(pid), do: init({pid, []})
@@ -72,7 +80,6 @@ defmodule AMQP.DirectConsumer do
     {:error, :no_consumer, nil}
   end
 
-  @impl true
   def handle_deliver(method, message, state) do
     send(state.consumer, compose_message(method, message))
 
@@ -84,7 +91,6 @@ defmodule AMQP.DirectConsumer do
     {:error, :no_consumer, nil}
   end
 
-  @impl true
   def handle_deliver(basic_deliver(), _args, _ctx, _state) do
     # there's no support for direct connection
     # this callback implementation should be added with library support
@@ -92,17 +98,18 @@ defmodule AMQP.DirectConsumer do
   end
 
   @impl true
-  def handle_info({:DOWN, _mref, :process, state, reason}, %{ignore_shutdown: true} = _state)
-      when reason in [:normal, :shutdown] do
-    {:ok, Map.put(state, :consumer, nil)}
-  end
+  def handle_info(
+        {:DOWN, _mref, :process, consumer, reason},
+        %{consumer: consumer, options: options} = state
+      ) do
+    casscade = get_in(options, [:on_consumer_down, :casscade]) != false
+    ignore_reasons = get_in(options, [:on_consumer_down, :ignore]) || []
 
-  def handle_info({:DOWN, _mref, :process, state, :normal}, state) do
-    {:ok, state}
-  end
-
-  def handle_info({:DOWN, _mref, :process, state, info}, state) do
-    {:error, {:consumer_died, info}, state}
+    if casscade == false || reason in ignore_reasons do
+      {:ok, Map.put(state, :consumer, nil)}
+    else
+      {:error, {:consumer_died, reason}, state}
+    end
   end
 
   def handle_info(down = {:DOWN, _, _, _, _}, state) do
@@ -130,13 +137,21 @@ defmodule AMQP.DirectConsumer do
   end
 
   @impl true
-  def handle_call({:register_return_handler, chan, _consumer}, _from, state) do
+  def handle_call(
+        {:register_return_handler, chan, consumer},
+        _from,
+        %{consumer: consumer} = state
+      ) do
     :amqp_channel.register_return_handler(chan.pid, self())
 
     {:reply, :ok, state}
   end
 
-  def handle_call({:register_confirm_handler, chan, _consumer}, _from, state) do
+  def handle_call(
+        {:register_confirm_handler, chan, consumer},
+        _from,
+        %{consumer: consumer} = state
+      ) do
     :amqp_channel.register_confirm_handler(chan.pid, self())
 
     {:reply, :ok, state}
