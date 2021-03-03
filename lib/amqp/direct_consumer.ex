@@ -40,18 +40,21 @@ defmodule AMQP.DirectConsumer do
 
   You can set the additional reasons to ignore with the following options:
 
-      iex> opts = [on_consumer_down: [ignore: [:normal, :shutdown]]]
+      iex> opts = [ignore_consumer_down: [:normal, :shutdown]]
       iex> AMQP.Channel.open(conn, {AMQP.DirectConsumer, {self(), opts}})
 
-  You can also ignore the user consumer down completely by disabling the cascade:
+  You can also ignore the user consumer down completely by setting `true` to the value:
 
-      iex> opts = [on_consumer_down: [cascade: false]]
+      iex> opts = [ignore_consumer_down: true]
       iex> AMQP.Channel.open(conn, {AMQP.DirectConsumer, {self(), opts}})
 
   """
   import AMQP.Core
   import AMQP.ConsumerHelper
   @behaviour :amqp_gen_consumer
+  @default_options [
+    ignore_consumer_down: [:normal]
+  ]
 
   #########################################################
   ### amqp_gen_consumer callbacks
@@ -62,16 +65,13 @@ defmodule AMQP.DirectConsumer do
     _ref = Process.monitor(pid)
 
     options = %{
-      on_consumer_down: %{
-        cascade: get_in(options, [:on_consumer_down, :cascade]) != false,
-        ignore: get_in(options, [:on_consumer_down, :ignore]) || [:normal]
-      }
+      ignore_consumer_down: options[:ignore_consumer_down]
     }
 
     {:ok, %{consumer: pid, options: options}}
   end
 
-  def init(pid), do: init({pid, []})
+  def init(pid), do: init({pid, @default_options})
 
   @impl true
   def handle_consume(basic_consume(), _pid, state) do
@@ -134,10 +134,7 @@ defmodule AMQP.DirectConsumer do
         {:DOWN, _mref, :process, consumer, reason},
         %{consumer: consumer, options: options} = state
       ) do
-    cascade = get_in(options, [:on_consumer_down, :cascade]) != false
-    ignore_reasons = get_in(options, [:on_consumer_down, :ignore]) || []
-
-    if cascade == false || reason in ignore_reasons do
+    if ignore_consumer_down?(reason, options) do
       # Ignores the user consumer DOWN and sets the pid.
       {:ok, Map.put(state, :consumer, nil)}
     else
@@ -199,4 +196,13 @@ defmodule AMQP.DirectConsumer do
 
   @impl true
   def terminate(_reason, state), do: state
+
+  defp ignore_consumer_down?(_reason, %{ignore_consumer_down: true}), do: true
+
+  defp ignore_consumer_down?(reason, %{ignore_consumer_down: reasons}) when is_list(reasons) do
+    reason in reasons
+  end
+
+  defp ignore_consumer_down?(reason, %{ignore_consumer_down: reason}), do: true
+  defp ignore_consumer_down?(_, _), do: false
 end
