@@ -1,8 +1,8 @@
 # AMQP
 
-[![Build Status](https://github.com/pma/amqp/workflows/Elixir%20CI/badge.svg?branch=master)](https://github.com/pma/amqp/actions?query=workflow%3A%22Elixir+CI%22+branch%3Amaster)
+[![Build Status](https://github.com/pma/amqp/workflows/Elixir%20CI/badge.svg?branch=main)](https://github.com/pma/amqp/actions?query=workflow%3A%22Elixir+CI%22+branch%3Amain)
 [![Hex Version](http://img.shields.io/hexpm/v/amqp.svg)](https://hex.pm/packages/amqp)
-[![Inline docs](http://inch-ci.org/github/pma/amqp.svg?branch=master)](http://inch-ci.org/github/pma/amqp)
+[![Inline docs](http://inch-ci.org/github/pma/amqp.svg?branch=main)](http://inch-ci.org/github/pma/amqp)
 
 Simple Elixir wrapper for the Erlang RabbitMQ client.
 
@@ -12,8 +12,8 @@ The API is based on Langohr, a Clojure client for RabbitMQ.
 
 To upgrade from the old version, please read our upgrade guides:
 
-* [0.x to 1.0](https://github.com/pma/amqp/wiki/Upgrade-from-0.X-to-1.0)
-* [1.x to 2.0](https://github.com/pma/amqp/wiki/2.0-Release-Notes#breaking-changes-and-upgrade-guide)
+* [0.x to 1.x](https://github.com/pma/amqp/wiki/Upgrade-from-0.X-to-1.0)
+* [1.x to 2.x](https://github.com/pma/amqp/wiki/2.0-Release-Notes#breaking-changes-and-upgrade-guide)
 
 ## Usage
 
@@ -22,7 +22,7 @@ Add AMQP as a dependency in your `mix.exs` file.
 ```elixir
 def deps do
   [
-    {:amqp, "~> 2.0"}
+    {:amqp, "~> 2.1"}
   ]
 end
 ```
