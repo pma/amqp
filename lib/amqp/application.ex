@@ -210,13 +210,17 @@ defmodule AMQP.Application do
         ....
 
         def handle_info(:subscribe, state) do
-          subscribe()
-          {:noreply, state}
+          case subscribe() do
+            {:ok, chan} ->
+              {:noreply, Map.put(state, :channel, chan)}
+            _ ->
+              {:noreply, state}
+          end
         end
 
-        def handle_info({:DOWN, _, :process, pid, reason}, state) do
+        def handle_info({:DOWN, _, :process, pid, reason}, %{channel: %{pid: pid}} = state) do
           send(self(), :subscribe)
-          {:noreply, state}
+          {:noreply, Map.put(state, :channel, nil)}
         end
 
         defp subscribe() do
