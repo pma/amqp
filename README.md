@@ -1,7 +1,6 @@
 # AMQP
 
 [![Build Status](https://github.com/pma/amqp/workflows/Elixir%20CI/badge.svg?branch=main)](https://github.com/pma/amqp/actions?query=workflow%3A%22Elixir+CI%22+branch%3Amain)
-[![Inline docs](https://inch-ci.org/github/pma/amqp.svg?branch=main)](https://inch-ci.org/github/pma/amqp)
 [![Module Version](https://img.shields.io/hexpm/v/amqp.svg)](https://hex.pm/packages/amqp)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/amqp/)
 [![Total Download](https://img.shields.io/hexpm/dt/amqp.svg)](https://hex.pm/packages/amqp)
