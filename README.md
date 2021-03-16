@@ -4,8 +4,8 @@
 [![Module Version](https://img.shields.io/hexpm/v/amqp.svg)](https://hex.pm/packages/amqp)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/amqp/)
 [![Total Download](https://img.shields.io/hexpm/dt/amqp.svg)](https://hex.pm/packages/amqp)
-[![License](https://img.shields.io/hexpm/l/amqp.svg)](https://github.com/pma/amqp/blob/main/LICENSE)
 [![Last Updated](https://img.shields.io/github/last-commit/pma/amqp.svg)](https://github.com/pma/amqp/commits/main)
+[![License](https://img.shields.io/hexpm/l/amqp.svg)](https://github.com/pma/amqp/blob/main/LICENSE)
 
 Simple Elixir wrapper for the Erlang RabbitMQ client.
 
