@@ -12,23 +12,35 @@ defmodule AMQP.Exchange do
 
   AMQP 0-9-1 brokers provide four pre-declared exchanges:
 
-  *   `:direct` exchange: (empty string) or `amq.direct`
-  *   `:fanout` exchange: `amq.fanout`
-  *   `:topic` exchange: `amq.topic`
-  *   `:headers` exchange: `amq.match` (and `amq.headers` in RabbitMQ)
+    * `:direct` exchange: (empty string) or `amq.direct`
+
+    * `:fanout` exchange: `amq.fanout`
+
+    * `:topic` exchange: `amq.topic`
+
+    * `:headers` exchange: `amq.match` (and `amq.headers` in RabbitMQ)
 
   Besides the exchange name and type, the following options can be used:
 
   ## Options
 
-    * `:durable` - If set, keeps the Exchange between restarts of the broker;
-    * `:auto_delete` - If set, deletes the Exchange once all queues unbind from it;
-    * `:passive` - If set, returns an error if the Exchange does not already exist;
-    * `:internal` - If set, the exchange may not be used directly by publishers, but only when bound to other exchanges. Internal exchanges are used to construct wiring that is not visible to applications.
-    * `:nowait` - If set, the declare operation is asynchronous. Defaults to
-      `false`.
-    * `:arguments` - A list of arguments to pass when declaring (of type `t:AMQP.arguments/0`).
-      See the README for more information. Defaults to `[]`.
+    * `:durable` - If set, keeps the Exchange between restarts of the broker
+
+    * `:auto_delete` - If set, deletes the Exchange once all queues unbind from
+      it
+
+    * `:passive` - If set, returns an error if the Exchange does not already
+      exist
+
+    * `:internal` - If set, the exchange may not be used directly by
+      publishers, but only when bound to other exchanges. Internal exchanges are
+      used to construct wiring that is not visible to applications
+
+    * `:nowait` - If set, the declare operation is asynchronous (default `false`)
+
+    * `:arguments` - A list of arguments to pass when declaring (of type
+      `t:AMQP.arguments/0`).  See the [README](readme.html) for more information
+      (default to `[]`)
 
   """
   @spec declare(Channel.t(), Basic.exchange(), type :: atom, keyword) :: :ok | Basic.error()
@@ -60,10 +72,11 @@ defmodule AMQP.Exchange do
 
   ## Options
 
-    * `:if_unused` - If set, the server will only delete the exchange if it has no queue
-      bindings.
-    * `:nowait` - If set, the delete operation is asynchronous. Defaults to
-      `false`.
+    * `:if_unused` - If set, the server will only delete the exchange if it has
+      no queue bindings
+
+    * `:nowait` - If set, the delete operation is asynchronous (default
+      `false`)
 
   """
   @spec delete(Channel.t(), Basic.exchange(), keyword) :: :ok | Basic.error()
@@ -85,16 +98,18 @@ defmodule AMQP.Exchange do
   end
 
   @doc """
-  Binds an Exchange to another Exchange using the
-  exchange.bind AMQP method (a RabbitMQ-specific extension).
+  Binds an Exchange to another Exchange using the exchange.bind AMQP method (a
+  RabbitMQ-specific extension).
 
   ## Options
 
-    * `:routing_key` - the routing key to use for the binding. Defaults to `""`.
-    * `:nowait` - If set, the bind operation is asynchronous. Defaults to
-      `false`.
-    * `:arguments` - A list of arguments to pass when binding (of type `t:AMQP.arguments/0`).
-      See the README for more information. Defaults to `[]`.
+    * `:routing_key` - the routing key to use for the binding (default `""`)
+
+    * `:nowait` - If set, the bind operation is asynchronous (default `false`)
+
+    * `:arguments` - A list of arguments to pass when binding (of type
+      `t:AMQP.arguments/0`). See the [README](readme.html) for more information
+      (default to `[]`)
 
   """
   @spec bind(Channel.t(), destination :: String.t(), source :: String.t(), keyword) ::
@@ -124,11 +139,12 @@ defmodule AMQP.Exchange do
 
   ## Options
 
-    * `:routing_key` - the routing key to use for the binding. Defaults to `""`.
-    * `:nowait` - If set, the declare operation is asynchronous. Defaults to
-      `false`.
-    * `:arguments` - A list of arguments to pass when declaring (of type `t:AMQP.arguments/0`).
-      See the README for more information. Defaults to `[]`.
+    * `:routing_key` - the routing key to use for the binding (default `""`)
+
+    * `:nowait` - If set, the declare operation is asynchronous (default `false`)
+
+    * `:arguments` - A list of arguments to pass when declaring (of type
+      `t:AMQP.arguments/0`). See the README for more information (defaults `[]`)
 
   """
   @spec unbind(Channel.t(), destination :: String.t(), source :: String.t(), keyword) ::

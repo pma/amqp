@@ -1,12 +1,15 @@
 defmodule AMQP.SelectiveConsumer do
   @moduledoc """
-  This is an Elixir reimplementation of `:amqp_selective_consumer` - [source](https://github.com/rabbitmq/rabbitmq-server/blob/master/deps/amqp_client/src/amqp_selective_consumer.erl)
+  This is an Elixir reimplementation of `:amqp_selective_consumer` -
+  [source](https://github.com/rabbitmq/rabbitmq-server/blob/master/deps/amqp_client/src/amqp_selective_consumer.erl).
 
-  The module is used by default when you open a channel via `AMQP.Channel.open/2` and allows you
-  to end consumer processes via `Basic.consume/4` and receive messages from a queue.
+  The module is used by default when you open a channel via
+  `AMQP.Channel.open/2` and allows you to end consumer processes via
+  `AMQP.Basic.consume/4` and receive messages from a queue.
 
-  Usually you don't have to pay attention to this module as the interaction would be made through
-  `AMQP.Channel.open/2`, `Basic.consume/4`, `Basic.return/2`, `Confirm.register_handler/2` etc.
+  Usually you don't have to pay attention to this module as the interaction
+  would be made through `AMQP.Channel.open/2`, `AMQP.Basic.consume/4`,
+  `AMQP.Basic.return/2`, `AMQP.Confirm.register_handler/2` etc.
   """
 
   import AMQP.Core
@@ -30,13 +33,15 @@ defmodule AMQP.SelectiveConsumer do
         }
 
   @doc """
-  Ported from :amqp_selective_consumer.register_default_consumer/2.
+  Ported from `:amqp_selective_consumer.register_default_consumer/2`.
 
   This function registers a default consumer with the channel.
+
   A default consumer is used when a subscription is made via
-  amqp_channel:call(ChannelPid, #'basic.consume'{}) (rather than {@module}:subscribe/3) and
-  hence there is no consumer pid registered with the consumer tag. In this case, the relevant
-  deliveries will be sent to the default consumer.
+  `amqp_channel:call(ChannelPid, #'basic.consume'{})` (rather than
+  `{@module}:subscribe/3`) and hence there is no consumer pid registered with
+  the consumer tag. In this case, the relevant deliveries will be sent to the
+  default consumer.
   """
   @spec register_default_consumer(Channel.t(), pid) :: :ok
   def register_default_consumer(%Channel{pid: pid}, consumer_pid) do
@@ -78,7 +83,8 @@ defmodule AMQP.SelectiveConsumer do
         {:error, error, status}
 
       {_error, false} ->
-        # Don't do anything (don't override existing consumers), the server will close the channel with an error.
+        # Don't do anything (don't override existing consumers), the server
+        # will close the channel with an error.
         {:ok, status}
     end
   end

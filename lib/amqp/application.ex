@@ -55,6 +55,7 @@ defmodule AMQP.Application do
   Disables the progress report logging from Erlang library.
 
   The log outputs are very verbose and can contain credentials.
+
   This AMQP library recommends to disable unless you want the information.
   """
   @spec disable_progress_report :: :ok | {:error, any}
@@ -85,7 +86,8 @@ defmodule AMQP.Application do
   @doc """
   Provides an easy way to access an AMQP connection.
 
-  The connection will be monitored by AMQP's GenServer and it will automatically try to reconnect when the connection is gone.
+  The connection will be monitored by AMQP's GenServer and it will
+  automatically try to reconnect when the connection is gone.
 
   ## Usage
 
@@ -104,11 +106,13 @@ defmodule AMQP.Application do
           password: "guest"
         ]
 
-  Then the connection will be open at the start of the application and you can access via this function.
+  Then the connection will be open at the start of the application and you can
+  access via this function.
 
       iex> {:ok, conn} = AMQP.Application.get_connection()
 
-  By default, it tries to connect to your local RabbitMQ. You can simply pass the empty keyword list too:
+  By default, it tries to connect to your local RabbitMQ. You can simply pass
+  the empty keyword list too:
 
       config :amqp, connection: [] # == [url: "amqp://0.0.0.0"]
 
@@ -128,15 +132,17 @@ defmodule AMQP.Application do
       iex> {:ok, conn1} = AMQP.Application.get_connection(:business_report)
       iex> {:ok, conn2} = AMQP.Application.get_connection(:analytics)
 
-  The defaut name is :default so These two configurations are equivalent:
+  The default name is :default so These two configurations are equivalent:
 
       config :amqp, connection: []
       config :amqp, connections: [default: []]
 
   ## Configuration options
 
-  * `:retry_interval` - The retry interval in milliseconds when the connection is failed to open (default `5000`)
-  * `:url` - AMQP URI for the connection
+    * `:retry_interval` - The retry interval in milliseconds when the connection
+      is failed to open. (default `5000`)
+
+    * `:url` - AMQP URI for the connection
 
   See also `AMQP.Connection.open/2` for all available options.
   """
@@ -149,7 +155,9 @@ defmodule AMQP.Application do
   Provides an easy way to access an AMQP channel.
 
   AMQP.Application provides a wrapper on top of `AMQP.Channel` with .
-  The channel will be monitored by AMQP's GenServer and it will automatically try to reopen when the channel is gone.
+
+  The channel will be monitored by AMQP's GenServer and it will automatically
+  try to reopen when the channel is gone.
 
   ## Usage
 
@@ -159,11 +167,12 @@ defmodule AMQP.Application do
         connection: [url: "amqp://guest:guest@localhost:15672"],
         channel: []
 
-  Then the channel will be open at the start of the application and you can access it via this function.
+  Then the channel will be open at the start of the application and you can
+  access it via this function.
 
       iex> {:ok, chan} = AMQP.Application.get_channel()
 
-  You can also set up multiple channels wth `:channels` key:
+  You can also set up multiple channels with `:channels` key:
 
       config :amqp,
         connections: [
@@ -191,16 +200,23 @@ defmodule AMQP.Application do
 
   ## Configuration options
 
-  * `:connection` - The connection name configured with `connection` or `connections` (default `:default`)
-  * `:retry_interval` - The retry interval in milliseconds when the channel is failed to open (default `5000`)
+    * `:connection` - The connection name configured with `connection` or
+      `connections` (default `:default`)
+
+    * `:retry_interval` - The retry interval in milliseconds when the channel is
+      failed to open (default `5000`)
 
   ## Caveat
 
-  Although AMQP will reopen the named channel automatically when it is closed for some reasons,
-  your application still needs to monitor the channel for a consumer process.
-  Be aware the channel reponed doesn't automatically recover the subscription of your consumer 
+  Although AMQP will reopen the named channel automatically when it is closed
+  for some reasons, your application still needs to monitor the channel for a
+  consumer process.
 
-  Here is a sample GenServer module that monitors the channel and re-subscribe the channel.
+  Be aware the channel reopened doesn't automatically recover the subscription
+  of your consumer
+
+  Here is a sample GenServer module that monitors the channel and re-subscribe
+  the channel.
 
       defmodule AppConsumer do
         use GenServer
@@ -235,6 +251,7 @@ defmodule AMQP.Application do
           end
         end
       end
+
   """
   @spec get_channel(binary | atom) :: {:ok, AMQP.Channel.t()} | {:error, any}
   def get_channel(name \\ :default) do

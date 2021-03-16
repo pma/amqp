@@ -1,6 +1,7 @@
 defmodule AMQP.Confirm do
   @moduledoc """
-  Functions that work with publisher confirms (RabbitMQ extension to AMQP 0.9.1).
+  Functions that work with publisher confirms (RabbitMQ extension to AMQP
+  0.9.1).
   """
 
   import AMQP.Core
@@ -18,8 +19,8 @@ defmodule AMQP.Confirm do
   end
 
   @doc """
-  Wait until all messages published since the last call have been
-  either ack'd or nack'd by the broker.
+  Wait until all messages published since the last call have been either ack'd
+  or nack'd by the broker.
   """
   @spec wait_for_confirms(Channel.t()) :: boolean | :timeout
   def wait_for_confirms(%Channel{pid: pid}) do
@@ -27,8 +28,8 @@ defmodule AMQP.Confirm do
   end
 
   @doc """
-  Wait until all messages published since the last call have been
-  either ack'd or nack'd by the broker, or until timeout elapses.
+  Wait until all messages published since the last call have been either ack'd
+  or nack'd by the broker, or until timeout elapses.
   """
   @spec wait_for_confirms(Channel.t(), non_neg_integer) :: boolean | :timeout
   def wait_for_confirms(%Channel{pid: pid}, timeout) do
@@ -36,8 +37,9 @@ defmodule AMQP.Confirm do
   end
 
   @doc """
-  Wait until all messages published since the last call have been
-  either ack'd or nack'd by the broker, or until timeout elapses.
+  Wait until all messages published since the last call have been either ack'd
+  or nack'd by the broker, or until timeout elapses.
+
   If any of the messages were nack'd, the calling process dies.
   """
   @spec wait_for_confirms_or_die(Channel.t()) :: true
@@ -52,6 +54,7 @@ defmodule AMQP.Confirm do
 
   @doc """
   On channel with confirm activated, return the next message sequence number.
+
   To use in combination with `register_handler/2`
   """
   @spec next_publish_seqno(Channel.t()) :: non_neg_integer
@@ -61,13 +64,19 @@ defmodule AMQP.Confirm do
 
   @doc """
   Register a handler for confirms on channel.
+
   The handler will receive either:
-  * `{:basic_ack, seqno, multiple}`
-  * `{:basic_nack, seqno, multiple}`
+
+    * `{:basic_ack, seqno, multiple}`
+
+    * `{:basic_nack, seqno, multiple}`
 
   The `seqno` (delivery_tag) is an integer, the sequence number of the message.
-  `multiple` is a boolean, when `true` means multiple messages confirm, upto `seqno`.
-  see https://www.rabbitmq.com/confirms.html
+
+  `multiple` is a boolean, when `true` means multiple messages confirm, up to
+  `seqno`.
+
+  See https://www.rabbitmq.com/confirms.html
   """
   @spec register_handler(Channel.t(), pid) :: :ok
   def register_handler(%Channel{} = chan, handler_pid) do

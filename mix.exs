@@ -1,6 +1,7 @@
 defmodule AMQP.Mixfile do
   use Mix.Project
 
+  @source_url "https://github.com/pma/amqp"
   @version "2.1.0"
 
   def project do
@@ -8,28 +9,12 @@ defmodule AMQP.Mixfile do
       app: :amqp,
       version: @version,
       elixir: "~> 1.7",
-      description: description(),
       package: package(),
-      source_url: "https://github.com/pma/amqp",
       deps: deps(),
-      dialyzer: [
-        ignore_warnings: "dialyzer.ignore-warnings",
-        plt_add_deps: :transitive,
-        flags: [:error_handling, :race_conditions, :no_opaque, :underspecs]
-      ],
-      docs: [
-        extras: ["README.md"],
-        main: "readme",
-        source_ref: "v#{@version}",
-        source_url: "https://github.com/pma/amqp"
-      ],
-      test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: [
-        coveralls: :test,
-        "coveralls.detail": :test,
-        "coveralls.post": :test,
-        "coveralls.html": :test
-      ]
+      dialyzer: dialyzer(),
+      docs: docs(),
+      preferred_cli_env: preferred_cli_env(),
+      test_coverage: [tool: ExCoveralls]
     ]
   end
 
@@ -45,13 +30,25 @@ defmodule AMQP.Mixfile do
       {:amqp_client, "~> 3.8.0"},
 
       # Docs dependencies.
-      {:earmark, "~> 1.0", only: :docs},
-      {:ex_doc, "~> 0.15", only: :docs},
+      {:ex_doc, ">= 0.0.0", only: :docs},
       {:inch_ex, "~> 0.5", only: :docs},
 
       # Dev dependencies.
       {:dialyxir, "~> 0.5", only: :dev, runtime: false},
       {:excoveralls, "~> 0.10", only: :test}
+    ]
+  end
+
+  defp package do
+    [
+      description: description(),
+      files: ["lib", "mix.exs", "README.md", "LICENSE"],
+      maintainers: ["Paulo Almeida", "Eduardo Gurgel"],
+      licenses: ["MIT"],
+      links: %{
+        "Changelog" => "https://github.com/pma/amqp/releases",
+        "GitHub" => @source_url
+      }
     ]
   end
 
@@ -61,12 +58,31 @@ defmodule AMQP.Mixfile do
     """
   end
 
-  defp package do
+  defp dialyzer do
     [
-      files: ["lib", "mix.exs", "README.md", "LICENSE"],
-      maintainers: ["Paulo Almeida", "Eduardo Gurgel"],
-      licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/pma/amqp"}
+      ignore_warnings: "dialyzer.ignore-warnings",
+      plt_add_deps: :transitive,
+      flags: [:error_handling, :race_conditions, :no_opaque, :underspecs]
+    ]
+  end
+
+  defp docs do
+    [
+      extras: ["README.md"],
+      main: "readme",
+      source_ref: "v#{@version}",
+      source_url: @source_url,
+      formatters: ["html"]
+    ]
+  end
+
+  defp preferred_cli_env do
+    [
+      coveralls: :test,
+      "coveralls.detail": :test,
+      "coveralls.post": :test,
+      "coveralls.html": :test,
+      docs: :docs
     ]
   end
 end
