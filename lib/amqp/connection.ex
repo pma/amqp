@@ -25,7 +25,7 @@ defmodule AMQP.Connection do
       {:ok, %AMQP.Connection{}}
 
   """
-  @spec open(keyword | String.t()) :: {:ok, t()} | {:error, atom()} | {:error, any()}
+  @spec open(String.t() | keyword) :: {:ok, t()} | {:error, atom()} | {:error, any()}
   def open(uri_or_options \\ []) when is_binary(uri_or_options) or is_list(uri_or_options) do
     open(uri_or_options, :undefined)
   end
@@ -143,14 +143,14 @@ defmodule AMQP.Connection do
       {:ok, %AMQP.Connection{}}
 
   """
-  @spec open(String.t() | keyword, keyword | String.t() | :undefined) ::
-          {:ok, t()} | {:error, atom()} | {:error, any()}
-  def open(uri, options)
+  def open(uri_or_options, name_or_options)
 
+  @spec open(uri :: String.t(), name :: String.t() | :undefined) :: {:ok, t()} | {:error, atom()} | {:error, any()}
   def open(uri, name) when is_binary(uri) and (is_binary(name) or name == :undefined) do
     do_open(uri, name, _options = [])
   end
 
+  @spec open(options :: keyword, name :: String.t() | :undefined) :: {:ok, t()} | {:error, atom()} | {:error, any()}
   def open(options, name) when is_list(options) and (is_binary(name) or name == :undefined) do
     {name_from_opts, options} = take_connection_name(options)
     name = if name == :undefined, do: name_from_opts, else: name
@@ -160,6 +160,7 @@ defmodule AMQP.Connection do
     |> do_open(name)
   end
 
+  @spec open(uri :: String.t(), options :: keyword) :: {:ok, t()} | {:error, atom()} | {:error, any()}
   def open(uri, options) when is_binary(uri) and is_list(options) do
     {name, options} = take_connection_name(options)
 
