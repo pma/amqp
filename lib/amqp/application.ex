@@ -243,7 +243,8 @@ defmodule AMQP.Application do
           case AMQP.Application.get_channel(@channel) do
             {:ok, chan} ->
               Process.monitor(chan.pid)
-              AMQP.Basic.consume(@channel, @queue)
+              {:ok, _consumer_tag} = AMQP.Basic.consume(@channel, @queue)
+              {:ok, chan}
 
             _error ->
               Process.send_after(self(), :subscribe, 1000)
