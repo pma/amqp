@@ -20,14 +20,14 @@ defmodule AMQP.Mixfile do
 
   def application do
     [
-      applications: [:lager, :amqp_client, :logger],
+      applications: [:amqp_client, :logger],
       mod: {AMQP.Application, []}
     ]
   end
 
   defp deps do
     [
-      {:amqp_client, "~> 3.8.0"},
+      {:amqp_client, "~> 3.9.1"},
 
       # Docs dependencies.
       {:ex_doc, ">= 0.0.0", only: :docs},

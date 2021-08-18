@@ -297,30 +297,6 @@ Try the following configuration.
 config :logger, handle_otp_reports: false
 ```
 
-#### Lager conflicts with Elixir logger
-
-Lager is used by rabbit_common and it is not Elixir's best friend yet.
-You need a workaround.
-
-In mix.exs, you have to load :lager before :logger.
-
-```elixir
-  extra_applications: [:lager, :logger, :amqp]
-```
-
-Here is a sample configuration to silent rabbit_common logging.
-
-```elixir
-config :lager,
-  error_logger_redirect: false,
-  handlers: [level: :critical]
-```
-
-Check out
-[Lager](https://github.com/erlang-lager/lager#configuration) and [RabbitMQ
-documentation](https://www.rabbitmq.com/logging.html#advanced-configuration) for
-more information.
-
 #### Compile error on ranch_proxy_protocol with OTP 21
 
 Update amqp to [1.1.0](https://github.com/pma/amqp/releases/tag/v1.1.0) or a greater version.
