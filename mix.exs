@@ -2,13 +2,13 @@ defmodule AMQP.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/pma/amqp"
-  @version "2.1.1"
+  @version "3.0.0-rc.1"
 
   def project do
     [
       app: :amqp,
       version: @version,
-      elixir: "~> 1.7",
+      elixir: "~> 1.9",
       package: package(),
       deps: deps(),
       dialyzer: dialyzer(),
@@ -43,7 +43,7 @@ defmodule AMQP.Mixfile do
     [
       description: description(),
       files: ["lib", "mix.exs", "README.md", "LICENSE"],
-      maintainers: ["Paulo Almeida", "Eduardo Gurgel"],
+      maintainers: ["Paulo Almeida", "Eduardo Gurgel", "Tatsuya Ono"],
       licenses: ["MIT"],
       links: %{
         "Changelog" => "https://github.com/pma/amqp/releases",
