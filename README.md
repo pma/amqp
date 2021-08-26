@@ -17,6 +17,7 @@ To upgrade from the old version, please read our upgrade guides:
 
 * [0.x to 1.x](https://github.com/pma/amqp/wiki/Upgrade-from-0.X-to-1.0)
 * [1.x to 2.x](https://github.com/pma/amqp/wiki/2.0-Release-Notes#breaking-changes-and-upgrade-guide)
+* [2.x to 3.x](https://github.com/pma/amqp/wiki/3.0-Release-Notes#breaking-changes-and-upgrade-guide)
 
 ## Usage
 
@@ -25,7 +26,7 @@ Add AMQP as a dependency in your `mix.exs` file.
 ```elixir
 def deps do
   [
-    {:amqp, "~> 2.1"}
+    {:amqp, "~> 3.0.0-rc.1"}
   ]
 end
 ```
@@ -178,21 +179,6 @@ Error converting Hello, World! to integer
 
 ### Configuration
 
-#### Erlang library's progress report
-
-This library uses an official Erlang RabbitMQ client library internally and we
-found its logging is too verbose.
-
-These are called progress reports by the Erlang library and you would see a lot
-of entries with info log level if you use 1.x version.
-
-AMQP disables that by default from version 2.0. If you want to see more
-detailed logs, you can enable it by adding the following line on your config.
-
-```elixir
-config :amqp, enable_progress_report: true
-```
-
 #### Connections and channels
 
 You can define a connection and channel in your config and AMQP will
@@ -289,17 +275,6 @@ You can set `heartbeat` option when you open a connection.
 
 For more details, read [this article](http://www.rabbitmq.com/heartbeats.html#tcp-proxies)
 
-#### Log related to amqp supervisors are too verbose
-
-Try the following configuration.
-
-```elixir
-config :logger, handle_otp_reports: false
-```
-
-#### Compile error on ranch_proxy_protocol with OTP 21
-
-Update amqp to [1.1.0](https://github.com/pma/amqp/releases/tag/v1.1.0) or a greater version.
 
 #### Does the library support AMQP 1.0?
 
