@@ -9,16 +9,17 @@ defmodule AMQP.Application.ConnectionTest do
     {:ok, conn} = AppConn.get_connection(:my_conn)
     assert %AMQP.Connection{} = conn
 
-    Process.exit(pid, :normal)
+    GenServer.stop(pid)
   end
 
   test "reconnects when the connection is gone" do
-    {:ok, _pid} = AppConn.start_link([])
+    {:ok, pid} = AppConn.start_link([])
     {:ok, %AMQP.Connection{} = conn1} = AppConn.get_connection()
     AMQP.Connection.close(conn1)
     :timer.sleep(50)
 
     assert {:ok, %AMQP.Connection{} = conn2} = AppConn.get_connection()
     refute conn1 == conn2
+    GenServer.stop(pid)
   end
 end

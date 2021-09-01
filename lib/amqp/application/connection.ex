@@ -37,6 +37,13 @@ defmodule AMQP.Application.Connection do
     GenServer.start_link(__MODULE__, init_arg, name: name)
   end
 
+  @doc false
+  def start(opts) do
+    {name, init_arg} = link_opts_to_init_arg(opts)
+
+    GenServer.start(__MODULE__, init_arg, name: name)
+  end
+
   defp link_opts_to_init_arg(opts) do
     proc_name = Keyword.get(opts, :proc_name, :default)
     server_name = get_server_name(proc_name)
@@ -145,7 +152,7 @@ defmodule AMQP.Application.Connection do
     %{state | connection: nil, monitor_ref: nil}
   end
 
-  defp close(%{connection: %Connection{} = conn, monior_ref: ref}) do
+  defp close(%{connection: %Connection{} = conn, monitor_ref: ref}) do
     if Process.alive?(conn.pid) do
       Process.demonitor(ref)
       Connection.close(conn)
