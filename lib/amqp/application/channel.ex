@@ -150,7 +150,7 @@ defmodule AMQP.Application.Channel do
     %{state | channel: nil, monitor_ref: nil}
   end
 
-  defp close(%{channel: %Channel{} = channel, monior_ref: ref}) do
+  defp close(%{channel: %Channel{} = channel, monitor_ref: ref}) do
     if Process.alive?(channel.pid) do
       Process.demonitor(ref)
       Channel.close(channel)
