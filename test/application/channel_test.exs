@@ -4,10 +4,10 @@ defmodule AMQP.Application.ChnnelTest do
   alias AMQP.Application.Channel, as: AppChan
 
   setup do
-    {:ok, app_conn_pid} = AppConn.start_link([])
+    {:ok, app_conn_pid} = AppConn.start([])
 
     on_exit(fn ->
-      Process.exit(app_conn_pid, :normal)
+      GenServer.stop(app_conn_pid)
     end)
 
     [app_conn: app_conn_pid]
@@ -18,17 +18,18 @@ defmodule AMQP.Application.ChnnelTest do
     {:ok, pid} = AppChan.start_link(opts)
 
     assert {:ok, %AMQP.Channel{}} = AppChan.get_channel(:test_chan)
-    Process.exit(pid, :normal)
+    GenServer.stop(pid, :normal)
   end
 
   test "reconnects when the channel is gone" do
     opts = [connection: :default, proc_name: :test_chan]
-    {:ok, _pid} = AppChan.start_link(opts)
+    {:ok, pid} = AppChan.start_link(opts)
     {:ok, %AMQP.Channel{} = chan1} = AppChan.get_channel(:test_chan)
     AMQP.Channel.close(chan1)
     :timer.sleep(50)
 
     assert {:ok, %AMQP.Channel{} = chan2} = AppChan.get_channel(:test_chan)
     refute chan1 == chan2
+    GenServer.stop(pid)
   end
 end
