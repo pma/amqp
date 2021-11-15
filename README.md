@@ -149,7 +149,7 @@ defmodule Consumer do
     # before we give up and have it moved to the error queue
     #
     # You might also want to catch :exit signal in production code.
-    # Make sure you call ack, nack or reject otherwise comsumer will stop
+    # Make sure you call ack, nack or reject otherwise consumer will stop
     # receiving messages.
     exception ->
       :ok = Basic.reject channel, tag, requeue: not redelivered
