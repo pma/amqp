@@ -5,7 +5,7 @@ defmodule AMQP.Exchange do
 
   import AMQP.Core
 
-  alias AMQP.{Basic, Channel}
+  alias AMQP.{Basic, Channel, Utils}
 
   @doc """
   Declares an Exchange. The default Exchange type is `direct`.
@@ -56,7 +56,7 @@ defmodule AMQP.Exchange do
         auto_delete: Keyword.get(options, :auto_delete, false),
         internal: Keyword.get(options, :internal, false),
         nowait: nowait,
-        arguments: Keyword.get(options, :arguments, [])
+        arguments: Keyword.get(options, :arguments, []) |> Utils.to_type_tuple()
       )
 
     case {nowait, :amqp_channel.call(pid, exchange_declare)} do
@@ -123,7 +123,7 @@ defmodule AMQP.Exchange do
         source: source,
         routing_key: Keyword.get(options, :routing_key, ""),
         nowait: nowait,
-        arguments: Keyword.get(options, :arguments, [])
+        arguments: Keyword.get(options, :arguments, []) |> Utils.to_type_tuple()
       )
 
     case {nowait, :amqp_channel.call(pid, exchange_bind)} do
@@ -202,6 +202,18 @@ defmodule AMQP.Exchange do
   @spec topic(Channel.t(), Basic.exchange(), keyword) :: :ok | Basic.error()
   def topic(%Channel{} = channel, exchange, options \\ []) do
     declare(channel, exchange, :topic, options)
+  end
+
+  @doc """
+  Convenience function to declare an Exchange of type `headers`.
+
+  ## Options
+
+  This function takes the same options as `declare/4`.
+  """
+  @spec headers(Channel.t(), Basic.exchange(), keyword) :: :ok | Basic.error()
+  def headers(%Channel{} = channel, exchange, options \\ []) do
+    declare(channel, exchange, :headers, options)
   end
 
   # support backward compatibility with old key name
