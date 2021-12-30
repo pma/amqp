@@ -21,18 +21,42 @@ defmodule AMQP.Confirm do
   @doc """
   Wait until all messages published since the last call have been either ack'd
   or nack'd by the broker.
+
+  Same as `wait_for_confirms/2` but with the default timeout of 60 seconds.
   """
   @spec wait_for_confirms(Channel.t()) :: boolean | :timeout
   def wait_for_confirms(%Channel{pid: pid}) do
     :amqp_channel.wait_for_confirms(pid)
   end
 
+  defguardp is_int_timeout(timeout) when is_integer(timeout) and timeout >= 0
+
+  # The typespec for this timeout is:
+  # non_neg_integer() | {non_neg_integer(), :second | :millisecond}
+  defguardp is_wait_for_confirms_timeout(timeout)
+            when is_int_timeout(timeout) or
+                   (is_tuple(timeout) and tuple_size(timeout) == 2 and
+                      is_int_timeout(elem(timeout, 0)) and
+                      elem(timeout, 1) in [:second, :millisecond])
+
   @doc """
   Wait until all messages published since the last call have been either ack'd
   or nack'd by the broker, or until timeout elapses.
+
+  Returns `true` if all messages are ack'd. Returns `false` if *any* of the messages
+  are nack'd. Returns `:timeout` on timeouts.
+
+  `timeout` can be an integer or a tuple with the "time unit" (see the spec). If just an integer
+  is provided, it's assumed to be *in seconds*. This is unconventional Elixir/Erlang API
+  (since usually the convention is milliseconds), but we are forwarding to the underlying
+  AMQP Erlang library here and it would be a breaking change for this library to default
+  to milliseconds.
   """
-  @spec wait_for_confirms(Channel.t(), non_neg_integer) :: boolean | :timeout
-  def wait_for_confirms(%Channel{pid: pid}, timeout) do
+  @spec wait_for_confirms(
+          Channel.t(),
+          non_neg_integer | {non_neg_integer, :second | :millisecond}
+        ) :: boolean | :timeout
+  def wait_for_confirms(%Channel{pid: pid}, timeout) when is_wait_for_confirms_timeout(timeout) do
     :amqp_channel.wait_for_confirms(pid, timeout)
   end
 
@@ -41,14 +65,20 @@ defmodule AMQP.Confirm do
   or nack'd by the broker, or until timeout elapses.
 
   If any of the messages were nack'd, the calling process dies.
+
+  Same as `wait_for_confirms_or_die/2` but with the default timeout of 60 seconds.
   """
   @spec wait_for_confirms_or_die(Channel.t()) :: true
   def wait_for_confirms_or_die(%Channel{pid: pid}) do
     :amqp_channel.wait_for_confirms_or_die(pid)
   end
 
-  @spec wait_for_confirms_or_die(Channel.t(), non_neg_integer) :: true
-  def wait_for_confirms_or_die(%Channel{pid: pid}, timeout) do
+  @spec wait_for_confirms_or_die(
+          Channel.t(),
+          non_neg_integer | {non_neg_integer, :second | :millisecond}
+        ) :: true
+  def wait_for_confirms_or_die(%Channel{pid: pid}, timeout)
+      when is_wait_for_confirms_timeout(timeout) do
     :amqp_channel.wait_for_confirms_or_die(pid, timeout)
   end
 
