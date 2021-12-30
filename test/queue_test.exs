@@ -20,7 +20,7 @@ defmodule QueueTest do
     assert {:ok, %{message_count: 0}} = Queue.delete(meta[:chan], queue)
   end
 
-  test "delare queue with nowait option", meta do
+  test "declare queue with nowait option", meta do
     assert :ok = Queue.declare(meta[:chan], "hello", nowait: true)
     assert :ok = Queue.delete(meta[:chan], "hello", nowait: true)
   end

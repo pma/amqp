@@ -18,7 +18,7 @@ defmodule ConfirmTest do
   end
 
   describe "next_publish_seqno" do
-    test "returns 1 whe no messages where sent", ctx do
+    test "returns 1 when no messages where sent", ctx do
       assert 1 == Confirm.next_publish_seqno(ctx[:chan])
     end
   end

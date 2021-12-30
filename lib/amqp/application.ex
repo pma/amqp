@@ -77,7 +77,7 @@ defmodule AMQP.Application do
 
       config :amqp, connection: [] # == [url: "amqp://0.0.0.0"]
 
-  You can set up multiple connections wth `:connections` key:
+  You can set up multiple connections with `:connections` key:
 
       config :amqp, connections: [
           business_report: [
