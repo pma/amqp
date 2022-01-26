@@ -95,6 +95,9 @@ defmodule AMQP.Application.Connection do
       nil -> {:error, :not_connected}
       conn -> {:ok, conn}
     end
+  catch
+    :exit, {:timeout, _} ->
+      {:error, :timeout}
   end
 
   @impl true
