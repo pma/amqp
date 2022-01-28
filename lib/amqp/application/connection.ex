@@ -72,6 +72,8 @@ defmodule AMQP.Application.Connection do
   @doc false
   def get_state(name \\ :default) do
     GenServer.call(get_server_name(name), :get_state)
+  catch
+    :exit, {:timeout, _} -> %{}
   end
 
   @doc """
@@ -97,6 +99,8 @@ defmodule AMQP.Application.Connection do
     end
   catch
     :exit, {:timeout, _} ->
+      # This would happen when the connection is stuck when opening.
+      # See do_open/1 to understand - it can block the GenSever.
       {:error, :timeout}
   end
 
