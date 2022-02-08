@@ -62,6 +62,8 @@ defmodule AMQP.Application.Channel do
   @doc false
   def get_state(name \\ :default) do
     GenServer.call(get_server_name(name), :get_state)
+  catch
+    :exit, {:timeout, _} -> %{}
   end
 
   @doc """
@@ -85,6 +87,11 @@ defmodule AMQP.Application.Channel do
       nil -> {:error, :channel_not_ready}
       channel -> {:ok, channel}
     end
+  catch
+    :exit, {:timeout, _} ->
+      # This would happen when the connection or channel is stuck when opening.
+      # See handle_info(:open, _) to understand - it can block the GenSever.
+      {:error, :timeout}
   end
 
   @impl true
