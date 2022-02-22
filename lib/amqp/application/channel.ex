@@ -83,9 +83,12 @@ defmodule AMQP.Application.Channel do
   """
   @spec get_channel(binary | atom) :: {:ok, Channel.t()} | {:error, any}
   def get_channel(name \\ :default) do
-    case GenServer.call(get_server_name(name), :get_channel) do
-      nil -> {:error, :channel_not_ready}
-      channel -> {:ok, channel}
+    with false <- whereis(name) |> is_nil(),
+         channel <- GenServer.call(get_server_name(name), :get_channel) do
+      if is_nil(channel), do: {:error, :channel_not_ready}, else: {:ok, channel}
+    else
+      true ->
+        {:error, :channel_not_found}
     end
   catch
     :exit, {:timeout, _} ->

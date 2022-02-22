@@ -93,9 +93,11 @@ defmodule AMQP.Application.Connection do
   """
   @spec get_connection(binary | atom) :: {:ok, Connection.t()} | {:error, any}
   def get_connection(name \\ :default) do
-    case GenServer.call(get_server_name(name), :get_connection) do
-      nil -> {:error, :not_connected}
-      conn -> {:ok, conn}
+    with false <- whereis(name) |> is_nil(),
+         conn <- GenServer.call(get_server_name(name), :get_connection) do
+      if conn |> is_nil(), do: {:error, :not_connected}, else: {:ok, conn}
+    else
+      true -> {:error, :connection_not_found}
     end
   catch
     :exit, {:timeout, _} ->

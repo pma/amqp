@@ -32,4 +32,9 @@ defmodule AMQP.Application.ChnnelTest do
     refute chan1 == chan2
     GenServer.stop(pid)
   end
+
+  test "Unavailable channel does not crash" do
+    assert {:error, :channel_not_found} ==
+             AppChan.get_channel(:non_existing)
+  end
 end
