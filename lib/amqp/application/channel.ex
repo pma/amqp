@@ -154,6 +154,10 @@ defmodule AMQP.Application.Channel do
     {:stop, reason, %{state | channel: nil, monitor_ref: nil}}
   end
 
+  def handle_info({ref, _res}, state) when is_reference(ref) do
+    {:noreply, state}
+  end
+
   @impl true
   def terminate(_reason, state) do
     close(state)
