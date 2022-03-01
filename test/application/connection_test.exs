@@ -22,4 +22,9 @@ defmodule AMQP.Application.ConnectionTest do
     refute conn1 == conn2
     GenServer.stop(pid)
   end
+
+  test "Unavailable connection does not crash" do
+    assert {:error, :connection_not_found} ==
+             AppConn.get_connection(:non_existing)
+  end
 end

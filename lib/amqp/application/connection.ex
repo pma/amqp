@@ -93,9 +93,12 @@ defmodule AMQP.Application.Connection do
   """
   @spec get_connection(binary | atom) :: {:ok, Connection.t()} | {:error, any}
   def get_connection(name \\ :default) do
-    case GenServer.call(get_server_name(name), :get_connection) do
+    with false <- name |> whereis() |> is_nil(),
+         conn = %{} <- GenServer.call(get_server_name(name), :get_connection) do
+      {:ok, conn}
+    else
+      true -> {:error, :connection_not_found}
       nil -> {:error, :not_connected}
-      conn -> {:ok, conn}
     end
   catch
     :exit, {:timeout, _} ->
@@ -151,6 +154,15 @@ defmodule AMQP.Application.Connection do
   def handle_info({:EXIT, _from, reason}, state) do
     close(state)
     {:stop, reason, %{state | connection: nil, monitor_ref: nil}}
+  end
+
+  # When GenServer call gets timeout and the message arrives later,
+  # it attempts to deliver the message to the server inbox.
+  # AMQP handles the message but simply ignores it.
+  #
+  # See `GenServer.call/3` for more details.
+  def handle_info({ref, _res}, state) when is_reference(ref) do
+    {:noreply, state}
   end
 
   @impl true

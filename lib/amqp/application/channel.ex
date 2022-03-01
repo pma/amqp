@@ -83,9 +83,15 @@ defmodule AMQP.Application.Channel do
   """
   @spec get_channel(binary | atom) :: {:ok, Channel.t()} | {:error, any}
   def get_channel(name \\ :default) do
-    case GenServer.call(get_server_name(name), :get_channel) do
-      nil -> {:error, :channel_not_ready}
-      channel -> {:ok, channel}
+    with false <- whereis(name) |> is_nil(),
+         channel = %{} <- GenServer.call(get_server_name(name), :get_channel) do
+      {:ok, channel}
+    else
+      true ->
+        {:error, :channel_not_found}
+
+      nil ->
+        {:error, :channel_not_ready}
     end
   catch
     :exit, {:timeout, _} ->
@@ -149,6 +155,15 @@ defmodule AMQP.Application.Channel do
   def handle_info({:EXIT, _from, reason}, state) do
     close(state)
     {:stop, reason, %{state | channel: nil, monitor_ref: nil}}
+  end
+
+  # When GenServer call gets timeout and the message arrives later,
+  # it attempts to deliver the message to the server inbox.
+  # AMQP handles the message but simply ignores it.
+  #
+  # See `GenServer.call/3` for more details.
+  def handle_info({ref, _res}, state) when is_reference(ref) do
+    {:noreply, state}
   end
 
   @impl true
