@@ -141,7 +141,7 @@ defmodule AMQP.Application do
           analytics: [url: "amqp://host2"]
         ],
         channels: [
-          bisiness_report: [connection: :business_report],
+          business_report: [connection: :business_report],
           analytics: [connection: :analytics]
         ]
 
