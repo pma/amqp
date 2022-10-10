@@ -109,9 +109,25 @@ defmodule AMQP.Application.Connection do
 
   @impl true
   def init(state) do
-    send(self(), :connect)
     Process.flag(:trap_exit, true)
-    {:ok, state}
+    {:ok, state, {:continue, :connect}}
+  end
+
+  @impl true
+  def handle_continue(:connect, state) do
+    case do_open(state[:open_arg]) do
+      {:ok, conn} ->
+        # Get notifications when the connection goes down
+        ref = Process.monitor(conn.pid)
+        {:noreply, %{state | connection: conn, monitor_ref: ref}}
+
+      {:error, _} ->
+        Logger.error("Failed to open AMQP connection (#{state[:name]}). Retrying later...")
+
+        # Retry later
+        Process.send_after(self(), :connect, state[:retry_interval])
+        {:noreply, state}
+    end
   end
 
   @impl true
@@ -129,26 +145,13 @@ defmodule AMQP.Application.Connection do
 
   @impl true
   def handle_info(:connect, state) do
-    case do_open(state[:open_arg]) do
-      {:ok, conn} ->
-        # Get notifications when the connection goes down
-        ref = Process.monitor(conn.pid)
-        {:noreply, %{state | connection: conn, monitor_ref: ref}}
-
-      {:error, _} ->
-        Logger.error("Failed to open AMQP connection (#{state[:name]}). Retrying later...")
-
-        # Retry later
-        Process.send_after(self(), :connect, state[:retry_interval])
-        {:noreply, state}
-    end
+    {:noreply, state, {:continue, :connect}}
   end
 
   def handle_info({:DOWN, _, :process, pid, _reason}, %{connection: %{pid: pid}} = state)
       when is_pid(pid) do
     Logger.info("AMQP connection is gone (#{state[:name]}). Reconnecting...")
-    send(self(), :connect)
-    {:noreply, %{state | connection: nil, monitor_ref: nil}}
+    {:noreply, %{state | connection: nil, monitor_ref: nil}, {:continue, :connect}}
   end
 
   def handle_info({:EXIT, _from, reason}, state) do
