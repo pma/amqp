@@ -54,8 +54,7 @@ defmodule AMQP.Application.Connection do
       retry_interval: retry_interval,
       open_arg: open_arg,
       name: proc_name,
-      connection: nil,
-      monitor_ref: nil
+      connection: nil
     }
 
     {server_name, init_arg}
@@ -118,8 +117,8 @@ defmodule AMQP.Application.Connection do
     case do_open(state[:open_arg]) do
       {:ok, conn} ->
         # Get notifications when the connection goes down
-        ref = Process.monitor(conn.pid)
-        {:noreply, %{state | connection: conn, monitor_ref: ref}}
+        true = Process.link(conn.pid)
+        {:noreply, %{state | connection: conn}}
 
       {:error, _} ->
         Logger.error("Failed to open AMQP connection (#{state[:name]}). Retrying later...")
@@ -148,15 +147,15 @@ defmodule AMQP.Application.Connection do
     {:noreply, state, {:continue, :connect}}
   end
 
-  def handle_info({:DOWN, _, :process, pid, _reason}, %{connection: %{pid: pid}} = state)
+  def handle_info({:EXIT, pid, _reason}, %{connection: %Connection{pid: pid}} = state)
       when is_pid(pid) do
     Logger.info("AMQP connection is gone (#{state[:name]}). Reconnecting...")
-    {:noreply, %{state | connection: nil, monitor_ref: nil}, {:continue, :connect}}
+    {:noreply, %{state | connection: nil}, {:continue, :connect}}
   end
 
   def handle_info({:EXIT, _from, reason}, state) do
     close(state)
-    {:stop, reason, %{state | connection: nil, monitor_ref: nil}}
+    {:stop, reason, %{state | connection: nil}}
   end
 
   # When GenServer call gets timeout and the message arrives later,
@@ -171,12 +170,12 @@ defmodule AMQP.Application.Connection do
   @impl true
   def terminate(_reason, state) do
     close(state)
-    %{state | connection: nil, monitor_ref: nil}
+    %{state | connection: nil}
   end
 
-  defp close(%{connection: %Connection{} = conn, monitor_ref: ref}) do
+  defp close(%{connection: %Connection{pid: pid} = conn}) do
     if Process.alive?(conn.pid) do
-      Process.demonitor(ref)
+      Process.unlink(pid)
       Connection.close(conn)
     end
   end

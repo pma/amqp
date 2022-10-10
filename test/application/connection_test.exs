@@ -23,6 +23,26 @@ defmodule AMQP.Application.ConnectionTest do
     GenServer.stop(pid)
   end
 
+  test "reconnects when the AMQP connection is killed" do
+    {:ok, pid} = AppConn.start_link([])
+    {:ok, %AMQP.Connection{pid: conn_pid} = conn1} = AppConn.get_connection()
+    Process.exit(conn_pid, :kill)
+    :timer.sleep(50)
+
+    assert {:ok, %AMQP.Connection{} = conn2} = AppConn.get_connection()
+    refute conn1 == conn2
+    GenServer.stop(pid)
+  end
+
+  test "AMQP connection dies when Connection process is killed" do
+    {:ok, pid} = AppConn.start_link([])
+    Process.unlink(pid)
+    {:ok, %AMQP.Connection{pid: conn_pid}} = AppConn.get_connection()
+    Process.exit(pid, :kill)
+    :timer.sleep(50)
+    refute Process.alive?(conn_pid)
+  end
+
   test "Unavailable connection does not crash" do
     assert {:error, :connection_not_found} ==
              AppConn.get_connection(:non_existing)
