@@ -102,26 +102,12 @@ defmodule AMQP.Application.Channel do
 
   @impl true
   def init(state) do
-    send(self(), :open)
     Process.flag(:trap_exit, true)
-    {:ok, state}
+    {:ok, state, {:continue, :open}}
   end
 
   @impl true
-  def handle_call(:get_state, _, state) do
-    {:reply, state, state}
-  end
-
-  def handle_call(:get_channel, _, state) do
-    if state[:channel] && Process.alive?(state[:channel].pid) do
-      {:reply, state[:channel], state}
-    else
-      {:reply, nil, state}
-    end
-  end
-
-  @impl true
-  def handle_info(:open, state) do
+  def handle_continue(:open, state) do
     case AMQP.Application.Connection.get_connection(state[:connection]) do
       {:ok, conn} ->
         case Channel.open(conn) do
@@ -145,11 +131,28 @@ defmodule AMQP.Application.Channel do
     end
   end
 
+  @impl true
+  def handle_call(:get_state, _, state) do
+    {:reply, state, state}
+  end
+
+  def handle_call(:get_channel, _, state) do
+    if state[:channel] && Process.alive?(state[:channel].pid) do
+      {:reply, state[:channel], state}
+    else
+      {:reply, nil, state}
+    end
+  end
+
+  @impl true
+  def handle_info(:open, state) do
+    {:noreply, state, {:continue, :open}}
+  end
+
   def handle_info({:DOWN, _, :process, pid, _reason}, %{channel: %{pid: pid}} = state)
       when is_pid(pid) do
     Logger.info("AMQP channel is gone (#{state[:name]}). Reopening...")
-    send(self(), :open)
-    {:noreply, %{state | channel: nil, monitor_ref: nil}}
+    {:noreply, %{state | channel: nil, monitor_ref: nil}, {:continue, :open}}
   end
 
   def handle_info({:EXIT, _from, reason}, state) do
