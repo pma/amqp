@@ -44,7 +44,6 @@ defmodule AMQP.Application.Channel do
       retry_interval: retry_interval,
       connection: connection,
       name: proc_name,
-      monitor_ref: nil,
       channel: nil
     }
 
@@ -112,8 +111,8 @@ defmodule AMQP.Application.Channel do
       {:ok, conn} ->
         case Channel.open(conn) do
           {:ok, chan} ->
-            ref = Process.monitor(chan.pid)
-            {:noreply, %{state | channel: chan, monitor_ref: ref}}
+            true = Process.link(chan.pid)
+            {:noreply, %{state | channel: chan}}
 
           {:error, error} ->
             Logger.error("Failed to open an AMQP channel(#{state[:name]}) - #{inspect(error)}")
@@ -149,15 +148,15 @@ defmodule AMQP.Application.Channel do
     {:noreply, state, {:continue, :open}}
   end
 
-  def handle_info({:DOWN, _, :process, pid, _reason}, %{channel: %{pid: pid}} = state)
+  def handle_info({:EXIT, pid, _reason}, %{channel: %Channel{pid: pid}} = state)
       when is_pid(pid) do
     Logger.info("AMQP channel is gone (#{state[:name]}). Reopening...")
-    {:noreply, %{state | channel: nil, monitor_ref: nil}, {:continue, :open}}
+    {:noreply, %{state | channel: nil}, {:continue, :open}}
   end
 
   def handle_info({:EXIT, _from, reason}, state) do
     close(state)
-    {:stop, reason, %{state | channel: nil, monitor_ref: nil}}
+    {:stop, reason, %{state | channel: nil}}
   end
 
   # When GenServer call gets timeout and the message arrives later,
@@ -172,12 +171,12 @@ defmodule AMQP.Application.Channel do
   @impl true
   def terminate(_reason, state) do
     close(state)
-    %{state | channel: nil, monitor_ref: nil}
+    %{state | channel: nil}
   end
 
-  defp close(%{channel: %Channel{} = channel, monitor_ref: ref}) do
+  defp close(%{channel: %Channel{} = channel}) do
     if Process.alive?(channel.pid) do
-      Process.demonitor(ref)
+      Process.unlink(channel.pid)
       Channel.close(channel)
     end
   end
