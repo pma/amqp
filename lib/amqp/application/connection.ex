@@ -63,7 +63,7 @@ defmodule AMQP.Application.Connection do
   @doc """
   Returns a GenServer reference for the connection name.
   """
-  @spec get_server_name(binary | atom) :: binary
+  @spec get_server_name(binary() | atom()) :: atom()
   def get_server_name(name) do
     :"#{__MODULE__}::#{name}"
   end
