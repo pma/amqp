@@ -12,8 +12,8 @@ jobs:
       - name: Install OTP and Elixir
         uses: actions/setup-elixir@v1
         with:
-          otp-version: 23.2
-          elixir-version: 1.11.2
+          otp-version: 25.1
+          elixir-version: 1.14.1
           experimental-otp: true
 
       - name: Install dependencies
