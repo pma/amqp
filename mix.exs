@@ -2,7 +2,7 @@ defmodule AMQP.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/pma/amqp"
-  @version "3.2.0"
+  @version "3.3.0"
 
   def project do
     [
