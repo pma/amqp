@@ -12,8 +12,8 @@ jobs:
       - name: Install OTP and Elixir
         uses: actions/setup-elixir@v1
         with:
-          otp-version: 25.1
-          elixir-version: 1.14.1
+          otp-version: 26.0.1
+          elixir-version: 1.14.5
           experimental-otp: true
 
       - name: Install dependencies
@@ -32,16 +32,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - otp: 26.x
+            elixir: 1.14.5
           - otp: 25.x
-            elixir: 1.14.1
-          - otp: 24.x
             elixir: 1.13.4
           - otp: 24.x
-            elixir: 1.12.2
-          - otp: 23.2
-            elixir: 1.11.2
-          - otp: 23.2
-            elixir: 1.10.3
+            elixir: 1.12.3
     env:
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       MIX_ENV: test
