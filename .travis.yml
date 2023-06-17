@@ -3,15 +3,13 @@ sudo: false # to use faster container based build environment
 dist: trusty
 matrix:
   include:
-    - elixir: 1.10.3
-      otp_release: 22.3
+    - elixir: 1.14.5
+      otp_release: 26.0.1
       env: CHECK_FORMATTED=true
-    - elixir: 1.9.2
-      otp_release: 22.0.4
-    - elixir: 1.8.1
-      otp_release: 21.3.2
-    - elixir: 1.7.4
-      otp_release: 21.3
+    - elixir: 1.13.4
+      otp_release: 25.3.2.2
+    - elixir: 1.12.3
+      otp_release: 24.3.4.12
 script:
   - if [ "$CHECK_FORMATTED" = true ]; then mix format --check-formatted; fi
   - mix test --exclude skip_ci
