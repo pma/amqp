@@ -27,7 +27,7 @@ defmodule AMQP.Mixfile do
 
   defp deps do
     [
-      {:amqp_client, "~> 3.9"},
+      {:amqp_client, "~> 3.12"},
 
       # Docs dependencies.
       {:ex_doc, ">= 0.0.0", only: :docs},
