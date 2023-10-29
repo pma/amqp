@@ -112,8 +112,7 @@ defmodule AMQP.Connection do
           keyfile: '/path/to/client/key.pem',
           # only necessary with intermediate CAs
           # depth: 2,
-          verify: :verify_peer,
-          fail_if_no_peer_cert: true
+          verify: :verify_peer
         ]
       )
 
