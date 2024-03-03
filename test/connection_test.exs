@@ -19,7 +19,7 @@ defmodule ConnectionTest do
   end
 
   test "open connection with host as char list" do
-    assert {:ok, conn} = Connection.open(host: 'localhost')
+    assert {:ok, conn} = Connection.open(host: ~c"localhost")
     assert :ok = Connection.close(conn)
   end
 
@@ -29,14 +29,14 @@ defmodule ConnectionTest do
   end
 
   test "open connection using both uri and options" do
-    assert {:ok, conn} = Connection.open("amqp://nonexistent:5672", host: 'localhost')
+    assert {:ok, conn} = Connection.open("amqp://nonexistent:5672", host: ~c"localhost")
     assert :ok = Connection.close(conn)
   end
 
   test "open connection with uri, port as an integer, and options " do
     assert {:ok, conn} =
              Connection.open("amqp://nonexistent",
-               host: 'localhost',
+               host: ~c"localhost",
                port: 5672
              )
 
@@ -46,7 +46,7 @@ defmodule ConnectionTest do
   test "open connection with uri, port as a string, and options" do
     assert {:ok, conn} =
              Connection.open("amqp://nonexistent",
-               host: 'localhost',
+               host: ~c"localhost",
                port: "5672"
              )
 
@@ -61,7 +61,7 @@ defmodule ConnectionTest do
 
   test "open connection with uri, name, and options (deprecated but still supported)" do
     assert {:ok, conn} =
-             Connection.open("amqp://nonexistent:5672", "my-connection", host: 'localhost')
+             Connection.open("amqp://nonexistent:5672", "my-connection", host: ~c"localhost")
 
     assert :ok = Connection.close(conn)
   end
@@ -74,7 +74,7 @@ defmodule ConnectionTest do
 
     assert params[:username] == "me"
     assert params[:password] == "bar"
-    assert params[:host] == 'amqp.test.com'
+    assert params[:host] == ~c"amqp.test.com"
   end
 
   defp get_connection_name(conn) do
