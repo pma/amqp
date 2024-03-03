@@ -13,7 +13,7 @@ jobs:
         uses: erlef/setup-beam@v1
         with:
           otp-version: 26.0.1
-          elixir-version: 1.14.5
+          elixir-version: 1.16.x
           experimental-otp: true
 
       - name: Install dependencies
@@ -33,7 +33,9 @@ jobs:
       matrix:
         include:
           - otp: 26.x
-            elixir: 1.15.0
+            elixir: 1.16.x
+          - otp: 26.x
+            elixir: 1.15.x
           - otp: 26.x
             elixir: 1.14.5
           - otp: 25.x
