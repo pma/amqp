@@ -19,6 +19,10 @@ To upgrade from the old version, please read our upgrade guides:
 * [1.x to 2.x](https://github.com/pma/amqp/wiki/2.0-Release-Notes#breaking-changes-and-upgrade-guide)
 * [2.x to 3.x](https://github.com/pma/amqp/wiki/3.0-Release-Notes#breaking-changes-and-upgrade-guide)
 
+## OTP 27 (Elixir 1.17) support
+
+Please read [this issue](https://github.com/pma/amqp/issues/231) about OTP 27 support.
+
 ## Usage
 
 Add AMQP as a dependency in your `mix.exs` file.
