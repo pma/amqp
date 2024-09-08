@@ -65,7 +65,7 @@ jobs:
         run: mix deps.get
 
       - name: Start docker
-        run: docker-compose up --detach
+        run: docker compose up --detach
 
       - name: Run tests
         run: mix test --trace
