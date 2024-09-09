@@ -20,7 +20,7 @@ defmodule AMQP.Mixfile do
 
   def application do
     [
-      applications: start_applications(Mix.env),
+      applications: start_applications(Mix.env()),
       mod: {AMQP.Application, []}
     ]
   end
