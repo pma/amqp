@@ -20,10 +20,16 @@ defmodule AMQP.Mixfile do
 
   def application do
     [
-      applications: [:amqp_client, :logger],
+      applications: start_applications(Mix.env),
       mod: {AMQP.Application, []}
     ]
   end
+
+  defp start_applications(:docs) do
+    [:logger, :makeup, :makeup_elixir, :makeup_erlang, :ex_doc]
+  end
+
+  defp start_applications(_env), do: [:amqp_client, :logger]
 
   defp deps do
     [
