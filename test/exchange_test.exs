@@ -71,6 +71,22 @@ defmodule ExchangeTest do
     assert :ok = Exchange.delete(meta[:chan], source)
   end
 
+  test "bind and unbind exchange to/from another exchange using arguments", meta do
+    destination = rand_name()
+    source = rand_name()
+    assert :ok = Exchange.headers(meta[:chan], destination)
+    assert :ok = Exchange.headers(meta[:chan], source)
+
+    assert :ok =
+             Exchange.bind(meta[:chan], destination, source,
+               arguments: [{"x-match", "any"}, {"header-name", "value"}]
+             )
+
+    assert :ok = Exchange.unbind(meta[:chan], destination, source)
+    assert :ok = Exchange.delete(meta[:chan], destination)
+    assert :ok = Exchange.delete(meta[:chan], source)
+  end
+
   defp rand_name do
     :crypto.strong_rand_bytes(8) |> Base.encode64()
   end
