@@ -44,8 +44,6 @@ jobs:
             elixir: 1.15.x
           - otp: 26.x
             elixir: 1.14.5
-          - otp: 25.x
-            elixir: 1.13.4
     env:
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       MIX_ENV: test

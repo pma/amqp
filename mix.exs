@@ -8,7 +8,7 @@ defmodule AMQP.Mixfile do
     [
       app: :amqp,
       version: @version,
-      elixir: "~> 1.13",
+      elixir: "~> 1.14",
       package: package(),
       deps: deps(),
       dialyzer: dialyzer(),
