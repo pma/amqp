@@ -26,7 +26,7 @@ jobs:
         run: mix compile --warnings-as-errors
 
   test:
-    name: Test (Elixir ${{matrix.elixir}} | Erlang/OTP ${{matrix.otp}})
+    name: Test (Elixir ${{matrix.elixir}} | Erlang/OTP ${{matrix.otp}} | RabbitMQ ${{matrix.rabbitmq}})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -34,20 +34,21 @@ jobs:
         include:
           # rabbit_common currently does not compile against OTP v27.
           # This needs to be fixed upstream to achieve compatibility.
-          #- otp: 27.x
-          #  elixir: 1.17.x
+          - otp: 27.x
+            elixir: 1.17.x
+            rabbitmq: 4
           - otp: 26.x
             elixir: 1.17.x
+            rabbitmq: 3
           - otp: 26.x
             elixir: 1.16.x
+            rabbitmq: 3
           - otp: 26.x
             elixir: 1.15.x
+            rabbitmq: 3
           - otp: 26.x
             elixir: 1.14.5
-          - otp: 25.x
-            elixir: 1.13.4
-          - otp: 24.x
-            elixir: 1.12.3
+            rabbitmq: 3
     env:
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       MIX_ENV: test
@@ -65,7 +66,7 @@ jobs:
         run: mix deps.get
 
       - name: Start docker
-        run: docker compose up --detach
+        run: docker compose -f docker-compose.rabbitmq${{matrix.rabbitmq}}.yml up --detach
 
       - name: Run tests
         run: mix test --trace
