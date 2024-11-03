@@ -22,8 +22,9 @@ To upgrade from the old version, please read our upgrade guides:
 
 ## OTP 27 support
 
-Also, note that [the RabbitMQ team has reported some performance regressions with OTP 27](https://www.rabbitmq.com/blog/2024/05/23/erlang27-support).
+If you want to use this library with OTP 27, please be aware that [the RabbitMQ team has reported some performance regressions with OTP 27](https://www.rabbitmq.com/blog/2024/05/23/erlang27-support).
 
+It might not be a big matter to the client side in most cases, but we recommend you monitor it carefully.
 
 ## Usage
 
