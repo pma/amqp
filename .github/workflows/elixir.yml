@@ -66,7 +66,7 @@ jobs:
         run: mix deps.get
 
       - name: Start docker
-        run: docker compose up --detach -f docker-compose.rabbitmq${{matrix.rabbitmq}}.yml
+        run: docker compose -f docker-compose.rabbitmq${{matrix.rabbitmq}}.yml up --detach
 
       - name: Run tests
         run: mix test --trace
