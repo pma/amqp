@@ -26,7 +26,7 @@ defmodule AMQP.Mixfile do
   end
 
   defp start_applications(:docs) do
-    [:logger, :makeup, :makeup_elixir, :makeup_erlang, :ex_doc]
+    [:logger, :makeup, :makeup_elixir, :makeup_erlang, :ex_doc, :amqp_client]
   end
 
   defp start_applications(_env), do: [:amqp_client, :logger]
@@ -37,7 +37,7 @@ defmodule AMQP.Mixfile do
 
       # Docs dependencies.
       {:ex_doc, ">= 0.0.0", only: :docs},
-      {:inch_ex, "~> 0.5", only: :docs},
+      {:inch_ex, "~> 2.0", only: :docs},
 
       # Dev dependencies.
       {:dialyxir, "~> 0.5", only: :dev, runtime: false},
