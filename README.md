@@ -7,7 +7,7 @@
 [![Last Updated](https://img.shields.io/github/last-commit/pma/amqp.svg)](https://github.com/pma/amqp/commits/main)
 [![License](https://img.shields.io/hexpm/l/amqp.svg)](https://github.com/pma/amqp/blob/main/LICENSE)
 
-Simple Elixir wrapper for the Erlang RabbitMQ client.
+Simple Elixir wrapper for the Erlang RabbitMQ 3/4 client (AMQP 0.9.1).
 
 The API is based on Langohr, a Clojure client for RabbitMQ.
 
