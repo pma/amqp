@@ -18,10 +18,12 @@ To upgrade from the old version, please read our upgrade guides:
 * [0.x to 1.x](https://github.com/pma/amqp/wiki/Upgrade-from-0.X-to-1.0)
 * [1.x to 2.x](https://github.com/pma/amqp/wiki/2.0-Release-Notes#breaking-changes-and-upgrade-guide)
 * [2.x to 3.x](https://github.com/pma/amqp/wiki/3.0-Release-Notes#breaking-changes-and-upgrade-guide)
+* [3.X to 4.x](https://github.com/pma/amqp/wiki/4.0-Release-Notes)
 
-## OTP 27 (Elixir 1.17) support
+## OTP 27 support
 
-Please read [this issue](https://github.com/pma/amqp/issues/231) about OTP 27 support.
+Also, note that [the RabbitMQ team has reported some performance regressions with OTP 27](https://www.rabbitmq.com/blog/2024/05/23/erlang27-support).
+
 
 ## Usage
 
@@ -30,7 +32,7 @@ Add AMQP as a dependency in your `mix.exs` file.
 ```elixir
 def deps do
   [
-    {:amqp, "~> 3.3"}
+    {:amqp, "~> 4.0"}
   ]
 end
 ```
@@ -246,25 +248,46 @@ Valid argument names in `Exchange.declare` include:
 
 ## Troubleshooting / FAQ
 
+#### Is amqp 4.x compatible with RabbitMQ 3.x?
+
+Yes, it is.
+
+This library uses [the official Erlang RabbitMQ client](https://hex.pm/packages/amqp_client) under the hood.
+As long as the client works with the old RabbitMQ version, our library will also support the old version.
+
+Here is [the comment](https://github.com/rabbitmq/rabbitmq-server/issues/12510#issuecomment-2442175567) from the RabbitMQ team.
+
+#### Does the library support AMQP 1.0?
+
+No, it doesn't. This library supports only AMQP 0.9.1 and we have no plan to support 1.0 at this moment.
+
+RabbitMQ 4 now officially supports AMQP 1.0 along with 0.9.1. You might get some good benefits from using the protocol.
+
+- https://www.rabbitmq.com/blog/2024/08/05/native-amqp
+- https://www.rabbitmq.com/blog/2024/08/21/amqp-benchmarks
+- https://www.rabbitmq.com/blog/2024/09/02/amqp-flow-control
+
+Since AMQP 1.0 protocol design is significantly different from 0.9.1, we also think it is a good idea to start from scratch instead of building on top of this library. 
+
+
 #### Consumer stops receiving messages
 
-It usually happens when your code doesn't send acknowledgement(ack, nack or
+It usually happens when your code doesn't send an acknowledgement(ack, nack or
 reject) after receiving a message.
 
-If you use GenServer for your consumer, try storing the number of messages the
-server is currently processing to the GenServer state.
+If you use GenServer for your consumer, try storing the number of messages the server is currently processing to the GenServer state.
 
 If the number equals `prefetch_count`, those messages were left without
 acknowledgements and that's why the consumer has stopped receiving more
 messages.
 
-Also review the following points:
+Also, review the following points:
 
 - when an exception was raised how it would be handled
 - when :exit signal was thrown how it would be handled
 - when a message processing took long time what could happen
 
-Also make sure that the consumer monitors the channel pid. When the channel is
+Also, make sure that the consumer monitors the channel pid. When the channel is
 gone, you have to reopen it and subscribe to a new channel again.
 
 #### The version compatibility
@@ -273,19 +296,12 @@ Check out [this article](https://github.com/pma/amqp/wiki/Versions-and-Compatibi
 
 #### Heartbeats
 
-In case the connection is dropped automatically, consider enabling heartbeats.
+If the connection is dropped automatically, consider enabling heartbeats.
 
-You can set `heartbeat` option when you open a connection.
+You can set the `heartbeat` option when you open a connection.
 
 For more details, read [this article](http://www.rabbitmq.com/heartbeats.html#tcp-proxies)
 
-
-#### Does the library support AMQP 1.0?
-
-Currently the library doesn't support AMQP 1.0 and there is no plan to do so at
-the moment. Our main aim here (at least for now) is to provide a thin wrapper
-around [amqp_client](https://hex.pm/packages/amqp_client) for Elixir
-programmers.
 
 
 ## Copyright and License
