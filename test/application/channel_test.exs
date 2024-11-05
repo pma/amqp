@@ -1,4 +1,4 @@
-defmodule AMQP.Application.ChnnelTest do
+defmodule AMQP.Application.ChannelTest do
   use ExUnit.Case
   alias AMQP.Application.Connection, as: AppConn
   alias AMQP.Application.Channel, as: AppChan

@@ -230,7 +230,7 @@ defmodule AMQP.Basic do
   ## Options
 
     * `:no_ack` - If set, the broker is told that the received will not send an
-      acknoledgement of the message. Once the broker believes it has delivered
+      acknowledgement of the message. Once the broker believes it has delivered
       the message, then it's free to assume that the consuming application has
       taken responsibility for it. In general, a lot of applications will not
       want these semantics, rather, they will want to explicitly acknowledge the

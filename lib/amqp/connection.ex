@@ -56,7 +56,7 @@ defmodule AMQP.Connection do
 
     * `:frame_max` - The frame_max handshake parameter (defaults `0`)
 
-    * `:heartbeat` - The hearbeat interval in seconds (defaults `10`)
+    * `:heartbeat` - The heartbeat interval in seconds (defaults `10`)
 
     * `:connection_timeout` - The connection timeout in milliseconds (efaults
       `50000`)
