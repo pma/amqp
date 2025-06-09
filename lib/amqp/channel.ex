@@ -12,27 +12,30 @@ defmodule AMQP.Channel do
   @doc """
   Opens a new Channel in a previously opened Connection.
 
-  Allows an optional channel number. It is recommended not to pass a channel number and allow
-  the library to manage it's own channel numbers.
+  ## Options
+    - custom_consumer -- `t:custom_consumer/0` implementation. The consumer
+                          must implement the `:amqp_gen_consumer` behavior from `:amqp_client`. See
+                         `:amqp_connection.open_channel/2` for more details and
+                         `AMQP.DirectConsumer` for an example of a custom consumer.
 
-  Allows optionally to pass a `t:custom_consumer/0` to start a custom consumer
-  implementation. The consumer must implement the `:amqp_gen_consumer` behavior
-  from `:amqp_client`. See `:amqp_connection.open_channel/2` for more details
-  and `AMQP.DirectConsumer` for an example of a custom consumer.
+    - channel_number  -- the number to use for the channel number. This is not recommended to set manually. See
+                         `:amqp_connection.open_channel/3` for more information.
   """
-  @spec open(Connection.t(), non_neg_integer() | nil, custom_consumer | nil) ::
-          {:ok, Channel.t()} | {:error, any}
+  @spec open(Connection.t(), keyword() | custom_consumer()) :: {:ok, Channel.t()} | {:error, any}
+  def open(conn, opts \\ [])
 
-  def open(conn, channel_number \\ nil, custom_consumer \\ {SelectiveConsumer, self()})
+  def open(%Connection{} = conn, opts) when is_list(opts) do
+    consumer = Keyword.get(opts, :custom_consumer, {SelectiveConsumer, self()})
 
-  def open(%Connection{} = conn, channel_number, custom_consumer)
-      when is_nil(channel_number) do
-    do_open_channel(conn, custom_consumer)
+    if channel_number = Keyword.get(opts, :channel_number) do
+      do_open_channel(conn, channel_number, consumer)
+    else
+      do_open_channel(conn, consumer)
+    end
   end
 
-  def open(%Connection{} = conn, channel_number, custom_consumer)
-      when not is_nil(channel_number) do
-    do_open_channel(conn, channel_number, custom_consumer)
+  def open(%Connection{} = conn, custom_consumer) when is_tuple(custom_consumer) do
+    do_open_channel(conn, custom_consumer)
   end
 
   @doc """
