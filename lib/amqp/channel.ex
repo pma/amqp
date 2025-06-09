@@ -12,14 +12,27 @@ defmodule AMQP.Channel do
   @doc """
   Opens a new Channel in a previously opened Connection.
 
+  Allows an optional channel number. It is recommended not to pass a channel number and allow
+  the library to manage it's own channel numbers.
+
   Allows optionally to pass a `t:custom_consumer/0` to start a custom consumer
   implementation. The consumer must implement the `:amqp_gen_consumer` behavior
   from `:amqp_client`. See `:amqp_connection.open_channel/2` for more details
   and `AMQP.DirectConsumer` for an example of a custom consumer.
   """
-  @spec open(Connection.t(), custom_consumer | nil) :: {:ok, Channel.t()} | {:error, any}
-  def open(%Connection{} = conn, custom_consumer \\ {SelectiveConsumer, self()}) do
+  @spec open(Connection.t(), non_neg_integer() | nil, custom_consumer | nil) ::
+          {:ok, Channel.t()} | {:error, any}
+
+  def open(conn, channel_number \\ nil, custom_consumer \\ {SelectiveConsumer, self()})
+
+  def open(%Connection{} = conn, channel_number, custom_consumer)
+      when is_nil(channel_number) do
     do_open_channel(conn, custom_consumer)
+  end
+
+  def open(%Connection{} = conn, channel_number, custom_consumer)
+      when not is_nil(channel_number) do
+    do_open_channel(conn, channel_number, custom_consumer)
   end
 
   @doc """
@@ -42,6 +55,16 @@ defmodule AMQP.Channel do
 
   defp do_open_channel(conn, custom_consumer) do
     case :amqp_connection.open_channel(conn.pid, custom_consumer) do
+      {:ok, chan_pid} ->
+        {:ok, %Channel{conn: conn, pid: chan_pid, custom_consumer: custom_consumer}}
+
+      error ->
+        {:error, error}
+    end
+  end
+
+  defp do_open_channel(conn, channel_number, custom_consumer) do
+    case :amqp_connection.open_channel(conn.pid, channel_number, custom_consumer) do
       {:ok, chan_pid} ->
         {:ok, %Channel{conn: conn, pid: chan_pid, custom_consumer: custom_consumer}}
 
