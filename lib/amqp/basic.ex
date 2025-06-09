@@ -119,8 +119,8 @@ defmodule AMQP.Basic do
 
     * `:prefetch_count` - the prefetch count (default `0`)
 
-    * `:global` - If set, this applies to the entire Connection, otherwise
-      it applies only to the given Channel (default `false`)
+    * `:global` - If true, this applies to the entire Channel.
+      Otherwise, it applies to each consumer (default `false`)
 
   """
   @spec qos(Channel.t(), keyword) :: :ok | error
