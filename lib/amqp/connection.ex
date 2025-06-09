@@ -251,6 +251,9 @@ defmodule AMQP.Connection do
 
   @doc """
   Closes an open Connection.
+
+  Please note that the closing will be performed asynchronously.
+  To verify the actual closure, you must monitor the process.
   """
   @spec close(t) :: :ok | {:error, any}
   def close(conn) do
