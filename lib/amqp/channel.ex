@@ -24,6 +24,9 @@ defmodule AMQP.Channel do
 
   @doc """
   Closes an open Channel.
+
+  Please note that the closing will be performed asynchronously.
+  To verify the actual closure, you must monitor the process.
   """
   @spec close(Channel.t()) :: :ok | {:error, AMQP.Basic.error()}
   def close(%Channel{pid: pid}) do
