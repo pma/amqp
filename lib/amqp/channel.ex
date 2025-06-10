@@ -6,7 +6,13 @@ defmodule AMQP.Channel do
   alias AMQP.{Connection, Channel, SelectiveConsumer}
 
   defstruct [:conn, :pid, :custom_consumer]
-  @type t :: %Channel{conn: Connection.t(), pid: pid, custom_consumer: custom_consumer() | nil}
+
+  @type t :: %Channel{
+          conn: Connection.t(),
+          pid: pid,
+          channel_number: channel_number() | nil,
+          custom_consumer: custom_consumer() | nil
+        }
   @type custom_consumer :: {module(), args :: any()}
   @type channel_number :: non_neg_integer()
 
@@ -73,7 +79,7 @@ defmodule AMQP.Channel do
   defp do_open_channel(conn, nil, channel_number) do
     case :amqp_connection.open_channel(conn.pid, channel_number) do
       {:ok, chan_pid} ->
-        {:ok, %Channel{conn: conn, pid: chan_pid}}
+        {:ok, %Channel{conn: conn, pid: chan_pid, channel_number: channel_number}}
 
       error ->
         {:error, error}
@@ -83,7 +89,13 @@ defmodule AMQP.Channel do
   defp do_open_channel(conn, custom_consumer, channel_number) do
     case :amqp_connection.open_channel(conn.pid, channel_number, custom_consumer) do
       {:ok, chan_pid} ->
-        {:ok, %Channel{conn: conn, pid: chan_pid, custom_consumer: custom_consumer}}
+        {:ok,
+         %Channel{
+           conn: conn,
+           pid: chan_pid,
+           custom_consumer: custom_consumer,
+           channel_number: channel_number
+         }}
 
       error ->
         {:error, error}
