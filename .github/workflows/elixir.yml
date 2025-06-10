@@ -1,6 +1,11 @@
 name: Elixir CI
 
-on: [push]
+on:
+  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - '**' # all branches, including forks
 
 jobs:
   format:
