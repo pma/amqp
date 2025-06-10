@@ -32,7 +32,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - otp: 28.x
+          - otp: 27.x
             elixir: 1.18.x
             rabbitmq: 4
           - otp: 27.x
