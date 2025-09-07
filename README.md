@@ -7,7 +7,7 @@
 [![Last Updated](https://img.shields.io/github/last-commit/pma/amqp.svg)](https://github.com/pma/amqp/commits/main)
 [![License](https://img.shields.io/hexpm/l/amqp.svg)](https://github.com/pma/amqp/blob/main/LICENSE)
 
-Simple Elixir wrapper for the Erlang RabbitMQ 3/4 client (AMQP 0.9.1).
+A simple Elixir wrapper for the Erlang RabbitMQ 3/4 client (AMQP 0.9.1).
 
 The API is based on Langohr, a Clojure client for RabbitMQ.
 
@@ -20,12 +20,6 @@ To upgrade from the old version, please read our upgrade guides:
 * [2.x to 3.x](https://github.com/pma/amqp/wiki/3.0-Release-Notes#breaking-changes-and-upgrade-guide)
 * [3.X to 4.x](https://github.com/pma/amqp/wiki/4.0-Release-Notes)
 
-## OTP 27 support
-
-If you want to use this library with OTP 27, please be aware that [the RabbitMQ team has reported some performance regressions with OTP 27](https://www.rabbitmq.com/blog/2024/05/23/erlang27-support).
-
-It might not be a big matter to the client side in most cases, but we recommend you monitor it carefully.
-
 ## Usage
 
 Add AMQP as a dependency in your `mix.exs` file.
@@ -33,19 +27,19 @@ Add AMQP as a dependency in your `mix.exs` file.
 ```elixir
 def deps do
   [
-    {:amqp, "~> 4.0"}
+    {:amqp, "~> 4.1"}
   ]
 end
 ```
 
-Elixir will start `amqp` automatically with this if you use Elixir 1.6+.
+Elixir will start `amqp` automatically if you use Elixir 1.6+.
 
 If that's not the case (use `Application.started_applications/0` to check), try
-adding `:amqp` to `applications` or `extra_applications` in your `mix.exs`. Or
+adding `:amqp` to `applications` or `extra_applications` in your `mix.exs`, or
 call `Application.ensure_started(:amqp)` at the start.
 
-After you are done, run `mix deps.get` in your shell to fetch and compile AMQP.
-Start an interactive Elixir shell with `iex -S mix`.
+After you're done, run `mix deps.get` in your shell to fetch and compile AMQP.
+Then start an interactive Elixir shell with `iex -S mix`.
 
 ```elixir
 iex> {:ok, conn} = AMQP.Connection.open()
@@ -78,7 +72,7 @@ iex> AMQP.Basic.publish(chan, "test_exchange", "", "Hello, World!")
 # Received: Hello, World!
 ```
 
-### Setup a consumer GenServer
+### Set up a consumer GenServer
 
 ```elixir
 defmodule Consumer do
@@ -189,10 +183,10 @@ Error converting Hello, World! to integer
 #### Connections and channels
 
 You can define a connection and channel in your config and AMQP will
-automatically...
+automatically:
 
 * Open the connection and channel at the start of the application
-* Automatically try to reconnect if they are disconnected
+* Automatically try to reconnect if they're disconnected
 
 ```elixir
 config :amqp,
@@ -211,8 +205,8 @@ iex> {:ok, chan} = AMQP.Application.get_channel(:mychan)
 iex> :ok = AMQP.Basic.publish(chan, "", "", "Hello")
 ```
 
-When a channel is down and reconnected, you have to make sure your consumer
-subscribes to a channel again.
+When a channel is down and reconnected, you have to ensure your consumer
+subscribes to the channel again.
 
 See the documentation for `AMQP.Application.get_connection/1` and
 `AMQP.Application.get_channel/1` for more details.
@@ -222,8 +216,8 @@ See the documentation for `AMQP.Application.get_connection/1` and
 The parameter `arguments` in `Queue.declare`, `Exchange.declare`,
 `Basic.consume` and the parameter `headers` in `Basic.publish` are a list of
 tuples in the form `{name, type, value}`, where `name` is a binary containing
-the argument/header name, `type` is an atom describing the AMQP field type and
-`value` a term compatible with the AMQP field type.
+the argument/header name, `type` is an atom describing the AMQP field type, and
+`value` is a term compatible with the AMQP field type.
 
 The valid AMQP field types are:
 
@@ -260,36 +254,36 @@ Here is [the comment](https://github.com/rabbitmq/rabbitmq-server/issues/12510#i
 
 #### Does the library support AMQP 1.0?
 
-No, it doesn't. This library supports only AMQP 0.9.1 and we have no plan to support 1.0 at this moment.
+No, it doesn't. This library supports only AMQP 0.9.1, and we have no plans to support 1.0 at this time.
 
-RabbitMQ 4 now officially supports AMQP 1.0 along with 0.9.1. You might get some good benefits from using the protocol.
+RabbitMQ 4 now officially supports AMQP 1.0 along with 0.9.1. You might get some benefits from using this protocol.
 
 - https://www.rabbitmq.com/blog/2024/08/05/native-amqp
 - https://www.rabbitmq.com/blog/2024/08/21/amqp-benchmarks
 - https://www.rabbitmq.com/blog/2024/09/02/amqp-flow-control
 
-Since AMQP 1.0 protocol design is significantly different from 0.9.1, we also think it is a good idea to start from scratch instead of building on top of this library. 
+Since the AMQP 1.0 protocol design is significantly different from 0.9.1, we also think it's a good idea to start from scratch instead of building on top of this library. 
 
 
 #### Consumer stops receiving messages
 
-It usually happens when your code doesn't send an acknowledgement(ack, nack or
+It usually happens when your code doesn't send an acknowledgement (ack, nack, or
 reject) after receiving a message.
 
-If you use GenServer for your consumer, try storing the number of messages the server is currently processing to the GenServer state.
+If you use GenServer for your consumer, try storing the number of messages the server is currently processing in the GenServer state.
 
 If the number equals `prefetch_count`, those messages were left without
-acknowledgements and that's why the consumer has stopped receiving more
+acknowledgements, which is why the consumer has stopped receiving more
 messages.
 
 Also, review the following points:
 
-- when an exception was raised how it would be handled
-- when :exit signal was thrown how it would be handled
-- when a message processing took long time what could happen
+- how exceptions are handled when they're raised
+- how `:exit` signals are handled when they're thrown
+- what could happen when message processing takes a long time
 
 Also, make sure that the consumer monitors the channel pid. When the channel is
-gone, you have to reopen it and subscribe to a new channel again.
+gone, you have to reopen it and subscribe to the new channel again.
 
 #### The version compatibility
 
