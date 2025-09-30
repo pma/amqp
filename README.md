@@ -159,7 +159,7 @@ defmodule Consumer do
 end
 ```
 
-```iex
+```elixir
 iex> Consumer.start_link
 {:ok, #PID<0.261.0>}
 iex> {:ok, conn} = AMQP.Connection.open
