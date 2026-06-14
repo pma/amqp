@@ -13,8 +13,13 @@ defmodule AMQP.Mixfile do
       deps: deps(),
       dialyzer: dialyzer(),
       docs: docs(),
-      preferred_cli_env: preferred_cli_env(),
       test_coverage: [tool: ExCoveralls]
+    ]
+  end
+
+  def cli do
+    [
+      preferred_envs: preferred_cli_env()
     ]
   end
 
