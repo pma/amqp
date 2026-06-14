@@ -252,6 +252,45 @@ As long as the client works with the old RabbitMQ version, our library will also
 
 Here is [the comment](https://github.com/rabbitmq/rabbitmq-server/issues/12510#issuecomment-2442175567) from the RabbitMQ team.
 
+#### Why does RabbitMQ 4 reject `Queue.declare(chan)` with `transient_nonexcl_queues`?
+
+RabbitMQ 4 can deny the deprecated `transient_nonexcl_queues` feature by
+default. This feature covers queues that are both non-durable and
+non-exclusive.
+
+`Queue.declare(chan)` uses AMQP's historical defaults:
+
+```elixir
+Queue.declare(chan, "", durable: false, exclusive: false, auto_delete: false)
+```
+
+That means the queue is transient (`durable: false`) and non-exclusive
+(`exclusive: false`), so RabbitMQ 4 may close the connection with an error like:
+
+```text
+Feature `transient_nonexcl_queues` is deprecated.
+```
+
+To avoid the deprecated feature, declare the queue as either durable:
+
+```elixir
+Queue.declare(chan, "jobs", durable: true)
+```
+
+or exclusive when you need a private temporary queue:
+
+```elixir
+Queue.declare(chan, "", exclusive: true)
+```
+
+If you need to keep using non-durable, non-exclusive queues while migrating to a
+newer RabbitMQ version, permit the deprecated feature in the broker
+configuration:
+
+```conf
+deprecated_features.permit.transient_nonexcl_queues = true
+```
+
 #### Does the library support AMQP 1.0?
 
 No, it doesn't. This library supports only AMQP 0.9.1, and we have no plans to support 1.0 at this time.
