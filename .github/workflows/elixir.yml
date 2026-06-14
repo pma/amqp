@@ -55,7 +55,7 @@ jobs:
           - otp: 26.x
             elixir: 1.17.x
             rabbitmq: 3
-          - otp: 25.x
+          - otp: 26.x
             elixir: 1.16.x
             rabbitmq: 3
     env:
