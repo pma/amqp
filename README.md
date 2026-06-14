@@ -11,14 +11,14 @@ A simple Elixir wrapper for the Erlang RabbitMQ 3/4 client (AMQP 0.9.1).
 
 The API is based on Langohr, a Clojure client for RabbitMQ.
 
-## Upgrading guides
+## Upgrade guides
 
-To upgrade from the old version, please read our upgrade guides:
+To upgrade from an older version, please read the relevant upgrade guide:
 
 * [0.x to 1.x](https://github.com/pma/amqp/wiki/Upgrade-from-0.X-to-1.0)
 * [1.x to 2.x](https://github.com/pma/amqp/wiki/2.0-Release-Notes#breaking-changes-and-upgrade-guide)
 * [2.x to 3.x](https://github.com/pma/amqp/wiki/3.0-Release-Notes#breaking-changes-and-upgrade-guide)
-* [3.X to 4.x](https://github.com/pma/amqp/wiki/4.0-Release-Notes)
+* [3.x to 4.x](https://github.com/pma/amqp/wiki/4.0-Release-Notes)
 
 ## Usage
 
@@ -34,11 +34,11 @@ end
 
 Elixir will start `amqp` automatically if you use Elixir 1.6+.
 
-If that's not the case (use `Application.started_applications/0` to check), try
+If that is not the case (use `Application.started_applications/0` to check), try
 adding `:amqp` to `applications` or `extra_applications` in your `mix.exs`, or
 call `Application.ensure_started(:amqp)` at the start.
 
-After you're done, run `mix deps.get` in your shell to fetch and compile AMQP.
+After that, run `mix deps.get` in your shell to fetch and compile AMQP.
 Then start an interactive Elixir shell with `iex -S mix`.
 
 ```elixir
@@ -92,24 +92,25 @@ defmodule Consumer do
     {:ok, chan} = Channel.open(conn)
     setup_queue(chan)
 
-    # Limit unacknowledged messages to 10
+    # Limit unacknowledged messages to 10.
     :ok = Basic.qos(chan, prefetch_count: 10)
-    # Register the GenServer process as a consumer
+    # Register the GenServer process as a consumer.
     {:ok, _consumer_tag} = Basic.consume(chan, @queue)
     {:ok, chan}
   end
 
-  # Confirmation sent by the broker after registering this process as a consumer
+  # Confirmation sent by the broker after registering this process as a consumer.
   def handle_info({:basic_consume_ok, %{consumer_tag: consumer_tag}}, chan) do
     {:noreply, chan}
   end
 
-  # Sent by the broker when the consumer is unexpectedly cancelled (such as after a queue deletion)
+  # Sent by the broker when the consumer is unexpectedly cancelled, such as
+  # after a queue deletion.
   def handle_info({:basic_cancel, %{consumer_tag: consumer_tag}}, chan) do
     {:stop, :normal, chan}
   end
 
-  # Confirmation sent by the broker to the consumer process after a Basic.cancel
+  # Confirmation sent by the broker to the consumer process after a Basic.cancel.
   def handle_info({:basic_cancel_ok, %{consumer_tag: consumer_tag}}, chan) do
     {:noreply, chan}
   end
@@ -122,7 +123,8 @@ defmodule Consumer do
 
   defp setup_queue(chan) do
     {:ok, _} = Queue.declare(chan, @queue_error, durable: true)
-    # Messages that cannot be delivered to any consumer in the main queue will be routed to the error queue
+    # Messages that cannot be delivered to any consumer in the main queue are
+    # routed to the error queue.
     {:ok, _} = Queue.declare(chan, @queue,
                              durable: true,
                              arguments: [
@@ -145,12 +147,12 @@ defmodule Consumer do
     end
 
   rescue
-    # Requeue unless it's a redelivered message.
-    # This means we will retry consuming a message once in case of exception
-    # before we give up and have it moved to the error queue
+    # Requeue unless it is a redelivered message.
+    # This retries a message once in case of an exception before giving up and
+    # moving it to the error queue.
     #
-    # You might also want to catch :exit signal in production code.
-    # Make sure you call ack, nack or reject otherwise consumer will stop
+    # You might also want to catch :exit signals in production code.
+    # Make sure you call ack, nack, or reject; otherwise, the consumer will stop
     # receiving messages.
     exception ->
       :ok = Basic.reject channel, tag, requeue: not redelivered
@@ -182,11 +184,11 @@ Error converting Hello, World! to integer
 
 #### Connections and channels
 
-You can define a connection and channel in your config and AMQP will
+You can define a connection and channel in your config, and AMQP will
 automatically:
 
-* Open the connection and channel at the start of the application
-* Automatically try to reconnect if they're disconnected
+* open the connection and channel when the application starts
+* automatically try to reconnect if they are disconnected
 
 ```elixir
 config :amqp,
@@ -198,14 +200,14 @@ config :amqp,
   ]
 ```
 
-You can access the connection/channel via `AMQP.Application`.
+You can access the connection or channel via `AMQP.Application`.
 
 ```elixir
 iex> {:ok, chan} = AMQP.Application.get_channel(:mychan)
 iex> :ok = AMQP.Basic.publish(chan, "", "", "Hello")
 ```
 
-When a channel is down and reconnected, you have to ensure your consumer
+When a channel goes down and reconnects, you have to ensure your consumer
 subscribes to the channel again.
 
 See the documentation for `AMQP.Application.get_connection/1` and
@@ -213,10 +215,10 @@ See the documentation for `AMQP.Application.get_connection/1` and
 
 ### Types of arguments and headers
 
-The parameter `arguments` in `Queue.declare`, `Exchange.declare`,
-`Basic.consume` and the parameter `headers` in `Basic.publish` are a list of
+The `arguments` parameter in `Queue.declare`, `Exchange.declare`, and
+`Basic.consume`, and the `headers` parameter in `Basic.publish`, are lists of
 tuples in the form `{name, type, value}`, where `name` is a binary containing
-the argument/header name, `type` is an atom describing the AMQP field type, and
+the argument or header name, `type` is an atom describing the AMQP field type, and
 `value` is a term compatible with the AMQP field type.
 
 The valid AMQP field types are:
@@ -247,8 +249,9 @@ Valid argument names in `Exchange.declare` include:
 
 Yes, it is.
 
-This library uses [the official Erlang RabbitMQ client](https://hex.pm/packages/amqp_client) under the hood.
-As long as the client works with the old RabbitMQ version, our library will also support the old version.
+This library uses [the official Erlang RabbitMQ client](https://hex.pm/packages/amqp_client)
+under the hood. As long as the client works with an older RabbitMQ version,
+this library should support that version too.
 
 Here is [the comment](https://github.com/rabbitmq/rabbitmq-server/issues/12510#issuecomment-2442175567) from the RabbitMQ team.
 
@@ -293,23 +296,28 @@ deprecated_features.permit.transient_nonexcl_queues = true
 
 #### Does the library support AMQP 1.0?
 
-No, it doesn't. This library supports only AMQP 0.9.1, and we have no plans to support 1.0 at this time.
+No, it does not. This library supports only AMQP 0.9.1, and we have no plans to
+support 1.0 at this time.
 
-RabbitMQ 4 now officially supports AMQP 1.0 along with 0.9.1. You might get some benefits from using this protocol.
+RabbitMQ 4 now officially supports AMQP 1.0 along with 0.9.1. You might get
+some benefits from using this protocol.
 
 - https://www.rabbitmq.com/blog/2024/08/05/native-amqp
 - https://www.rabbitmq.com/blog/2024/08/21/amqp-benchmarks
 - https://www.rabbitmq.com/blog/2024/09/02/amqp-flow-control
 
-Since the AMQP 1.0 protocol design is significantly different from 0.9.1, we also think it's a good idea to start from scratch instead of building on top of this library. 
+Since the AMQP 1.0 protocol design is significantly different from 0.9.1, we
+think it is better to start from scratch instead of building on top of this
+library.
 
 
 #### Consumer stops receiving messages
 
-It usually happens when your code doesn't send an acknowledgement (ack, nack, or
+It usually happens when your code does not send an acknowledgement (ack, nack, or
 reject) after receiving a message.
 
-If you use GenServer for your consumer, try storing the number of messages the server is currently processing in the GenServer state.
+If you use a GenServer for your consumer, try storing the number of messages the
+server is currently processing in the GenServer state.
 
 If the number equals `prefetch_count`, those messages were left without
 acknowledgements, which is why the consumer has stopped receiving more
@@ -324,9 +332,10 @@ Also, review the following points:
 Also, make sure that the consumer monitors the channel pid. When the channel is
 gone, you have to reopen it and subscribe to the new channel again.
 
-#### The version compatibility
+#### Version compatibility
 
-Check out [this article](https://github.com/pma/amqp/wiki/Versions-and-Compatibilities) to find out the compatibility with Elixir, OTP and RabbitMQ.
+Check out [this article](https://github.com/pma/amqp/wiki/Versions-and-Compatibilities)
+to learn about compatibility with Elixir, OTP, and RabbitMQ.
 
 #### Heartbeats
 
