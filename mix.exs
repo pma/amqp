@@ -45,7 +45,7 @@ defmodule AMQP.Mixfile do
       {:inch_ex, "~> 2.0", only: :docs},
 
       # Dev dependencies.
-      {:dialyxir, "~> 0.5", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.4", only: :dev, runtime: false},
       {:excoveralls, "~> 0.10", only: :test}
     ]
   end
