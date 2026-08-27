@@ -77,6 +77,13 @@ defmodule ConnectionTest do
     assert params[:host] == ~c"amqp.test.com"
   end
 
+  test "update the secret of an open connection" do
+    {:ok, conn} = Connection.open()
+    assert :ok = Connection.update_secret(conn, "guest", "token refresh")
+    assert Process.alive?(conn.pid)
+    assert :ok = Connection.close(conn)
+  end
+
   defp get_connection_name(conn) do
     params = :amqp_connection.info(conn.pid, [:amqp_params])[:amqp_params]
     amqp_params_network(client_properties: props) = params
