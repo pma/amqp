@@ -263,6 +263,31 @@ defmodule AMQP.Connection do
     end
   end
 
+  @doc """
+  Updates the secret used to authenticate the given Connection.
+
+  This is useful when the credentials used to open the connection have a
+  limited lifetime, such as an OAuth 2 token, and need to be renewed before
+  they expire so the broker does not close the connection.
+
+  `new_secret` is the new secret and `reason` is a short human readable string
+  explaining why the secret is being updated.
+
+  ## Examples
+
+      iex> {:ok, conn} = AMQP.Connection.open()
+      iex> AMQP.Connection.update_secret(conn, "new-token", "token refresh")
+      :ok
+
+  """
+  @spec update_secret(t, String.t(), String.t()) :: :ok | {:error, any}
+  def update_secret(conn, new_secret, reason) do
+    case :amqp_connection.update_secret(conn.pid, new_secret, reason) do
+      :ok -> :ok
+      error -> {:error, error}
+    end
+  end
+
   defp normalize_ssl_options(options) when is_list(options) do
     for {k, v} <- options do
       if k in [:cacertfile, :certfile, :keyfile] do
