@@ -83,7 +83,7 @@ defmodule AMQP.Mixfile do
       main: "readme",
       source_ref: "v#{@version}",
       source_url: @source_url,
-      formatters: ["html"]
+      formatters: ["html", "markdown"]
     ]
   end
 
