@@ -26,6 +26,26 @@ defmodule ConnectionTest do
     assert :ok = Connection.close(conn)
   end
 
+  test "invalid information keys do not close the connection or its channels" do
+    {:ok, conn} = Connection.open()
+    {:ok, channel} = AMQP.Channel.open(conn)
+    on_exit(fn -> Connection.close(conn) end)
+
+    assert_raise ArgumentError, "invalid connection information key: :unknown_key", fn ->
+      Connection.info(conn, [:num_channels, :unknown_key])
+    end
+
+    assert Process.alive?(conn.pid)
+    assert Process.alive?(channel.pid)
+    assert [num_channels: 1] == Connection.info(conn, [:num_channels])
+    assert {:ok, %{queue: queue}} = AMQP.Queue.declare(channel, "", exclusive: true)
+    assert {:ok, %{message_count: 0}} = AMQP.Queue.delete(channel, queue)
+    assert [] == Connection.info(conn, [])
+
+    assert [num_channels: 1, num_channels: 1] ==
+             Connection.info(conn, [:num_channels, :num_channels])
+  end
+
   test "close with timeout" do
     {:ok, conn} = Connection.open()
     ref = Process.monitor(conn.pid)

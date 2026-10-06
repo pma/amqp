@@ -303,10 +303,21 @@ defmodule AMQP.Connection do
   Use `info_keys/1` to discover available keys. These include `:server_properties`,
   `:num_channels`, `:is_closing`, and negotiated `:channel_max`, `:frame_max`, and
   `:heartbeat` values. Values are returned unchanged from the Erlang client,
-  including records such as `:amqp_params`. Invalid keys raise an exception.
+  including records such as `:amqp_params`. Invalid keys raise `ArgumentError`
+  without closing the connection.
   """
   @spec info(t(), [atom()]) :: keyword()
-  def info(%Connection{pid: pid}, items), do: :amqp_connection.info(pid, items)
+  def info(%Connection{pid: pid} = conn, items) do
+    keys = info_keys(conn)
+
+    Enum.each(items, fn item ->
+      unless item in keys do
+        raise ArgumentError, "invalid connection information key: #{inspect(item)}"
+      end
+    end)
+
+    :amqp_connection.info(pid, items)
+  end
 
   @doc "Returns information keys available for any connection."
   @spec info_keys() :: [atom()]
