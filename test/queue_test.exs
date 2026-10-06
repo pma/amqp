@@ -20,6 +20,22 @@ defmodule QueueTest do
     assert {:ok, %{message_count: 0}} = Queue.delete(meta[:chan], queue)
   end
 
+  test "purge without options preserves the message count result", meta do
+    {:ok, %{queue: queue}} = Queue.declare(meta[:chan], "", exclusive: true)
+    :ok = AMQP.Basic.publish(meta[:chan], "", queue, "discard")
+    assert {:ok, %{message_count: 1}} = Queue.purge(meta[:chan], queue)
+    assert {:empty, _} = AMQP.Basic.get(meta[:chan], queue)
+  end
+
+  for option <- [:nowait, :no_wait] do
+    test "purge with #{option} discards messages", meta do
+      {:ok, %{queue: queue}} = Queue.declare(meta[:chan], "", exclusive: true)
+      :ok = AMQP.Basic.publish(meta[:chan], "", queue, "discard")
+      assert :ok = Queue.purge(meta[:chan], queue, [{unquote(option), true}])
+      assert {:empty, _} = AMQP.Basic.get(meta[:chan], queue)
+    end
+  end
+
   test "declare queue with nowait option", meta do
     assert :ok = Queue.declare(meta[:chan], "hello", nowait: true)
     assert :ok = Queue.delete(meta[:chan], "hello", nowait: true)

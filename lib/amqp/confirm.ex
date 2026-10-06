@@ -9,12 +9,18 @@ defmodule AMQP.Confirm do
 
   @doc """
   Activates publishing confirmations on the channel.
+
+  Set `:nowait` (or its alias `:no_wait`) to `true` to skip waiting for the
+  broker's reply. This returns `:ok` after the request is sent.
   """
-  @spec select(Channel.t()) :: :ok | Basic.error()
-  def select(%Channel{pid: pid}) do
-    case :amqp_channel.call(pid, confirm_select()) do
-      confirm_select_ok() -> :ok
-      error -> {:error, error}
+  @spec select(Channel.t(), keyword()) :: :ok | Basic.error()
+  def select(%Channel{pid: pid}, options \\ []) do
+    nowait = Keyword.get(options, :nowait, false) || Keyword.get(options, :no_wait, false)
+
+    case {nowait, :amqp_channel.call(pid, confirm_select(nowait: nowait))} do
+      {true, :ok} -> :ok
+      {_, confirm_select_ok()} -> :ok
+      {_, error} -> {:error, error}
     end
   end
 

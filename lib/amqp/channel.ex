@@ -62,6 +62,15 @@ defmodule AMQP.Channel do
     end
   end
 
+  @doc "Closes a channel with a custom AMQP reply code and text."
+  @spec close(t(), non_neg_integer(), String.t()) :: :ok | {:error, any()}
+  def close(%Channel{pid: pid}, code, text) do
+    case :amqp_channel.close(pid, code, text) do
+      :ok -> :ok
+      error -> {:error, error}
+    end
+  end
+
   defp do_open_channel(conn, nil) do
     case :amqp_connection.open_channel(conn.pid) do
       {:ok, chan_pid} -> {:ok, %Channel{conn: conn, pid: chan_pid}}
