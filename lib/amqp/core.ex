@@ -4,6 +4,42 @@ defmodule AMQP.Core do
   require Record
 
   Record.defrecord(
+    :tx_select,
+    :"tx.select",
+    Record.extract(:"tx.select", from_lib: "rabbit_common/include/rabbit_framing.hrl")
+  )
+
+  Record.defrecord(
+    :tx_select_ok,
+    :"tx.select_ok",
+    Record.extract(:"tx.select_ok", from_lib: "rabbit_common/include/rabbit_framing.hrl")
+  )
+
+  Record.defrecord(
+    :tx_commit,
+    :"tx.commit",
+    Record.extract(:"tx.commit", from_lib: "rabbit_common/include/rabbit_framing.hrl")
+  )
+
+  Record.defrecord(
+    :tx_commit_ok,
+    :"tx.commit_ok",
+    Record.extract(:"tx.commit_ok", from_lib: "rabbit_common/include/rabbit_framing.hrl")
+  )
+
+  Record.defrecord(
+    :tx_rollback,
+    :"tx.rollback",
+    Record.extract(:"tx.rollback", from_lib: "rabbit_common/include/rabbit_framing.hrl")
+  )
+
+  Record.defrecord(
+    :tx_rollback_ok,
+    :"tx.rollback_ok",
+    Record.extract(:"tx.rollback_ok", from_lib: "rabbit_common/include/rabbit_framing.hrl")
+  )
+
+  Record.defrecord(
     :p_basic,
     :P_basic,
     Record.extract(:P_basic, from_lib: "rabbit_common/include/rabbit_framing.hrl")

@@ -169,12 +169,18 @@ defmodule AMQP.Queue do
 
   @doc """
   Discards all messages in the Queue.
+
+  Set `:nowait` (or its alias `:no_wait`) to `true` to skip waiting for the
+  broker's reply and return `:ok` instead of the message count.
   """
-  @spec purge(Channel.t(), Basic.queue()) :: {:ok, map} | Basic.error()
-  def purge(%Channel{pid: pid}, queue) do
-    case :amqp_channel.call(pid, queue_purge(queue: queue)) do
-      queue_purge_ok(message_count: message_count) -> {:ok, %{message_count: message_count}}
-      error -> {:error, error}
+  @spec purge(Channel.t(), Basic.queue(), keyword()) :: {:ok, map} | :ok | Basic.error()
+  def purge(%Channel{pid: pid}, queue, options \\ []) do
+    nowait = get_nowait(options)
+
+    case {nowait, :amqp_channel.call(pid, queue_purge(queue: queue, nowait: nowait))} do
+      {true, :ok} -> :ok
+      {_, queue_purge_ok(message_count: message_count)} -> {:ok, %{message_count: message_count}}
+      {_, error} -> {:error, error}
     end
   end
 

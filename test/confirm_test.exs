@@ -23,6 +23,16 @@ defmodule ConfirmTest do
     end
   end
 
+  for option <- [:nowait, :no_wait] do
+    test "select with #{option} enables confirms", ctx do
+      {:ok, chan} = Channel.open(ctx[:chan].conn)
+      assert :ok = Confirm.select(chan, [{unquote(option), true}])
+      assert :ok = AMQP.Basic.publish(chan, "", "", "confirmed")
+      assert true == Confirm.wait_for_confirms(chan, {5_000, :millisecond})
+      assert 2 == Confirm.next_publish_seqno(chan)
+    end
+  end
+
   describe "register_handler" do
     test "handler receive confirm with message seqno", ctx do
       :ok = Confirm.register_handler(ctx[:chan], self())

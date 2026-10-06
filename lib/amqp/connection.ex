@@ -264,6 +264,89 @@ defmodule AMQP.Connection do
   end
 
   @doc """
+  Closes a connection with a timeout in milliseconds.
+
+  After the timeout, the connection is abruptly terminated.
+  Uses the default reply code `200` and text `"Goodbye"`.
+  """
+  @spec close(t(), non_neg_integer()) :: :ok | {:error, any()}
+  def close(conn, timeout), do: close(conn, 200, "Goodbye", timeout)
+
+  @doc """
+  Closes a connection with a custom AMQP reply code and text.
+  Uses the Erlang client's configured call timeout.
+  """
+  @spec close(t(), non_neg_integer(), String.t()) :: :ok | {:error, any()}
+  def close(%Connection{pid: pid}, code, text) do
+    case :amqp_connection.close(pid, code, text) do
+      :ok -> :ok
+      error -> {:error, error}
+    end
+  end
+
+  @doc """
+  Closes a connection with a custom AMQP reply code, text, and timeout in milliseconds.
+
+  After the timeout, the connection is abruptly terminated.
+  """
+  @spec close(t(), non_neg_integer(), String.t(), non_neg_integer()) :: :ok | {:error, any()}
+  def close(%Connection{pid: pid}, code, text, timeout) do
+    case :amqp_connection.close(pid, code, text, timeout) do
+      :ok -> :ok
+      error -> {:error, error}
+    end
+  end
+
+  @doc """
+  Returns a keyword list of the requested connection information.
+
+  Use `info_keys/1` to discover available keys. These include `:server_properties`,
+  `:num_channels`, `:is_closing`, and negotiated `:channel_max`, `:frame_max`, and
+  `:heartbeat` values. Values are returned unchanged from the Erlang client,
+  including records such as `:amqp_params`. Invalid keys raise `ArgumentError`
+  without closing the connection.
+  """
+  @spec info(t(), [atom()]) :: keyword()
+  def info(%Connection{pid: pid} = conn, items) do
+    keys = info_keys(conn)
+
+    Enum.each(items, fn item ->
+      unless item in keys do
+        raise ArgumentError, "invalid connection information key: #{inspect(item)}"
+      end
+    end)
+
+    :amqp_connection.info(pid, items)
+  end
+
+  @doc "Returns information keys available for any connection."
+  @spec info_keys() :: [atom()]
+  def info_keys, do: :amqp_connection.info_keys()
+
+  @doc "Returns all information keys available for the given connection."
+  @spec info_keys(t()) :: [atom()]
+  def info_keys(%Connection{pid: pid}), do: :amqp_connection.info_keys(pid)
+
+  @doc "Returns the user-specified connection name, or `:undefined` when unset."
+  @spec connection_name(t()) :: String.t() | :undefined
+  def connection_name(%Connection{pid: pid}), do: :amqp_connection.connection_name(pid)
+
+  @doc """
+  Registers a process to receive connection blocked and unblocked notifications.
+
+  The process receives the Erlang record tuples `{:"connection.blocked", reason}`
+  and `{:"connection.unblocked"}`. Registering another process replaces the handler.
+  Registration is asynchronous and returns `:ok`.
+
+  The Erlang client retains monitors for replaced handlers. Keep those processes
+  alive until the connection closes to avoid an unexpected connection exit.
+  """
+  @spec register_blocked_handler(t(), pid()) :: :ok
+  def register_blocked_handler(%Connection{pid: pid}, handler_pid) do
+    :amqp_connection.register_blocked_handler(pid, handler_pid)
+  end
+
+  @doc """
   Updates the secret used to authenticate the given Connection.
 
   This is useful when the credentials used to open the connection have a
